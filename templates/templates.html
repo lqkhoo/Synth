@@ -1,21 +1,21 @@
-<div id="template-player-controls-buttons" class="template">
-	<button id="button-play-pause" type="button" class="btn btn-default {{buttonClass}}"></button>
-</div>
-
-<div id="template-player-controls-value-display" class="template">
-	<span>{{currentBeat}}</span>
+<div id="template-player-controls-inner" class="template">
+	<button id="button-play-pause" type="button" class="btn btn-default"></button>
+	<span>Beat: </span><span data-attr="beat"></span>
 </div>
 
 <div id="template-instrument-controls" class="template">
 	<div class="instrument-block header">Instruments</div>
-	{{#each instruments}}
-		<div class="instrument-block">
-			<div>
-				<input type="text" value="{{name}}" class="form-control"></input>
-				<span title="Id">{{id}}</span>
-			</div>
-			<div>Vol: {{loudness}}</div>
-			<div style="font-size: 0.7em;">unlock | name | waveform | delete</div>
+</div>
+
+<div id="template-instrument-control-block" class="template">
+	<div class="instrument-control-block">
+		<div>
+			<input type="text" data-attr="name" value="" class="form-control"></input>
+			<span data-attr="instrument-id"></span>
 		</div>
-	{{/each}}
+		<div>
+			<span>Vol: </span><span data-attr="loudness"></span>
+		</div>
+		<div style="font-size: 0.7em;">waveform | delete</div>
+	</div>
 </div>

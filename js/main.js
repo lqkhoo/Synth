@@ -25,7 +25,8 @@ var SYNTH = SYNTH || {};
                 templateString = $(data).filter(templateSelector);
                 var i;
                 for(i = 0; i < templateString.length; i++) {
-                    cacheObject[templateString[i].id] = Handlebars.compile($(templateString[i]).html());
+                    cacheObject[templateString[i].id] = $(templateString[i]).html();
+                    //cacheObject[templateString[i].id] = Handlebars.compile($(templateString[i]).html());
                 }
             },
             error: function() {
@@ -76,14 +77,14 @@ var SYNTH = SYNTH || {};
     function makeTimbre(soundCode, frequencyArray, loudness, attack, decay, sustain, release) {
         
         switch(soundCode) {
-        case "synthPiano":
+        case 'synthPiano':
             var i;
             var oscArray = [];
             
             for(i = 0; i < frequencyArray.length; i++) {
-                oscArray.push(Timbre("sin", {freq: frequencyArray[i], mul: loudness}));
+                oscArray.push(Timbre('sin', {freq: frequencyArray[i], mul: loudness}));
             }
-            var env = Timbre("perc", {r: release}, oscArray).bang();
+            var env = Timbre('perc', {r: release}, oscArray).bang();
             return env;
             
         default:
@@ -103,30 +104,30 @@ var SYNTH = SYNTH || {};
     var Part = Backbone.Model.extend({
         
         defaults: {
-            "instrument": undefined,
-            "array": undefined
+            'instrument': undefined,
+            'array': undefined
         },
         
         /** Gets instrument which this part controls */
         getInstrument: function() {
-            var instrument = this.get("instrument");
+            var instrument = this.get('instrument');
             return instrument;
         },
         
         /** Set instrument reference to part */
         setInstrument: function(instrument) {
-            this.set({"instrument": instrument});
+            this.set({'instrument': instrument});
         },
         
         /** Gets controller array of part */
         getArray: function() {
-            var array = this.get("array");
+            var array = this.get('array');
             return array;
         },
         
         /** Sets value for controller array */
         setArray: function(newArray) {
-            this.set({"array": newArray});
+            this.set({'array': newArray});
         },
         
         /** Constructs a new controller array based on arguments */
@@ -169,63 +170,63 @@ var SYNTH = SYNTH || {};
      */
     var Instrument = Backbone.Model.extend({ // Instrument. Timbre object tagged with numeric id
         defaults: {
-            "orchestra": undefined,
-            "id": null,
-            "name": "(unnamed)",
-            "part": undefined,
-            "loudness": 1,
-            "soundCode": null
+            'orchestra': undefined,
+            'id': null,
+            'name': '(unnamed)',
+            'part': undefined,
+            'loudness': 1,
+            'soundCode': null
         },
         
         /** Gets orchestra */
         getOrchestra: function() {
-            var orchestra = this.get("orchestra");
+            var orchestra = this.get('orchestra');
             return orchestra;
         },
         
         /** Returns the integer id of the instrument */
         getId: function() {
-            var id = this.get("id");
+            var id = this.get('id');
             return id;
         },
         
         /** Returns the name of the instrument */
         getName: function() {
-            var name = this.get("name");
+            var name = this.get('name');
             return name;
         },
         
         /** Sets the name of the instrument */
         setName: function(newName) {
-            this.set({"name": newName});
+            this.set({'name': newName});
         },
         
         /** Gets part */
         getPart: function() {
-            var part = this.get("part");
+            var part = this.get('part');
             return part;
         },
         
         /** Gets loudness */
         getLoudness: function() {
-            var loudness = this.get("loudness");
+            var loudness = this.get('loudness');
             return loudness;
         },
         
         /** Sets loudness */
         setLoudness: function(newLoudness) {
-            this.set({"loudness": newLoudness});
+            this.set({'loudness': newLoudness});
         },
         
         /** Gets sound code */
         getSoundCode: function() {
-            var soundCode = this.get("soundCode");
+            var soundCode = this.get('soundCode');
             return soundCode;
         },
         
         /** Sets sound code */
         setSoundCode: function(newsoundCode) {
-            this.set({"soundCode": newsoundCode});
+            this.set({'soundCode': newsoundCode});
         },
         
     });
@@ -238,18 +239,18 @@ var SYNTH = SYNTH || {};
         defaults: function() {
             var instruments = new Instruments();
             return {
-                "TONES": undefined,
-                "FREQS": undefined,
-                "key": 'A',
-                "scale": 'chromatic',   // 'chromatic', 'major', 'harmonic minor', 'melodic minor', 'major pentatonic', 'minor pentatonic'
-                "mspb": 300,            // milliseconds per beat
-                "currentBeat": 0,
-                "isLooping": true,
-                "isPlaying": false,
-                "player": null,         // the interval Timbre.js object responsible for keeping beat and playing everything
-                "instruments": instruments,
-                "nextInstrumentId": 0,  // id given to next instrument added to orchestra
-                "scoreLength": 24       // 24 beats
+                'TONES': undefined,
+                'FREQS': undefined,
+                'key': 'A',
+                'scale': 'chromatic',   // 'chromatic', 'major', 'harmonic minor', 'melodic minor', 'major pentatonic', 'minor pentatonic'
+                'mspb': 300,            // milliseconds per beat
+                'currentBeat': 0,
+                'isLooping': true,
+                'isPlaying': false,
+                'player': null,         // the interval Timbre.js object responsible for keeping beat and playing everything
+                'instruments': instruments,
+                'nextInstrumentId': 0,  // id given to next instrument added to orchestra
+                'scoreLength': 24       // 24 beats
             };
         },
         
@@ -257,13 +258,13 @@ var SYNTH = SYNTH || {};
         
         /** Gets the Collection of Instruments */
         getInstrumentCollection: function() {
-            var collection = this.get("instruments");
+            var collection = this.get('instruments');
             return collection;
         },
         
         /** Get the list of instruments registered on the orchestra */
         getInstruments: function() {
-            var instruments = this.get("instruments");
+            var instruments = this.get('instruments');
             return instruments.models;
         },
         
@@ -282,19 +283,19 @@ var SYNTH = SYNTH || {};
         addInstrument: function(soundCode, instrumentName) {
             
             // Grab next id
-            var nextInstrumentId = this.get("nextInstrumentId");
+            var nextInstrumentId = this.get('nextInstrumentId');
             
             // Initialize the part controlling the instrument
             var part = new Part();
-            part.setArrayFromArgs(this.get("TONES").length, this.getScoreLength());
+            part.setArrayFromArgs(this.get('TONES').length, this.getScoreLength());
             
             // Initialize new instrument
             var instrument = new Instrument({
-                "orchestra": this,
-                "id": nextInstrumentId,
-                "name": instrumentName,
-                "part": part,
-                "soundCode": soundCode
+                'orchestra': this,
+                'id': nextInstrumentId,
+                'name': instrumentName,
+                'part': part,
+                'soundCode': soundCode
             });
             
             part.setInstrument(instrument);
@@ -304,7 +305,7 @@ var SYNTH = SYNTH || {};
             
             nextInstrumentId += 1;
             this.set({
-                "nextInstrumentId": nextInstrumentId
+                'nextInstrumentId': nextInstrumentId
             });
             
         },
@@ -325,79 +326,79 @@ var SYNTH = SYNTH || {};
         
         /** Gets score length */
         getScoreLength: function() {
-            var scoreLength = this.get("scoreLength");
+            var scoreLength = this.get('scoreLength');
             return scoreLength;
         },
         
         /** Set score length */
         setScoreLength: function(newScoreLength) {
-            this.set({"scoreLength": newScoreLength});
+            this.set({'scoreLength': newScoreLength});
         },
         
         // Key and scale (tonality) controls
         
         /** Gets key */
         getKey: function() {
-            var key = this.get("key");
+            var key = this.get('key');
             return key;
         },
         
         /** Sets key */
         setKey: function(newKey) {
-            this.set({"key": newKey});
+            this.set({'key': newKey});
         },
         
         /** Get scale */
         getScale: function() {
-            var scale = this.get("scale");
+            var scale = this.get('scale');
             return scale;
         },
         
         /** Set scale */
         setScale: function(newScale) {
-            this.set({"scale": newScale});
+            this.set({'scale': newScale});
         },
         
         // Beat controls
         
         /** Set how many milliseconds to take for a beat */
         setMspb: function() {
-            var mspb = this.get("mspb");
-            this.set({"mspb": mspb});
+            var mspb = this.get('mspb');
+            this.set({'mspb': mspb});
         },
         
         /** Get current beat */
         getCurrentBeat: function() {
-            var currentBeat = this.get("currentBeat");
+            var currentBeat = this.get('currentBeat');
             return currentBeat;
         },
         
         /** Set current beat */
         setCurrentBeat: function(newCurrentBeat) {
-            this.set({"currentBeat": newCurrentBeat});
+            this.set({'currentBeat': newCurrentBeat});
         },
         
         // Player controls
         
         /** Get loop */
         getIsLooping: function(bool) {
-            var isLooping = this.get("isLooping");
+            var isLooping = this.get('isLooping');
             return isLooping;
         },
         
         /** Set loop */
         setIsLooping: function(bool) {
-            this.set({"isLooping": bool});
+            this.set({'isLooping': bool});
         },
         
         /** Get is playing status */
         getIsPlaying: function() {
-            var isPlaying = this.get("isPlaying");
+            var isPlaying = this.get('isPlaying');
             return isPlaying;
         },
         
         /** Play all instruments registered within the orchestra */
-        play: function() {          
+        play: function() {
             this.playFromBeat(0);
         },
         
@@ -407,13 +408,13 @@ var SYNTH = SYNTH || {};
             var self = this;
             
             // get milliseconds per beat
-            var mspb = this.get("mspb");
+            var mspb = this.get('mspb');
             
             // set current beat to given offset
             this.setCurrentBeat(startBeat);
                         
             // initialize interval Timbre.js object, set to play the instruments
-            this.set({"player": Timbre("interval", {interval: mspb}, function(count) {
+            this.set({'player': Timbre('interval', {interval: mspb}, function(count) {
                     (function() {
                         var i, j;
                         var controlArray;
@@ -424,7 +425,7 @@ var SYNTH = SYNTH || {};
                             timbreArray = [];
                             for(j = 0; j < controlArray.length; j++) {
                                 if(controlArray[j][self.getCurrentBeat()] === true) {
-                                    timbreArray.push(self.get("FREQS")[j]);
+                                    timbreArray.push(self.get('FREQS')[j]);
                                 }
                             }
                             makeTimbre(instruments[i].getSoundCode(), timbreArray).play();
@@ -433,16 +434,16 @@ var SYNTH = SYNTH || {};
                     self.setCurrentBeat(startBeat + count + 1);
                 })
             });
-            var player = this.get("player");
+            var player = this.get('player');
             player.start();
-            this.set({"isPlaying": true});
+            this.set({'isPlaying': true});
         },
         
         /** Stop all instruments registered within the orchestra */
         stop: function() {
-            var player = this.get("player");
+            var player = this.get('player');
             player.stop();
-            this.set({"isPlaying": false});
+            this.set({'isPlaying': false});
         },
         
         /** Toggles stop or play depending on current state */
@@ -456,100 +457,104 @@ var SYNTH = SYNTH || {};
         
     });
     
-    
     // Views ----------------------------------------------------------------------------------------
     
-    var PlayerControlButtonsView = Backbone.View.extend({
-        parent: '#player-controls-buttons',
-        el: '#player-controls-buttons',
-        template: SYNTH.templateCache['template-player-controls-buttons'],
+    var PlayerControlView = Backbone.View.extend({
+        el: '#player-controls-inner',
+        _template: SYNTH.templateCache['template-player-controls-inner'],
+        _modelBinder: undefined,
         initialize: function() {
+            this._modelBinder = new Backbone.ModelBinder();
             this.render();
-            this.model.bind("change:isPlaying", this.render, this);
         },
         
         render: function() {
-            var buttonClass;
-            if(this.model.getIsPlaying()) {
-                buttonClass = 'glyphicon glyphicon-stop';
-            } else {
-                buttonClass = 'glyphicon glyphicon-play';
-            }
-            this.$el.html(this.template({
-                buttonClass: buttonClass
-            }));
+            var converter = function(direction, value) {
+                if(value) {
+                    return 'glyphicon glyphicon-stop';
+                } else {
+                    return 'glyphicon glyphicon-play';
+                }
+            };
+            this.$el.html(this._template);
+            var bindings = {
+                'isPlaying': {
+                    selector: '#button-play-pause',
+                    elAttribute: "class",
+                    converter: converter
+                },
+                'currentBeat': '[data-attr="beat"]'
+            };
+            this._modelBinder.bind(this.model, this.el, bindings);
             return this;
         },
-        events: {
-            "click #button-play-pause": "togglePlay",
+        
+        close: function() {
+            this._modelBinder.unbind();
         },
+        
+        events: {
+            'click #button-play-pause': 'togglePlay'
+        },
+        
         togglePlay: function() {
             this.model.togglePlay();
         }
         
     });
     
-    var PlayerControlDisplayView = Backbone.View.extend({
-        el: '#player-controls-value-display',
-        template: SYNTH.templateCache['template-player-controls-value-display'],
-        initialize: function() {
-            this.render();
-            this.model.bind("change:currentBeat", this.render, this);
-        },
-        
-        render: function() {
-            var currentBeat = this.model.getCurrentBeat();
-            this.$el.html(this.template({
-                "currentBeat": "Beat: " + currentBeat
-            }));
-        }
-        
-    });
-    
     var InstrumentControlView = Backbone.View.extend({
         el: '#instrument-controls',
-        template: SYNTH.templateCache['template-instrument-controls'],
+        _template: SYNTH.templateCache['template-instrument-controls'],
+        _componentTemplate: SYNTH.templateCache['template-instrument-control-block'],
+        _modelBinder: undefined,
+        _collectionBinder: undefined,
         initialize: function() {
+            var bindings = {
+                'name': {
+                    selector: '[data-attr="name"]'
+                },
+                'id': '[data-attr="instrument-id"]',
+                'loudness': '[data-attr="loudness"]'
+            };
+            this._modelBinder = new Backbone.ModelBinder();
+            this._collectionBinder = new Backbone.CollectionBinder(
+                new Backbone.CollectionBinder.ElManagerFactory(this._componentTemplate, bindings)
+            );
             this.render();
-            this.model.bind("change:instruments", this.render, this);
         },
+        
         render: function() {
-            var data = [];
-            var instruments = this.model.getInstruments();
-            var i;
-            for(i = 0; i < instruments.length; i++) {
-                data.push({
-                    "id": instruments[i].getId(),
-                    "name": instruments[i].getName(),
-                    "loudness": instruments[i].getLoudness()
-                });
-            }
-            this.$el.html(this.template({
-                "instruments": data
-            }));
+            this.$el.html(this._template);
+            this._collectionBinder.bind(this.model.getInstrumentCollection(), this.el);
             return this;
+        },
+        
+        close: function() {
+            this._collectionBinder.unbind();
         }
+        
     });
     
     
     // Variables ------------------------------------------------------------------------------------
     SYNTH.orchestra = new Orchestra({
-        "TONES": SYNTH.TONES,
-        "FREQS": SYNTH.FREQS
+        'TONES': SYNTH.TONES,
+        'FREQS': SYNTH.FREQS
     });
     
     // Document.ready --------------------------------------------------------------------------------
     
     $(document).ready(function() {
         
-        SYNTH.orchestra.addInstrument("synthPiano", "instrument1");
-        SYNTH.orchestra.addInstrument("synthPiano", "instrument2");
-        SYNTH.orchestra.addInstrument("synthPiano", "instrument3");
-        SYNTH.orchestra.addInstrument("synthPiano", "instrument4");
-        SYNTH.orchestra.addInstrument("synthPiano", "instrument5");
-        SYNTH.orchestra.addInstrument("synthPiano", "instrument6");
-        SYNTH.orchestra.addInstrument("synthPiano", "instrument7");
-        SYNTH.orchestra.addInstrument("synthPiano", "instrument8");
+        SYNTH.orchestra.addInstrument('synthPiano', 'instrument1');
+        SYNTH.orchestra.addInstrument('synthPiano', 'instrument2');
+        SYNTH.orchestra.addInstrument('synthPiano', 'instrument3');
+        SYNTH.orchestra.addInstrument('synthPiano', 'instrument4');
+        SYNTH.orchestra.addInstrument('synthPiano', 'instrument5');
+        SYNTH.orchestra.addInstrument('synthPiano', 'instrument6');
+        SYNTH.orchestra.addInstrument('synthPiano', 'instrument7');
+        SYNTH.orchestra.addInstrument('synthPiano', 'instrument8');
         var testInstrument = SYNTH.orchestra.getInstrumentById(0);
         testInstrument.getPart().setArrayPoint(50, 0, true);
         testInstrument.getPart().setArrayPoint(55, 4, true);
@@ -562,13 +567,12 @@ var SYNTH = SYNTH || {};
         
         // Bind views
         SYNTH.VIEWS = {};
-        SYNTH.VIEWS.playerControlButtons = new PlayerControlButtonsView({model: SYNTH.orchestra});
-        SYNTH.VIEWS.playerControlDisplay = new PlayerControlDisplayView({model: SYNTH.orchestra});
+        SYNTH.VIEWS.playerControl = new PlayerControlView({model: SYNTH.orchestra});
         SYNTH.VIEWS.instrumentControl = new InstrumentControlView({model: SYNTH.orchestra});
         
         function resizeUI() {
             var windowHeight = $(window).height() - 125;
-            $('#site-main').attr({"style": "height: " + windowHeight + "px;"});
+            $('#site-main').attr({'style': 'height: ' + windowHeight + 'px;'});
         }
         
         resizeUI();
