@@ -1,12 +1,14 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 	<head>
-	<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+	<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"></meta>
 	<title>Audiotest</title>
 	<!-- stylesheets -->
-	
+	<link type="text/css" rel="stylesheet" media="all" href="css/bootstrap.min.css"></link>
+	<link type="text/css" rel="stylesheet" media="all" href="css/common.css"></link>
 	<!-- scripts -->
 	<script type="text/javascript" src="js/jquery-2.0.3.min.js"></script>
+	<script type="text/javascript" src="js/handlebars-v1.3.0.js"></script>
 	<script type="text/javascript" src="js/underscore-min.js"></script>
 	<script type="text/javascript" src="js/backbone-min.js"></script>
 	<script type="text/javascript" src="js/music.js"></script>
@@ -14,7 +16,25 @@
 	<script type="text/javascript" src="js/main.js"></script>
 	</head>
 	<body>
-		<div>
+		<div id="site-top">
+			<div id="logo">
+			</div>
+			<div id="player-controls">
+				<div id="player-controls-buttons"></div>
+				<div id="player-controls-value-display"></div>
+			</div>
+		</div>
+		<div id="site-main">
+			<div id="site-left">
+			</div>
+			<div id="site-content-wrapper">
+				<div id="site-content">
+				</div>
+			</div>
+			<div id="site-right">
+			</div>
+		</div>
+		<div id="site-bottom">
 		</div>
 	</body>
 </html>

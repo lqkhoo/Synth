@@ -1,0 +1,64 @@
+legend {
+	font-size: 1em;
+}
+
+#site-top {
+	background-color: #eee;
+	border: 1px solid #aaa;
+	height: 100px;
+}
+#player-controls {
+	float: right;
+}
+#player-controls-buttons,
+#player-controls-value-display {
+	display: inline-block;
+}
+
+
+#site-main {
+	height: 500px;
+}
+#site-left {
+	background-color: #eee;
+	height: 100%;
+	width: 100px;
+	float: left;
+	position: relative;
+	z-index: 10;
+}
+#site-content-wrapper {
+	background-color: #fff;
+	height: 100%;
+	width: 100%;
+	margin-left: -100px;
+	margin-right: -100px;
+	float: left;
+	position: relative;
+	z-index: 5;
+}
+#site-content {
+	width: auto;
+	height: 100%;
+	margin-left: 100px;
+	margin-right: 100px;
+}
+
+
+
+#site-right {
+	background-color: #eee;
+	height: 100%;
+	width: 100px;
+	float: left;
+	position: relative;
+	z-index: 10;
+}
+
+
+
+#site-bottom {
+	background-color: #eee;
+	border: 1px solid #aaa;
+	height: 100px;
+}

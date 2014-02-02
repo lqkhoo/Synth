@@ -2,13 +2,45 @@
  * @author Li Quan Khoo
  */
 
-var GLOBAL = GLOBAL || {};
 
-(function($, Backbone, Timbre, MUSIC, Note, Interval) {
+/*
+ * Currently global scope to be accessible from developer console
+ */
+var SYNTH = SYNTH || {};
+
+(function($, Backbone, Handlebars, Timbre, MUSIC, Note, Interval) {
+    
+    // Template cacher ------------------------------------------------------------------------------
+    function cacheTemplates(cacheObject, templateUrl, templateSelector) {
+        if(! cacheObject) {
+            cacheObject = {};
+        }
+        
+        var templateString;
+        $.ajax({
+            url: templateUrl,
+            method: 'GET',
+            async: false,
+            success: function(data) {
+                templateString = $(data).filter(templateSelector);
+                var i;
+                for(i = 0; i < templateString.length; i++) {
+                    cacheObject[templateString[i].id] = Handlebars.compile($(templateString[i]).html());
+                }
+            },
+            error: function() {
+                console.error('Error fetching templates');
+            }
+        });
+    }
+    
+    // Define the template cache object and cache them
+    SYNTH.templateCache = {};
+    cacheTemplates(SYNTH.templateCache, 'templates/templates.html', '.template');
     
     
     // Augment Music.js library scale definition with chromatic scale
-    MUSIC.scales['chromatic'] = ['minor second', 'major second', 'minor third', 'major third', 'fourth', 'augmented fourth', 'fifth', 'minor sixth', 'major sixth', 'minor seventh', 'major seventh'];
+    MUSIC.scales['chromatic'] = MUSIC.scales['chromatic'] || ['minor second', 'major second', 'minor third', 'major third', 'fourth', 'augmented fourth', 'fifth', 'minor sixth', 'major sixth', 'minor seventh', 'major seventh'];
     
     
     // Generate frequency table -------------------------------------------------------
@@ -16,24 +48,24 @@ var GLOBAL = GLOBAL || {};
         var tones = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'];
         var octaves = ['1', '2', '3', '4', '5', '6', '7', '8'];
         
-        GLOBAL.TONES = ['A0', 'Bb0', 'B0'];
+        SYNTH.TONES = ['A0', 'Bb0', 'B0'];
         (function() {
             var i, j;
             for(i = 0; i < octaves.length; i++) {
                 for(j = 0; j < tones.length; j++) {
-                    GLOBAL.TONES.push(tones[j] + octaves[i]);
-                    if(GLOBAL.TONES.length >= 88) {
+                    SYNTH.TONES.push(tones[j] + octaves[i]);
+                    if(SYNTH.TONES.length >= 88) {
                         return;
                     }
                 }
             }
         }());
         
-        GLOBAL.FREQS = [];
+        SYNTH.FREQS = [];
         (function() {
             var i;
-            for(i = 0; i < GLOBAL.TONES.length; i++) {
-                GLOBAL.FREQS.push(Note.fromLatin(GLOBAL.TONES[i]).frequency());
+            for(i = 0; i < SYNTH.TONES.length; i++) {
+                SYNTH.FREQS.push(Note.fromLatin(SYNTH.TONES[i]).frequency());
             }
         }());
     }());
@@ -41,7 +73,7 @@ var GLOBAL = GLOBAL || {};
     
     // Sound definitions ----------------------------------------------------------------------------
     
-    function makeTimbreNew(soundCode, frequencyArray, loudness, attack, decay, sustain, release) {
+    function makeTimbre(soundCode, frequencyArray, loudness, attack, decay, sustain, release) {
         
         switch(soundCode) {
         case "synthPiano":
@@ -62,29 +94,165 @@ var GLOBAL = GLOBAL || {};
     }
     
     // Models ---------------------------------------------------------------------------------------
+    
+    /**
+     * A part (of a musical score)
+     * A part consists of a 88-row boolean array with a (virtually) unbounded right end.
+     * Each row corresponds to a Timbre object. If true, it's supposed to be played.
+     */
+    var Part = Backbone.Model.extend({
+        
+        defaults: {
+            "instrument": undefined,
+            "array": undefined
+        },
+        
+        /** Gets instrument which this part controls */
+        getInstrument: function() {
+            var instrument = this.get("instrument");
+            return instrument;
+        },
+        
+        /** Set instrument reference to part */
+        setInstrument: function(instrument) {
+            this.set({"instrument": instrument});
+        },
+        
+        /** Gets controller array of part */
+        getArray: function() {
+            var array = this.get("array");
+            return array;
+        },
+        
+        /** Sets value for controller array */
+        setArray: function(newArray) {
+            this.set({"array": newArray});
+        },
+        
+        /** Constructs a new controller array based on arguments */
+        setArrayFromArgs: function(tonalRange, scoreLength) {
+            var array = [];
+            for(var i = 0; i < tonalRange; i++) {
+                array.push([]);
+                for(var j = 0; j < scoreLength; j++) {
+                    array[i].push(false);
+                }
+            }
+            this.setArray(array);
+        },
+        
+        /** Updates array coordinates with new value */
+        setArrayPoint: function(tone, beat, value) {
+            var array = this.getArray();
+            array[tone][beat] = value;
+            this.setArray(array);
+        },
+        
+        /** Gets orchestra of the instrument which this part controls */
+        getOrchestra: function() {
+            var orchestra = this.getInstrument().getOrchestra();
+            return orchestra;
+        }
+        
+    });
+    
+    var Instruments = Backbone.Collection.extend({
+        model: Instrument
+    });
+    
+    
+    /**
+     * An instrument
+     * One instrument contains:
+     *   88 instances of Timbre objects - one the frequency of each piano key
+     *   An Score object, controlling how the instrument is supposed to be played
+     */
+    var Instrument = Backbone.Model.extend({ // Instrument. Timbre object tagged with numeric id
+        defaults: {
+            "orchestra": undefined,
+            "id": null,
+            "part": undefined,
+            "loudness": 1,
+            "soundCode": null
+        },
+        
+        /** Gets orchestra */
+        getOrchestra: function() {
+            var orchestra = this.get("orchestra");
+            return orchestra;
+        },
+        
+        /** Returns the integer id of the instrument */
+        getId: function() {
+            var id = this.get("id");
+            return id;
+        },
+        
+        /** Gets part */
+        getPart: function() {
+            var part = this.get("part");
+            return part;
+        },
+        
+        /** Gets loudness */
+        getLoudness: function() {
+            var loudness = this.get("loudness");
+            return loudness;
+        },
+        
+        /** Sets loudness */
+        setLoudness: function(newLoudness) {
+            this.set({"loudness": newLoudness});
+        },
+        
+        /** Gets sound code */
+        getSoundCode: function() {
+            var soundCode = this.get("soundCode");
+            return soundCode;
+        },
+        
+        /** Sets sound code */
+        setSoundCode: function(newsoundCode) {
+            this.set({"soundCode": newsoundCode});
+        },
+        
+    });
+    
     /**
      * The Orchestra
-     * Responsible for keeping track of the tempo, all active instruments, and actually playing the instruments.
+     * Responsible for keeping track of the tempo, all active instruments.
      */
-    Orchestra = Backbone.Model.extend({
-        defaults: {
-            "key": 'A',
-            "scale": 'chromatic',   // 'chromatic', 'major', 'harmonic minor', 'melodic minor', 'major pentatonic', 'minor pentatonic'
-            "mspb": 300,            // milliseconds per beat
-            "currentBeat": 0,
-            "loop": true,
-            "player": null,         // the interval Timbre.js object responsible for keeping beat and playing everything
-            "instruments": [],
-            "nextInstrumentId": 0,  // id given to next instrument added to orchestra
-            "scoreLength": 24       // 24 beats
+    var Orchestra = Backbone.Model.extend({
+        defaults: function() {
+            var instruments = new Instruments();
+            return {
+                "TONES": undefined,
+                "FREQS": undefined,
+                "key": 'A',
+                "scale": 'chromatic',   // 'chromatic', 'major', 'harmonic minor', 'melodic minor', 'major pentatonic', 'minor pentatonic'
+                "mspb": 300,            // milliseconds per beat
+                "currentBeat": 0,
+                "isLooping": true,
+                "isPlaying": false,
+                "player": null,         // the interval Timbre.js object responsible for keeping beat and playing everything
+                "instruments": instruments,
+                "nextInstrumentId": 0,  // id given to next instrument added to orchestra
+                "scoreLength": 24       // 24 beats
+            };
         },
         
         // Instrument controls
         
+        /** Gets the Collection of Instruments */
+        getInstrumentCollection: function() {
+            var collection = this.get("instruments");
+            return collection;
+        },
+        
         /** Get the list of instruments registered on the orchestra */
         getInstruments: function() {
             var instruments = this.get("instruments");
-            return instruments;
+            return instruments.models;
         },
         
         /** Get instrument with specified Id */
@@ -100,21 +268,13 @@ var GLOBAL = GLOBAL || {};
                        
         /** Add an Instrument to the orchestra */
         addInstrument: function(soundCode) {
+            
             // Grab next id
             var nextInstrumentId = this.get("nextInstrumentId");
             
             // Initialize the part controlling the instrument
-            var array = [];
-            var scoreLength = this.getScoreLength();
-            for(var i = 0; i < GLOBAL.TONES.length; i++) {
-                array.push([]);
-                for(var j = 0; j < scoreLength; j++) {
-                    array[i].push(false);
-                }
-            }
-            var part = new Part({
-                "array": array
-            });
+            var part = new Part();
+            part.setArrayFromArgs(this.get("TONES").length, this.getScoreLength());
             
             // Initialize new instrument
             var instrument = new Instrument({
@@ -127,10 +287,8 @@ var GLOBAL = GLOBAL || {};
             part.setInstrument(instrument);
             
             // Update orchestra
-            var instruments = this.getInstruments();
-            instruments.push(instrument);
+            this.getInstrumentCollection().add(instrument);
             this.set({
-                "instruments": instruments,
                 "nextInstrumentId": nextInstrumentId
             });
             nextInstrumentId += 1;
@@ -207,14 +365,20 @@ var GLOBAL = GLOBAL || {};
         // Player controls
         
         /** Get loop */
-        getLoop: function(bool) {
-            var loop = this.get("loop");
-            return loop;
+        getIsLooping: function(bool) {
+            var isLooping = this.get("isLooping");
+            return isLooping;
         },
         
         /** Set loop */
-        setLoop: function(bool) {
-            this.set({"loop": bool});
+        setIsLooping: function(bool) {
+            this.set({"isLooping": bool});
+        },
+        
+        /** Get is playing status */
+        getIsPlaying: function() {
+            var isPlaying = this.get("isPlaying");
+            return isPlaying;
         },
         
         /** Play all instruments registered within the orchestra */
@@ -235,7 +399,6 @@ var GLOBAL = GLOBAL || {};
                         
             // initialize interval Timbre.js object, set to play the instruments
             this.set({"player": Timbre("interval", {interval: mspb}, function(count) {
-                    var offset = self.getCurrentBeat() + count;
                     (function() {
                         var i, j;
                         var controlArray;
@@ -246,145 +409,103 @@ var GLOBAL = GLOBAL || {};
                             timbreArray = [];
                             for(j = 0; j < controlArray.length; j++) {
                                 if(controlArray[j][self.getCurrentBeat()] === true) {
-                                    timbreArray.push(GLOBAL.FREQS[j]);
+                                    timbreArray.push(self.get("FREQS")[j]);
                                 }
                             }
-                            makeTimbreNew(instruments[i].getSoundCode(), timbreArray).play();
+                            makeTimbre(instruments[i].getSoundCode(), timbreArray).play();
                         }
-                        
                     }());
                     self.setCurrentBeat(startBeat + count + 1);
                 })
             });
             var player = this.get("player");
             player.start();
-            
+            this.set({"isPlaying": true});
         },
         
         /** Stop all instruments registered within the orchestra */
         stop: function() {
             var player = this.get("player");
             player.stop();
+            this.set({"isPlaying": false});
+        },
+        
+        /** Toggles stop or play depending on current state */
+        togglePlay: function() {
+            if(this.getIsPlaying()) {
+                this.stop();
+            } else {
+                this.play();
+            }
         }
         
     });
     
     
-    /**
-     * An instrument
-     * One instrument contains:
-     *   88 instances of Timbre objects - one the frequency of each piano key
-     *   An Score object, controlling how the instrument is supposed to be played
-     */
-    Instrument = Backbone.Model.extend({ // Instrument. Timbre object tagged with numeric id
-        defaults: {
-            "orchestra": undefined,
-            "id": null,
-            "part": undefined,
-            "loudness": 1,
-            "soundCode": null
+    // Views ----------------------------------------------------------------------------------------
+    
+    var PlayerControlButtons = Backbone.View.extend({
+        parent: '#player-controls-buttons',
+        el: '#player-controls-buttons',
+        template: SYNTH.templateCache['template-player-controls-buttons'],
+        initialize: function() {
+            this.render();
+            this.model.bind("change:isPlaying", this.render, this);
         },
         
-        /** Gets orchestra */
-        getOrchestra: function() {
-            var orchestra = this.get("orchestra");
-            return orchestra;
+        render: function() {
+            var buttonClass;
+            var currentBeat = this.model.getCurrentBeat();
+            if(this.model.getIsPlaying()) {
+                buttonClass = 'glyphicon glyphicon-stop';
+            } else {
+                buttonClass = 'glyphicon glyphicon-play';
+            }
+            this.$el.html(this.template({
+                buttonClass: buttonClass
+            }));
+            return this;
         },
-        
-        /** Returns the integer id of the instrument */
-        getId: function() {
-            var id = this.get("id");
-            return id;
+        events: {
+            "click #button-play-pause": "togglePlay",
         },
-        
-        /** Gets part */
-        getPart: function() {
-            var part = this.get("part");
-            return part;
-        },
-        
-        /** Gets loudness */
-        getLoudness: function() {
-            var loudness = this.get("loudness");
-            return loudness;
-        },
-        
-        /** Sets loudness */
-        setLoudness: function(newLoudness) {
-            this.set({"loudness": newLoudness});
-        },
-        
-        /** Gets sound code */
-        getSoundCode: function() {
-            var soundCode = this.get("soundCode");
-            return soundCode;
-        },
-        
-        /** Sets sound code */
-        setSoundCode: function(newsoundCode) {
-            this.set({"soundCode": newsoundCode});
-        },
+        togglePlay: function() {
+            this.model.togglePlay();
+        }
         
     });
     
-    
-    /**
-     * A part (of a musical score)
-     * A part consists of a 88-row boolean array with a (virtually) unbounded right end.
-     * Each row corresponds to a Timbre object. If true, it's supposed to be played.
-     */
-    Part = Backbone.Model.extend({
-        
-        defaults: {
-            "instrument": undefined,
-            "array": undefined
+    var PlayerControlDisplay = Backbone.View.extend({
+        el: '#player-controls-value-display',
+        template: SYNTH.templateCache['template-player-controls-value-display'],
+        initialize: function() {
+            this.render();
+            this.model.bind("change:currentBeat", this.render, this);
         },
         
-        /** Gets instrument which this part controls */
-        getInstrument: function() {
-            var instrument = this.get("instrument");
-            return instrument;
-        },
-        
-        /** Set instrument reference to part */
-        setInstrument: function(instrument) {
-            this.set({"instrument": instrument});
-        },
-        
-        /** Gets controller array of part */
-        getArray: function() {
-            var array = this.get("array");
-            return array;
-        },
-        
-        /** Sets value for controller array */
-        setArray: function(newArray) {
-            this.set({"array": newArray});
-        },
-        
-        /** Updates array coordinates with new value */
-        setArrayPoint: function(tone, beat, value) {
-            var array = this.getArray();
-            array[tone][beat] = value;
-            this.setArray(array);
-        },
-        
-        /** Gets orchestra of the instrument which this part controls */
-        getOrchestra: function() {
-            var orchestra = this.getInstrument().getOrchestra();
-            return orchestra;
+        render: function() {
+            var currentBeat = this.model.getCurrentBeat();
+            this.$el.html(this.template({
+                "currentBeat": "Beat: " + currentBeat
+            }));
         }
         
     });
     
     
     // Variables ------------------------------------------------------------------------------------
-    GLOBAL.orchestra = GLOBAL.orchestra || new Orchestra();
-            
+    SYNTH.orchestra = new Orchestra({
+        "TONES": SYNTH.TONES,
+        "FREQS": SYNTH.FREQS
+    });
+
+    
+    // Document.ready --------------------------------------------------------------------------------
+    
     $(document).ready(function() {
         
-        GLOBAL.orchestra.addInstrument("synthPiano");
-        var testInstrument = GLOBAL.orchestra.getInstrument(0);
+        SYNTH.orchestra.addInstrument("synthPiano");
+        var testInstrument = SYNTH.orchestra.getInstrument(0);
         testInstrument.getPart().setArrayPoint(50, 0, true);
         testInstrument.getPart().setArrayPoint(55, 4, true);
         //addInstrument(synthPiano());
@@ -392,10 +513,19 @@ var GLOBAL = GLOBAL || {};
         
         console.log(Note.fromLatin('C4').frequency());
         
-        GLOBAL.orchestra.play();
+        SYNTH.orchestra.play();
+        
+        // Bind views
+        SYNTH.VIEWS = {};
+        SYNTH.VIEWS.playerControlButtons = new PlayerControlButtons({model: SYNTH.orchestra});
+        SYNTH.VIEWS.playerControlDisplay = new PlayerControlDisplay({model: SYNTH.orchestra});
+        
+        
+        
+        
         
     });
     
     
-}(jQuery, Backbone, T, MUSIC, Note, Interval));
+}(jQuery, Backbone, Handlebars, T, MUSIC, Note, Interval));
 
