@@ -9,6 +9,8 @@ legend {
 }
 #player-controls {
 	float: right;
+	width: 200px;
+	height: 100px;
 }
 #player-controls-buttons,
 #player-controls-value-display {
@@ -27,12 +29,27 @@ legend {
 	position: relative;
 	z-index: 10;
 }
+.instrument-block {
+	overflow: hidden;
+	border: 1px solid #aaa;
+	padding: 1em;
+}
+.instrument-block.header {
+	padding: 0 1em;
+	border: 0;
+}
+.instrument-block > div {
+	float: left;
+	width: auto;
+	clear: both;
+}
+
 #site-content-wrapper {
 	background-color: #fff;
 	height: 100%;
 	width: 100%;
 	margin-left: -100px;
-	margin-right: -100px;
+	margin-right: -200px;
 	float: left;
 	position: relative;
 	z-index: 5;
@@ -41,7 +58,7 @@ legend {
 	width: auto;
 	height: 100%;
 	margin-left: 100px;
-	margin-right: 100px;
+	margin-right: 200px;
 }
 
 
@@ -49,16 +66,31 @@ legend {
 #site-right {
 	background-color: #eee;
 	height: 100%;
-	width: 100px;
+	width: 200px;
 	float: left;
 	position: relative;
 	z-index: 10;
 }
-
+#instrument-controls {
+	overflow: auto;
+	height: 100%;
+}
+.instrument-block input[type="text"] {
+	padding: 0.2em;
+	line-height: 1em;
+	height: 1.5em;
+	width: 80%;
+	display: inline-block;
+}
 
 
 #site-bottom {
 	background-color: #eee;
 	border: 1px solid #aaa;
+	height: 25px;
+	position: relative;
+	z-index: 20;
+}
+#site-bottom.expanded {
 	height: 100px;
 }

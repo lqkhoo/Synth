@@ -5,3 +5,17 @@
 <div id="template-player-controls-value-display" class="template">
 	<span>{{currentBeat}}</span>
 </div>
+
+<div id="template-instrument-controls" class="template">
+	<div class="instrument-block header">Instruments</div>
+	{{#each instruments}}
+		<div class="instrument-block">
+			<div>
+				<input type="text" value="{{name}}" class="form-control"></input>
+				<span title="Id">{{id}}</span>
+			</div>
+			<div>Vol: {{loudness}}</div>
+			<div style="font-size: 0.7em;">unlock | name | waveform | delete</div>
+		</div>
+	{{/each}}
+</div>

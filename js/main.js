@@ -171,6 +171,7 @@ var SYNTH = SYNTH || {};
         defaults: {
             "orchestra": undefined,
             "id": null,
+            "name": "(unnamed)",
             "part": undefined,
             "loudness": 1,
             "soundCode": null
@@ -186,6 +187,17 @@ var SYNTH = SYNTH || {};
         getId: function() {
             var id = this.get("id");
             return id;
+        },
+        
+        /** Returns the name of the instrument */
+        getName: function() {
+            var name = this.get("name");
+            return name;
+        },
+        
+        /** Sets the name of the instrument */
+        setName: function(newName) {
+            this.set({"name": newName});
         },
         
         /** Gets part */
@@ -256,7 +268,7 @@ var SYNTH = SYNTH || {};
         },
         
         /** Get instrument with specified Id */
-        getInstrument: function(id) {
+        getInstrumentById: function(id) {
             var instruments = this.getInstruments();
             var i;
             for(i = 0; i < instruments.length; i++) {
@@ -267,7 +279,7 @@ var SYNTH = SYNTH || {};
         },
                        
         /** Add an Instrument to the orchestra */
-        addInstrument: function(soundCode) {
+        addInstrument: function(soundCode, instrumentName) {
             
             // Grab next id
             var nextInstrumentId = this.get("nextInstrumentId");
@@ -280,6 +292,7 @@ var SYNTH = SYNTH || {};
             var instrument = new Instrument({
                 "orchestra": this,
                 "id": nextInstrumentId,
+                "name": instrumentName,
                 "part": part,
                 "soundCode": soundCode
             });
@@ -288,10 +301,12 @@ var SYNTH = SYNTH || {};
             
             // Update orchestra
             this.getInstrumentCollection().add(instrument);
+            
+            nextInstrumentId += 1;
             this.set({
                 "nextInstrumentId": nextInstrumentId
             });
-            nextInstrumentId += 1;
+            
         },
         
         /** Remove an Instrument from the orchestra */
@@ -444,7 +459,7 @@ var SYNTH = SYNTH || {};
     
     // Views ----------------------------------------------------------------------------------------
     
-    var PlayerControlButtons = Backbone.View.extend({
+    var PlayerControlButtonsView = Backbone.View.extend({
         parent: '#player-controls-buttons',
         el: '#player-controls-buttons',
         template: SYNTH.templateCache['template-player-controls-buttons'],
@@ -455,7 +470,6 @@ var SYNTH = SYNTH || {};
         
         render: function() {
             var buttonClass;
-            var currentBeat = this.model.getCurrentBeat();
             if(this.model.getIsPlaying()) {
                 buttonClass = 'glyphicon glyphicon-stop';
             } else {
@@ -475,7 +489,7 @@ var SYNTH = SYNTH || {};
         
     });
     
-    var PlayerControlDisplay = Backbone.View.extend({
+    var PlayerControlDisplayView = Backbone.View.extend({
         el: '#player-controls-value-display',
         template: SYNTH.templateCache['template-player-controls-value-display'],
         initialize: function() {
@@ -492,20 +506,51 @@ var SYNTH = SYNTH || {};
         
     });
     
+    var InstrumentControlView = Backbone.View.extend({
+        el: '#instrument-controls',
+        template: SYNTH.templateCache['template-instrument-controls'],
+        initialize: function() {
+            this.render();
+            this.model.bind("change:instruments", this.render, this);
+        },
+        render: function() {
+            var data = [];
+            var instruments = this.model.getInstruments();
+            var i;
+            for(i = 0; i < instruments.length; i++) {
+                data.push({
+                    "id": instruments[i].getId(),
+                    "name": instruments[i].getName(),
+                    "loudness": instruments[i].getLoudness()
+                });
+            }
+            this.$el.html(this.template({
+                "instruments": data
+            }));
+            return this;
+        }
+    });
+    
     
     // Variables ------------------------------------------------------------------------------------
     SYNTH.orchestra = new Orchestra({
         "TONES": SYNTH.TONES,
         "FREQS": SYNTH.FREQS
     });
-
     
     // Document.ready --------------------------------------------------------------------------------
     
     $(document).ready(function() {
         
-        SYNTH.orchestra.addInstrument("synthPiano");
-        var testInstrument = SYNTH.orchestra.getInstrument(0);
+        SYNTH.orchestra.addInstrument("synthPiano", "instrument1");
+        SYNTH.orchestra.addInstrument("synthPiano", "instrument2");
+        SYNTH.orchestra.addInstrument("synthPiano", "instrument3");
+        SYNTH.orchestra.addInstrument("synthPiano", "instrument4");
+        SYNTH.orchestra.addInstrument("synthPiano", "instrument5");
+        SYNTH.orchestra.addInstrument("synthPiano", "instrument6");
+        SYNTH.orchestra.addInstrument("synthPiano", "instrument7");
+        SYNTH.orchestra.addInstrument("synthPiano", "instrument8");
+        var testInstrument = SYNTH.orchestra.getInstrumentById(0);
         testInstrument.getPart().setArrayPoint(50, 0, true);
         testInstrument.getPart().setArrayPoint(55, 4, true);
         //addInstrument(synthPiano());
@@ -517,12 +562,21 @@ var SYNTH = SYNTH || {};
         
         // Bind views
         SYNTH.VIEWS = {};
-        SYNTH.VIEWS.playerControlButtons = new PlayerControlButtons({model: SYNTH.orchestra});
-        SYNTH.VIEWS.playerControlDisplay = new PlayerControlDisplay({model: SYNTH.orchestra});
+        SYNTH.VIEWS.playerControlButtons = new PlayerControlButtonsView({model: SYNTH.orchestra});
+        SYNTH.VIEWS.playerControlDisplay = new PlayerControlDisplayView({model: SYNTH.orchestra});
+        SYNTH.VIEWS.instrumentControl = new InstrumentControlView({model: SYNTH.orchestra});
         
+        function resizeUI() {
+            var windowHeight = $(window).height() - 125;
+            $('#site-main').attr({"style": "height: " + windowHeight + "px;"});
+        }
         
+        resizeUI();
+        $(window).resize(resizeUI);
         
-        
+        $('#site-bottom').click(function() {
+            $(this).toggleClass('expanded');
+        });
         
     });
     
