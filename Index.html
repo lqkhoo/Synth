@@ -9,7 +9,6 @@
 	<link type="text/css" rel="stylesheet" media="all" href="css/common.css"></link>
 	<!-- scripts -->
 	<script type="text/javascript" src="js/jquery-2.0.3.min.js"></script>
-	<script type="text/javascript" src="js/handlebars-v1.3.0.js"></script>
 	<script type="text/javascript" src="js/underscore-min.js"></script>
 	<script type="text/javascript" src="js/backbone-min.js"></script>
 	<script type="text/javascript" src="js/Backbone.ModelBinder.min.js"></script>
@@ -22,12 +21,8 @@
 		<div id="site-top">
 			<div id="logo">logo here</div>
 			<div id="upper-controls">
-				<div id="add-instrument-controls">
-					(add instrument)
-				</div>
-				<div id="player-controls">
-					<div id="player-controls-inner"></div>
-				</div>
+				<div id="add-instrument-controls">(add instrument)</div>
+				<div id="player-controls"><!-- template-player-controls --></div>
 			</div>
 		</div>
 		<div id="site-main">
@@ -35,12 +30,12 @@
 			</div>
 			<div id="site-content-wrapper">
 				<div id="site-content">
+					<div id="part-top"></div>
+					<div id="part-controls"><!-- template-part-controls --></div>
 				</div>
 			</div>
 			<div id="site-right">
-				<div id="instrument-controls">
-					
-				</div>
+				<div id="instrument-controls"><!-- template-instrument-controls --></div>
 			</div>
 		</div>
 		<div id="site-bottom">
