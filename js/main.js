@@ -10,6 +10,11 @@ var SYNTH = SYNTH || {};
 
 (function($, Backbone, Timbre, MUSIC, Note, Interval) {
     
+    if(! $) { throw 'jQuery not available.'; }
+    if(! Backbone) { throw 'Backbone.js not available.'; }
+    if(! Timbre) { throw 'Timbre.js not available. '; }
+    if(! MUSIC || ! Note || ! Interval) { throw 'MUSIC.js not available. '; }
+    
     // Template cacher ------------------------------------------------------------------------------
     function cacheTemplates(cacheObject, templateUrl, templateSelector) {
         if(! cacheObject) {
@@ -109,6 +114,7 @@ var SYNTH = SYNTH || {};
             
             var obj = {
                 'time': null,
+                'value': null,
                 'instrumentId': undefined
             };
             var i;
@@ -122,6 +128,17 @@ var SYNTH = SYNTH || {};
         getTime: function() {
             var time = this.get("time");
             return time;
+        },
+        
+        /** Gets value (duration) of note */
+        getValue: function() {
+            var value = this.get('value');
+            return value;
+        },
+        
+        /** Sets new value (duration) for note */
+        setValue: function(newValue) {
+            this.set({'value': newValue});
         },
         
         /** Set notes */
@@ -171,7 +188,8 @@ var SYNTH = SYNTH || {};
             'name': '(unnamed)',
             'beats': undefined,
             'loudness': 1,
-            'soundCode': null
+            'soundCode': null,
+            'isActive': false   // whether instrument is current instrument being edited
         },
         
         changeId: function(newId) {
@@ -262,6 +280,17 @@ var SYNTH = SYNTH || {};
         setSoundCode: function(newsoundCode) {
             this.set({'soundCode': newsoundCode});
         },
+
+        /** Get whether instrument is being actively edited */
+        getIsActive: function() {
+            var isActive = this.get('isActive');
+            return isActive;
+        },
+        
+        /** Set instrument as being actively edited */
+        setIsActive: function(isActive) {
+            this.set({isActive: isActive});
+        }
         
     });
     
@@ -284,6 +313,7 @@ var SYNTH = SYNTH || {};
                 'player': null,         // the interval Timbre.js object responsible for keeping beat and playing everything
                 'instruments': instruments,
                 'nextInstrumentId': 0,  // id given to next instrument added to orchestra
+                'activeInstrumentId': undefined, 
                 'scoreLength': 24       // 24 beats
             };
         },
@@ -353,7 +383,7 @@ var SYNTH = SYNTH || {};
             
             // Update orchestra
             this.getInstrumentCollection().add(instrument);
-            SYNTH.VIEWS.beatControls[nextInstrumentId] = new BeatControlView({model: instrument});
+            SYNTH.views.beatControls[nextInstrumentId] = new BeatControlView({model: instrument});
             
             nextInstrumentId += 1;
             this.set({
@@ -373,6 +403,14 @@ var SYNTH = SYNTH || {};
             }
         },
         
+        /** Set new active instrument */
+        setNewActiveInstrument: function(id) {
+            if(this.get('activeInstrumentId') !== undefined) {
+                this.getInstrumentById(this.get('activeInstrumentId')).setIsActive(false);
+            }
+            this.set({'activeInstrumentId': id});
+            this.getInstrumentById(id).setIsActive(true);
+        },
         
         // Score controls
         
@@ -570,28 +608,63 @@ var SYNTH = SYNTH || {};
         _modelBinder: undefined,
         _collectionBinder: undefined,
         initialize: function() {
-            var bindings = {
+            
+            var converter = function(direction, value) {
+                if(value) { return 'btn-primary'; }
+                return 'btn-default';
+            };
+            
+            var modelBindings = {
                 'name': {
                     selector: '[data-attr="name"]'
                 },
-                'id': '[data-attr="instrument-id"]',
-                'loudness': '[data-attr="loudness"]'
+                'id': [
+                    {
+                        selector: '[data-attr="instrument-id"]',
+                        
+                    },
+                    {
+                        selector: '.instrument-control-block',
+                        elAttribute: 'data-id'
+                    }
+                ],
+                'loudness': '[data-attr="loudness"]',
+                'isActive': {
+                    selector: '.instrument-control-block',
+                    elAttribute: 'class',
+                    converter: converter
+                }
             };
+                        
             this._modelBinder = new Backbone.ModelBinder();
             this._collectionBinder = new Backbone.CollectionBinder(
-                new Backbone.CollectionBinder.ElManagerFactory(this._componentTemplate, bindings)
+                new Backbone.CollectionBinder.ElManagerFactory(this._componentTemplate, modelBindings)
             );
             this.render();
         },
         
         render: function() {
+            
             this.$el.html(this._template);
             this._collectionBinder.bind(this.model.getInstrumentCollection(), this.el);
             return this;
         },
         
+        events: {
+            'click .instrument-control-block': 'setAsActiveInstrument',
+            'click *': 'stopPropagation'
+        },
+        
         close: function() {
             this._collectionBinder.unbind();
+        },
+        
+        setAsActiveInstrument: function(event) {
+            this.model.setNewActiveInstrument(parseInt($(event.target).attr('data-id')));
+        },
+        
+        stopPropagation: function(event) {
+            event.stopPropagation();
         }
         
     });
@@ -603,10 +676,23 @@ var SYNTH = SYNTH || {};
         _modelBinder: undefined,
         _collectionBinder: undefined,
         initialize: function() {
+            
+            var converter = function(direction, value) {
+                if(value) {
+                    return 'active';
+                }
+                return 'inactive';
+            };
+            
             var bindings = {
                 'id': {
                     selector: '.part-control-block-inner',
                     elAttribute: 'data-id'
+                },
+                'isActive': {
+                    selector: '.part-control-block-inner',
+                    elAttribute: 'class',
+                    converter: converter
                 }
             };
             this._modelBinder = new Backbone.ModelBinder();
@@ -654,9 +740,8 @@ var SYNTH = SYNTH || {};
             };
             var i;
             for(i = 0; i < 88; i++) {
-                bindings[i] = {selector: '.' + i, elAttribute: 'active' };
+                bindings[i] = {selector: '.' + i, elAttribute: 'data-active' };
             }
-            console.log(bindings);
             
             this._modelBinder = new Backbone.ModelBinder();
             this._collectionBinder = new Backbone.CollectionBinder(
@@ -678,7 +763,11 @@ var SYNTH = SYNTH || {};
     });
     
     // Variables ------------------------------------------------------------------------------------
-    SYNTH.orchestra = new Orchestra({
+    
+    SYNTH.views = {};
+    SYNTH.models = {};
+    
+    SYNTH.models.orchestra = new Orchestra({
         'TONES': SYNTH.TONES,
         'FREQS': SYNTH.FREQS
     });
@@ -689,37 +778,50 @@ var SYNTH = SYNTH || {};
         
         
         // Bind views
-        SYNTH.VIEWS = {};
-        SYNTH.VIEWS.playerControl = new PlayerControlView({model: SYNTH.orchestra});
-        SYNTH.VIEWS.instrumentControl = new InstrumentControlView({model: SYNTH.orchestra});
-        SYNTH.VIEWS.instrumentPartControl = new InstrumentPartView({model: SYNTH.orchestra});
-        SYNTH.VIEWS.beatControls = {};
-        SYNTH.VIEWS.noteControls = {};
+        SYNTH.views.playerControl = new PlayerControlView({model: SYNTH.models.orchestra});
+        SYNTH.views.instrumentControl = new InstrumentControlView({model: SYNTH.models.orchestra});
+        SYNTH.views.instrumentPartControl = new InstrumentPartView({model: SYNTH.models.orchestra});
+        SYNTH.views.beatControls = {};
         
         
         // Preconfigure orchestra
-        SYNTH.orchestra.addInstrument('synthPiano', 'instrument1');
-        SYNTH.orchestra.addInstrument('synthPiano', 'instrument2');
-        SYNTH.orchestra.addInstrument('synthPiano', 'instrument3');
-        var testInstrument = SYNTH.orchestra.getInstrumentById(0);
+        SYNTH.models.orchestra.addInstrument('synthPiano', 'instrument1');
+        SYNTH.models.orchestra.addInstrument('synthPiano', 'instrument2');
+        SYNTH.models.orchestra.addInstrument('synthPiano', 'instrument3');
+        var testInstrument = SYNTH.models.orchestra.getInstrumentById(0);
         testInstrument.setNote(0, 50, true);
         testInstrument.setNote(4, 55, true);
         
         // Play
-        SYNTH.orchestra.play();
+        SYNTH.models.orchestra.play();
         
         // UI ops
-        function resizeUI() {
-            var windowHeight = $(window).height() - 125;
-            $('#site-main').attr({'style': 'height: ' + windowHeight + 'px;'});
+        function initUI() {
+            
+            function initializeTop() {
+                var parent = $('#part-top');
+                var i;
+                parent.append($('<div></div>'));
+                for(i = 0; i < 88; i++) {
+                    parent.append($('<div>' + SYNTH.TONES[i].charAt(0)+ '</div>'));
+                }
+            }
+            
+            function resizeUI() {
+                var windowHeight = $(window).height() - 125;
+                $('#site-main').attr({'style': 'height: ' + windowHeight + 'px;'});
+            }
+            
+            initializeTop();
+            resizeUI();
+            $(window).resize(resizeUI);
+            
+            $('#site-bottom').click(function() {
+                $(this).toggleClass('expanded');
+            });
         }
         
-        resizeUI();
-        $(window).resize(resizeUI);
-        
-        $('#site-bottom').click(function() {
-            $(this).toggleClass('expanded');
-        });
+        initUI();
         
     });
     
