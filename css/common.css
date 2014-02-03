@@ -59,21 +59,30 @@ legend {
 	overflow: auto;
 }
 #part-top {
-	font-size: 0.7em;
-	height: 40px;
+	font-size: 0.8em;
+	height: 60px;
 	width: 1810px;
 	border-bottom: 1px solid #ccc;
 	background-color: #eee;
 }
 #part-top > div {
+	padding-top: 10px;
 	width: 20px;
 	height: 100%;
 	border-right: 1px solid #ccc;
 	float: left;
+	text-align: center;
 }
 #part-top > div:first-child {
 	width: 50px;
 }
+#part-top .black-key {
+	background-color: #666;
+	color: #fff;
+}
+#part-top .num {
+}
+
 #part-controls {
 	height: 100%;
 }
@@ -115,18 +124,20 @@ legend {
 	width: 50px;
 	background-color: #eee;
 	border-bottom: 1px solid #ccc;
-	padding-left: 5px;
+	padding-right: 5px;
+	color: #666;
+	text-align: right;
 }
 
-div[data-active="true"] {
+.dot[data-active="true"] {
 	background-color: #eee;
 }
 
-div[data-active="true"] > .dot {
+.dot[data-active="true"] > div {
 	background-color: #ccc;
 } 
 
-.dot {
+.dot > div {
 	border-radius: 2px;
 	position: relative;
 	height: 70%;

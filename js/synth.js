@@ -50,7 +50,7 @@ var SYNTH = SYNTH || {};
     
     // Generate frequency table -------------------------------------------------------
     (function() {
-        var tones = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'];
+        var tones = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'A', 'Bb', 'B'];
         var octaves = ['1', '2', '3', '4', '5', '6', '7', '8'];
         
         SYNTH.TONES = ['A0', 'Bb0', 'B0'];
@@ -251,7 +251,6 @@ var SYNTH = SYNTH || {};
         setNote: function(time, tone, bool) {
             var beats = this.get("beats").models;
             var i;
-            //TODO mark
             for(i = 0; i < beats.length; i++) {
                 if(beats[i].getTime() === time) {
                     beats[i].setNote(tone, bool);
@@ -412,6 +411,10 @@ var SYNTH = SYNTH || {};
             this.getInstrumentById(id).setIsActive(true);
         },
         
+        setNoteToInstrument: function(instrumentId, beat, pitch, isActive) {
+            this.getInstrumentById(instrumentId).setNote(beat, pitch, isActive);
+        },
+        
         // Score controls
         
         /** Gets score length */
@@ -502,7 +505,7 @@ var SYNTH = SYNTH || {};
             
             // set current beat to given offset
             this.setCurrentBeat(startBeat);
-                        
+            
             // initialize interval Timbre.js object, set to play the instruments
             this.set({'player': Timbre('interval', {interval: mspb}, function(count) {
                     var i, j;
@@ -510,6 +513,7 @@ var SYNTH = SYNTH || {};
                     var timbreArray;
                     var beat;
                     var instruments = self.getInstruments();
+                    
                     for(i = 0; i < instruments.length; i++) {
                         beat = instruments[i].getBeats()[currentBeat];
                         if(! beat ) {
@@ -517,6 +521,10 @@ var SYNTH = SYNTH || {};
                             break;
                         }
                         timbreArray = [];
+                        //TODO: optimization
+                        // Cache which columns actually have anything in them in the whole piece
+                        // since it is very unlikely that an instrument would use all 88 pitches
+                        // and only scan those columns
                         for(j = 0; j < 88; j++) {
                             if(beat.getNote(j) === true) {
                                 timbreArray.push(self.get('FREQS')[j]);
@@ -708,8 +716,48 @@ var SYNTH = SYNTH || {};
             return this;
         },
         
+        events: {
+            'mouseup .dot': '_onDotClick',
+            'mouseup .dot > div': '_onInnerDotClick',
+            'mousedown .dot': 'foo'
+        },
+        
         close: function() {
             this._collectionBinder.unbind();
+        },
+        
+        _onDotClick: function(event) {
+            event.stopPropagation();
+            var target = $(event.target);
+            this.onDotClick(target);
+        },
+        
+        _onInnerDotClick: function(event) {
+            event.stopPropagation();
+            var target = $(event.target).parent();
+            this.onDotClick(target);
+        },
+        
+        onDotClick: function(target) {
+            var isActive = target.attr('data-active');
+            if(isActive === 'true') {
+                isActive = true;
+            } else {
+                isActive = false;
+            }
+            var pitch = parseInt(target.attr('data-pitch'));
+            var parent = target.parent();
+            var beat = parseInt(parent.attr('data-time'));
+            var instrumentId = parseInt(parent.parent().parent().attr('data-id'));
+            this.model.setNoteToInstrument(instrumentId, beat, pitch, !isActive);
+        },
+        
+        foo: function(event) {
+            console.log(event);
+        },
+        
+        stopPropagation: function(event) {
+            event.stopPropagation();
         }
     });
     
@@ -740,7 +788,7 @@ var SYNTH = SYNTH || {};
             };
             var i;
             for(i = 0; i < 88; i++) {
-                bindings[i] = {selector: '.' + i, elAttribute: 'data-active' };
+                bindings[i] = {selector: '[data-pitch="' + i + '"]', elAttribute: 'data-active' };
             }
             
             this._modelBinder = new Backbone.ModelBinder();
@@ -752,7 +800,7 @@ var SYNTH = SYNTH || {};
         },
         
         render: function() {
-            this.$el.html(this._template); // this doesn't do anything, but is required for the collectionbinder to render
+            //this.$el.html(this._template); // this doesn't do anything, but is required for the collectionbinder to render
             this._collectionBinder.bind(this.model.getBeatsCollection(), this.el);
             return this;
         },
@@ -760,6 +808,7 @@ var SYNTH = SYNTH || {};
         close: function() {
             this._collectionBinder.unbind();
         }
+                
     });
     
     // Variables ------------------------------------------------------------------------------------
@@ -776,7 +825,6 @@ var SYNTH = SYNTH || {};
     
     $(document).ready(function() {
         
-        
         // Bind views
         SYNTH.views.playerControl = new PlayerControlView({model: SYNTH.models.orchestra});
         SYNTH.views.instrumentControl = new InstrumentControlView({model: SYNTH.models.orchestra});
@@ -784,16 +832,12 @@ var SYNTH = SYNTH || {};
         SYNTH.views.beatControls = {};
         
         
+        
+        
         // Preconfigure orchestra
         SYNTH.models.orchestra.addInstrument('synthPiano', 'instrument1');
         SYNTH.models.orchestra.addInstrument('synthPiano', 'instrument2');
         SYNTH.models.orchestra.addInstrument('synthPiano', 'instrument3');
-        var testInstrument = SYNTH.models.orchestra.getInstrumentById(0);
-        testInstrument.setNote(0, 50, true);
-        testInstrument.setNote(4, 55, true);
-        
-        // Play
-        SYNTH.models.orchestra.play();
         
         // UI ops
         function initUI() {
@@ -801,10 +845,27 @@ var SYNTH = SYNTH || {};
             function initializeTop() {
                 var parent = $('#part-top');
                 var i;
+                var div;
+                var str;
                 parent.append($('<div></div>'));
                 for(i = 0; i < 88; i++) {
-                    parent.append($('<div>' + SYNTH.TONES[i].charAt(0)+ '</div>'));
+                    str = SYNTH.TONES[i];
+                    div = $('<div></div>');
+                    if(str === 'C4') {
+                        div.attr({'id': 'mid'});
+                    }
+                    if(str.length > 2) {
+                        div.append($('<div>' + str.substr(0, 2)+ '</div>'));
+                        div.append($('<div>&nbsp;</div>'));
+                        div.addClass('black-key');
+                    } else {
+                        div.append($('<div>&nbsp;</div>'));
+                        div.append($('<div>' + str.charAt(0)+ '</div>'));
+                    }
+                    div.append($('<div class="num">' + str.charAt(str.length - 1) + '</div>'));
+                    parent.append(div);
                 }
+                
             }
             
             function resizeUI() {
