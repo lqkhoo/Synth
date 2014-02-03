@@ -73,7 +73,7 @@ legend {
 }
 .beat-control-block-header {
 	height: 20px;
-	width: 1830px;
+	width: 1810px;
 	border-bottom: 1px solid #ccc;
 	background-color: #eee;
 }
@@ -90,7 +90,7 @@ legend {
 .beat-control-block {
 	display: inline-block;
 	height: 20px;
-	width: 1830px;
+	width: 1810px;
 	border-bottom: 1px solid #ccc;
 }
 .beat-control-block-inner {
