@@ -1,10 +1,59 @@
 <div class="template" id="template-player-controls">
-	<button id="button-play-pause" type="button" class="btn btn-default"></button>
-	<span>Beat: </span><span data-attr="beat"></span>
+	<div class="nav-header">Playback</div>
+	<div id="playback-buttons-wrapper">
+		<span class="btn-group">
+			<button id="button-to-beginning" class="btn btn-default glyphicon glyphicon-fast-backward"></button>
+			<button id="button-play-pause" type="button" class="btn btn-default"></button>
+			<button id="button-to-end" class="btn btn-default glyphicon glyphicon-fast-forward"></button>
+		</span>
+		<span>
+			<button id="button-loop" class="btn btn-default glyphicon glyphicon-repeat"></button>
+		</span>
+		<span data-attr="beat"></span>
+	</div>
+	
+	<div id="input-playback-bar-wrapper">
+		<span>0</span>
+		<input id="input-playback-bar" type="range"></input>
+		<span>100</span>
+	</div>
+</div>
+
+<div class="template" id="template-bar-controls">
+	<div class="nav-header">Beats and bars</div>
+	<div>
+		<div>
+			<div id="beats-per-bar-title">
+				<span>Beats per bar</span> (<span id="beats-per-bar-display"></span>)
+			</div>
+			<div id="beats-per-bar-container">
+				<span>4</span>
+				<input id="beats-per-bar-input" type="range" min="4" max="24"></input>
+				<span>24</span>
+				
+			</div>
+		</div>
+	</div>
+	<div>
+		<div>
+			<span><button id="button-add-bars" class="btn btn-default btn-xs">Add</button></span>
+			<span><input id="bars-per-addition" type="text" class="form-control"></input></span>
+			<span>bar(s)</span>
+		</div>
+		<div>
+			<span><button id="button-add-beats" class="btn btn-default btn-xs">Add</button></span>
+			<input id="beats-per-addition" type="text" class="form-control"></input>
+			<span>beat(s)</span>
+		</div>
+		<div>
+			<span><button id="button-delete-beats" class="btn btn-default btn-xs">Delete</button></span>
+			<span>Selected beat(s)</span>
+		</div>
+	</div>
 </div>
 
 <div class="template" id="template-instrument-controls">
-	<div class="instrument-block header">Instruments</div>
+	<div class="nav-header">Instruments</div>
 </div>
 
 <div class="template" id="template-instrument-control-block">

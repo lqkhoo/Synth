@@ -8,6 +8,14 @@ legend {
 	height: 100px;
 }
 
+.nav-header {
+	padding: 3px 10px !important;
+	width: 100% !important;
+	height: 20px !important;
+	border-bottom: 1px solid #ddd;
+	color: #666;
+	font-size: 0.8em;
+}
 #logo {
 	width: 200px;
 	float: left;
@@ -20,23 +28,79 @@ legend {
 
 #upper-controls > div {
 	float: right;
-	border: 1px solid #ccc;
+	border-left: 1px solid #ccc;
+	border-right: 1px solid #fff;
+	height: 100%;
+}
+
+#waveform-editor {
+	width: 200px;
 }
 
 #player-controls {
-	width: 200px;
-	height: 100%;
+	width: 250px;
+}
+#player-controls .btn-group {
+	margin: auto;
+}
+#player-controls [data-attr="beat"] {
+	margin-left: 10px;
+}
+#playback-buttons-wrapper {
+	margin: 5px 20px;
+}
+#input-playback-bar-wrapper {
+	padding: 5px;
+}
+#input-playback-bar-wrapper > span {
+	display: block;
+	float: left;
+	padding: 5px;
+}
+#input-playback-bar {
+	display: block;
+	float: left;
+	width: 70%;
 }
 
-#add-instrument-controls {
-	width: 200px;
-	height: 100%;
+#add-bar-controls {
+	width: 350px;
 }
-
-#player-controls-buttons,
-#player-controls-value-display {
+#add-bar-controls > div {
+	width: 50%;
+	height: 100%;
+	float: left;
+	padding: 5px;
+}
+#add-bar-controls span {
+	color: #666;
+	font-size: 0.9em;
+}
+#add-bar-controls input[type="text"] {
+	padding: 0.2em;
+	line-height: 1em;
+	height: 1.5em;
+	width: 30px;
 	display: inline-block;
 }
+#beats-per-bar-title {
+	margin-left: 15px;
+}
+#beats-per-bar-container > span {
+	display: block;
+	float: left;
+	padding: 5px;
+}
+#beats-per-bar-input {
+	display: block;
+	float: left;
+	padding: 5px 0;
+	width: 70%;
+}
+#add-instrument-controls {
+	width: 200px;
+}
+
 
 
 
@@ -80,11 +144,8 @@ legend {
 	background-color: #666;
 	color: #fff;
 }
-#part-top .num {
-}
 
 #part-controls {
-	height: 100%;
 }
 .part-control {
 	height: 0;
@@ -126,6 +187,7 @@ legend {
 	border-bottom: 1px solid #ccc;
 	padding-right: 5px;
 	color: #666;
+	font-size: 0.8em;
 	text-align: right;
 }
 
@@ -162,11 +224,6 @@ legend {
 .instrument-control-block {
 	padding: 1em;
 	text-align: left;
-}
-
-.instrument-control-block.header {
-	padding: 0 1em;
-	border: 0;
 }
 .instrument-control-block > div {
 	float: left;

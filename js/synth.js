@@ -247,6 +247,17 @@ var SYNTH = SYNTH || {};
             this.set({'beats': newBeats});
         },
         
+        /** Add n beats at the end, starting from given beat */
+        addBeats: function(n, startBeat) {
+            var beatsCollection = this.getBeatsCollection();
+            var i;
+            for(i = 0; i < n; i++) {
+                beatsCollection.add(new Beat({
+                    time: startBeat + i
+                }));
+            }
+        },
+        
         /** Sets specific beat */
         setNote: function(time, tone, bool) {
             var beats = this.get("beats").models;
@@ -307,6 +318,9 @@ var SYNTH = SYNTH || {};
                 'scale': 'chromatic',   // 'chromatic', 'major', 'harmonic minor', 'melodic minor', 'major pentatonic', 'minor pentatonic'
                 'mspb': 300,            // milliseconds per beat
                 'currentBeat': 0,
+                'beatsPerBar': 16,
+                'barsPerAdd': 1,
+                'beatsPerAdd': 1,
                 'isLooping': true,
                 'isPlaying': false,
                 'player': null,         // the interval Timbre.js object responsible for keeping beat and playing everything
@@ -471,6 +485,44 @@ var SYNTH = SYNTH || {};
             this.set({'currentBeat': newCurrentBeat});
         },
         
+        /** Get beats per bar */
+        getBeatsPerBar: function() {
+            var beatsPerBar = this.get('beatsPerBar');
+            return beatsPerBar;
+        },
+        
+        /** Sets new number of beats per bar */
+        setBeatsPerBar: function(newBeatsPerBar) {
+            this.set({'beatsPerBar': newBeatsPerBar});
+        },
+        
+        /** Adds new bars */
+        addBars: function() {
+            var beatsToAdd = this.get('beatsPerAdd') * this.getBeatsPerBar();
+            this._addBeats(beatsToAdd);
+        },
+        
+        /** Add beats */
+        addBeats: function() {
+            var beatsPerAdd = this.get('beatsPerAdd');
+            this._addBeats(beatsPerAdd);
+        },
+        
+        _addBeats: function(beatsToAdd) {
+            var instruments = this.getInstruments();
+            var scoreLength = this.getScoreLength();
+            var i;
+            for(i = 0; i < instruments.length; i++) {
+                instruments[i].addBeats(beatsToAdd, scoreLength);
+            }
+            this.setScoreLength(scoreLength + beatsToAdd);
+        },
+        
+        /** Delete selected beats */
+        deleteBeats: function() {
+            //TODO
+        },
+        
         // Player controls
         
         /** Get loop */
@@ -557,8 +609,20 @@ var SYNTH = SYNTH || {};
             if(this.getIsPlaying()) {
                 this.stop();
             } else {
-                this.play();
+                this.playFromBeat(this.getCurrentBeat());
             }
+        },
+        
+        /** Stop playing and rewind to beginning */
+        rewindToStart: function() {
+            this.stop();
+            this.setCurrentBeat(0);
+        },
+        
+        /** Stop playing and fast forward to end */
+        forwardToEnd: function() {
+            this.stop();
+            this.setCurrentBeat(this.getScoreLength());
         }
         
     });
@@ -575,21 +639,41 @@ var SYNTH = SYNTH || {};
         },
         
         render: function() {
-            var converter = function(direction, value) {
+            var buttonClassConverter = function(direction, value) {
                 if(value) {
-                    return 'glyphicon glyphicon-stop';
+                    return 'glyphicon glyphicon-pause';
                 } else {
                     return 'glyphicon glyphicon-play';
                 }
             };
+            
+            var inputBarConverter = function(direction, value) {
+                if(direction === 'ViewToModel') {
+                    return parseInt(value);
+                }
+                return value;
+            };
+            
             this.$el.html(this._template);
             var bindings = {
                 'isPlaying': {
                     selector: '#button-play-pause',
                     elAttribute: "class",
-                    converter: converter
+                    converter: buttonClassConverter
                 },
-                'currentBeat': '[data-attr="beat"]'
+                'currentBeat': [
+                    {
+                        selector: '[data-attr="beat"]'
+                    },
+                    {
+                        selector: '#input-playback-bar'
+                    }
+                ],
+                'scoreLength': {
+                    selector: '#input-playback-bar',
+                    elAttribute: 'max',
+                    converter: inputBarConverter
+                }
             };
             this._modelBinder.bind(this.model, this.el, bindings);
             return this;
@@ -600,11 +684,21 @@ var SYNTH = SYNTH || {};
         },
         
         events: {
-            'click #button-play-pause': 'togglePlay'
+            'click #button-play-pause': 'togglePlay',
+            'click #button-to-beginning': 'rewindToStart',
+            'click #button-to-end': 'forwardToEnd'
         },
         
         togglePlay: function() {
             this.model.togglePlay();
+        },
+        
+        rewindToStart: function() {
+            this.model.rewindToStart();
+        },
+        
+        forwardToEnd: function() {
+            this.model.forwardToEnd();
         }
         
     });
@@ -717,9 +811,9 @@ var SYNTH = SYNTH || {};
         },
         
         events: {
-            'mouseup .dot': '_onDotClick',
-            'mouseup .dot > div': '_onInnerDotClick',
-            'mousedown .dot': 'foo'
+            'click .dot': '_onDotClick',
+            'click .dot > div': '_onInnerDotClick',
+            'mousedown .dot': 'onMouseDown'
         },
         
         close: function() {
@@ -752,8 +846,9 @@ var SYNTH = SYNTH || {};
             this.model.setNoteToInstrument(instrumentId, beat, pitch, !isActive);
         },
         
-        foo: function(event) {
+        onMouseDown: function(event) {
             console.log(event);
+            event.preventDefault();
         },
         
         stopPropagation: function(event) {
@@ -811,6 +906,73 @@ var SYNTH = SYNTH || {};
                 
     });
     
+    var BarControlView = Backbone.View.extend({
+        el: '#add-bar-controls',
+        _template: SYNTH.templateCache['template-bar-controls'],
+        _modelBinder: undefined,
+        initialize: function() {
+            this._modelBinder = new Backbone.ModelBinder();
+            this.render();
+        },
+        
+        render: function() {
+            
+            var converter = function(direction, value) {
+                if(direction === 'ViewToModel') {
+                    return parseInt(value);
+                }
+                return value;
+            };
+            
+            var bindings = {
+                'beatsPerBar': [
+                    {
+                        selector: '#beats-per-bar-input',
+                        converter: converter
+                    },
+                    {
+                        selector: '#beats-per-bar-display'
+                    }
+                ],
+                'barsPerAdd': {
+                    selector: '#bars-per-addition',
+                    converter: converter
+                },
+                'beatsPerAdd': {
+                    selector: '#beats-per-addition',
+                    converter: converter
+                }
+            };
+            
+            this.$el.html(this._template);
+            this._modelBinder.bind(this.model, this.el, bindings);
+        },
+        
+        events: {
+            'click #button-add-bars': 'addBars',
+            'click #button-add-beats': 'addBeats',
+            'click #button-delete-beats': 'deleteBeats'
+        },
+        
+        close: function() {
+            this.modelBinder.unbind();
+        },
+        
+        addBars: function(event) {
+            this.model.addBars();
+        },
+        
+        addBeats: function(event) {
+            this.model.addBeats();
+        },
+        
+        deleteBeats: function(event) {
+            //TODO
+            console.log('delete beats fired');
+            console.log(event);
+        }
+    });
+    
     // Variables ------------------------------------------------------------------------------------
     
     SYNTH.views = {};
@@ -827,6 +989,7 @@ var SYNTH = SYNTH || {};
         
         // Bind views
         SYNTH.views.playerControl = new PlayerControlView({model: SYNTH.models.orchestra});
+        SYNTH.views.barControl = new BarControlView({model: SYNTH.models.orchestra});
         SYNTH.views.instrumentControl = new InstrumentControlView({model: SYNTH.models.orchestra});
         SYNTH.views.instrumentPartControl = new InstrumentPartView({model: SYNTH.models.orchestra});
         SYNTH.views.beatControls = {};
