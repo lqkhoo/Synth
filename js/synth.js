@@ -497,7 +497,7 @@ var SYNTH = SYNTH || {};
         
         /** Adds new bars */
         addBars: function() {
-            var beatsToAdd = this.get('beatsPerAdd') * this.getBeatsPerBar();
+            var beatsToAdd = this.get('barsPerAdd') * this.getBeatsPerBar();
             this._addBeats(beatsToAdd);
         },
         
