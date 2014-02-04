@@ -809,7 +809,7 @@ var SYNTH = SYNTH || {};
         
         toggleLoop: function() {
             this.model.toggleLoop();
-        },
+        }
         
     });
     
@@ -832,7 +832,7 @@ var SYNTH = SYNTH || {};
                 },
                 'id': [
                     {
-                        selector: '[data-attr="instrument-id"]',
+                        selector: '[data-attr="instrument-id"]'
                         
                     },
                     {
@@ -923,7 +923,7 @@ var SYNTH = SYNTH || {};
         events: {
             'mousedown .dot': '_onMouseDownDot',
             'mousedown .time': 'onMouseDownTime',
-            'mouseup': 'onMouseUp',
+            'mouseup': 'onMouseUp'
         },
         
         close: function() {
@@ -1194,8 +1194,6 @@ var SYNTH = SYNTH || {};
         
         // Preconfigure orchestra
         SYNTH.models.orchestra.addInstrument('synthPiano', 'instrument1');
-        SYNTH.models.orchestra.addInstrument('synthPiano', 'instrument2');
-        SYNTH.models.orchestra.addInstrument('synthPiano', 'instrument3');
         
         // UI ops
         function initUI() {
