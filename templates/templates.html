@@ -1,180 +1,287 @@
 <html>
-	<div class="template" id="template-player-controls">
-		<div class="nav-header">Playback</div>
-		<div id="playback-buttons-wrapper">
-			<span class="btn-group">
-				<button id="button-to-beginning" class="btn btn-default glyphicon glyphicon-fast-backward"></button>
-				<button id="button-play-pause" type="button" class="btn btn-default"></button>
-				<button id="button-to-end" class="btn btn-default glyphicon glyphicon-fast-forward"></button>
-			</span>
-			<span>
-				<button id="button-loop" class="btn btn-default glyphicon glyphicon-repeat"></button>
-			</span>
-			<span data-attr="beat"></span>
-		</div>
-		
-		<div id="input-playback-bar-wrapper">
-			<span>1</span>
-			<input id="input-playback-bar" type="range" min="1"></input>
-			<span id="score-length"></span>
-		</div>
+<div class="template" id="template-player-controls">
+	<div class="nav-header">Playback</div>
+	<div id="playback-buttons-wrapper">
+		<span class="btn-group">
+			<button id="button-to-beginning"
+				class="btn btn-default glyphicon glyphicon-fast-backward"></button>
+			<button id="button-play-pause" type="button" class="btn btn-default"></button>
+			<button id="button-to-end"
+				class="btn btn-default glyphicon glyphicon-fast-forward"></button>
+		</span> <span>
+			<button id="button-loop"
+				class="btn btn-default glyphicon glyphicon-repeat"></button>
+		</span> <span data-attr="beat"></span>
 	</div>
 
-	<div class="template" id="template-bar-controls">
-		<div class="nav-header">Beats and bars</div>
+	<div id="input-playback-bar-wrapper">
+		<span>1</span> <input id="input-playback-bar" type="range" min="1"></input>
+		<span id="score-length"></span>
+	</div>
+</div>
+
+
+
+<div class="template" id="template-bar-controls">
+	<div class="nav-header">Beats and bars</div>
+	<div>
 		<div>
-			<div>
-				<div id="beats-per-bar-title">
-					<span>Beats per bar</span> (<span id="beats-per-bar-display"></span>)
-				</div>
-				<div id="beats-per-bar-container">
-					<span>4</span>
-					<input id="beats-per-bar-input" type="range" min="4" max="24"></input>
-					<span>24</span>
-					
-				</div>
+			<div id="beats-per-bar-title">
+				<span>Beats per bar</span> (<span id="beats-per-bar-display"></span>)
 			</div>
+			<div id="beats-per-bar-container">
+				<span>4</span> <input id="beats-per-bar-input" type="range" min="4"
+					max="24"></input> <span>24</span>
+
+			</div>
+		</div>
+	</div>
+	<div>
+		<div>
+			<span><button id="button-add-bars"
+					class="btn btn-default btn-xs">Add</button></span> <span><input
+				id="bars-per-addition" type="text" class="form-control"></input></span> <span>bar(s)</span>
 		</div>
 		<div>
-			<div>
-				<span><button id="button-add-bars" class="btn btn-default btn-xs">Add</button></span>
-				<span><input id="bars-per-addition" type="text" class="form-control"></input></span>
-				<span>bar(s)</span>
-			</div>
-			<div>
-				<span><button id="button-add-beats" class="btn btn-default btn-xs">Add</button></span>
-				<input id="beats-per-addition" type="text" class="form-control"></input>
-				<span>beat(s)</span>
-			</div>
-			<div>
-				<span><button id="button-delete-beats" class="btn btn-default btn-xs">Delete</button></span>
-				<span>Selected beat(s)</span>
-			</div>
+			<span><button id="button-add-beats"
+					class="btn btn-default btn-xs">Add</button></span> <input
+				id="beats-per-addition" type="text" class="form-control"></input> <span>beat(s)</span>
 		</div>
-	</div>
-
-	<div class="template" id="template-instrument-controls">
-		<div class="nav-header">Instruments</div>
-	</div>
-
-	<div class="template" id="template-instrument-control-block">
 		<div>
-			<div class="instrument-control-block btn btn-default">
-				<div>
-					<input type="text" data-attr="name" class="form-control"></input>
-					<span data-attr="instrument-id"></span>
-				</div>
-				<div>
-					<span>Vol: </span><span data-attr="loudness"></span>
-				</div>
-				<div style="font-size: 0.7em;">waveform | delete</div>
+			<span><button id="button-delete-beats"
+					class="btn btn-default btn-xs">Delete</button></span> <span>Selected
+				beat(s)</span>
+		</div>
+	</div>
+</div>
+
+
+
+<div class="template" id="template-instrument-controls">
+	<div class="nav-header">Instruments</div>
+</div>
+
+
+
+<div class="template" id="template-instrument-control-block">
+	<div>
+		<div class="instrument-control-block btn btn-default">
+			<div>
+				<input type="text" data-attr="name" class="form-control"></input> <span
+					data-attr="instrument-id"></span>
+			</div>
+			<div>
+				<span>Vol: </span><span data-attr="loudness"></span>
+			</div>
+			<div style="font-size: 0.7em;">waveform | delete</div>
+		</div>
+	</div>
+</div>
+
+
+
+<div class="template" id="template-part-controls"></div>
+<div class="template" id="template-part-control-array">
+	<div class="part-control">
+		<div class="part-control-block-inner">
+			<div class="part-control-v-grid">
+				<div data-pitch="0"></div>
+				<div data-pitch="1"></div>
+				<div data-pitch="2"></div>
+				<div data-pitch="3"></div>
+				<div data-pitch="4"></div>
+				<div data-pitch="5"></div>
+				<div data-pitch="6"></div>
+				<div data-pitch="7"></div>
+				<div data-pitch="8"></div>
+				<div data-pitch="9"></div>
+				<div data-pitch="10"></div>
+				<div data-pitch="11"></div>
+				<div data-pitch="12"></div>
+				<div data-pitch="13"></div>
+				<div data-pitch="14"></div>
+				<div data-pitch="15"></div>
+				<div data-pitch="16"></div>
+				<div data-pitch="17"></div>
+				<div data-pitch="18"></div>
+				<div data-pitch="19"></div>
+				<div data-pitch="20"></div>
+				<div data-pitch="21"></div>
+				<div data-pitch="22"></div>
+				<div data-pitch="23"></div>
+				<div data-pitch="24"></div>
+				<div data-pitch="25"></div>
+				<div data-pitch="26"></div>
+				<div data-pitch="27"></div>
+				<div data-pitch="28"></div>
+				<div data-pitch="29"></div>
+				<div data-pitch="30"></div>
+				<div data-pitch="31"></div>
+				<div data-pitch="32"></div>
+				<div data-pitch="33"></div>
+				<div data-pitch="34"></div>
+				<div data-pitch="35"></div>
+				<div data-pitch="36"></div>
+				<div data-pitch="37"></div>
+				<div data-pitch="38"></div>
+				<div data-pitch="39"></div>
+				<div data-pitch="40"></div>
+				<div data-pitch="41"></div>
+				<div data-pitch="42"></div>
+				<div data-pitch="43"></div>
+				<div data-pitch="44"></div>
+				<div data-pitch="45"></div>
+				<div data-pitch="46"></div>
+				<div data-pitch="47"></div>
+				<div data-pitch="48"></div>
+				<div data-pitch="49"></div>
+				<div data-pitch="50"></div>
+				<div data-pitch="51"></div>
+				<div data-pitch="52"></div>
+				<div data-pitch="53"></div>
+				<div data-pitch="54"></div>
+				<div data-pitch="55"></div>
+				<div data-pitch="56"></div>
+				<div data-pitch="57"></div>
+				<div data-pitch="58"></div>
+				<div data-pitch="59"></div>
+				<div data-pitch="60"></div>
+				<div data-pitch="61"></div>
+				<div data-pitch="62"></div>
+				<div data-pitch="63"></div>
+				<div data-pitch="64"></div>
+				<div data-pitch="65"></div>
+				<div data-pitch="66"></div>
+				<div data-pitch="67"></div>
+				<div data-pitch="68"></div>
+				<div data-pitch="69"></div>
+				<div data-pitch="70"></div>
+				<div data-pitch="71"></div>
+				<div data-pitch="72"></div>
+				<div data-pitch="73"></div>
+				<div data-pitch="74"></div>
+				<div data-pitch="75"></div>
+				<div data-pitch="76"></div>
+				<div data-pitch="77"></div>
+				<div data-pitch="78"></div>
+				<div data-pitch="79"></div>
+				<div data-pitch="80"></div>
+				<div data-pitch="81"></div>
+				<div data-pitch="82"></div>
+				<div data-pitch="83"></div>
+				<div data-pitch="84"></div>
+				<div data-pitch="85"></div>
+				<div data-pitch="86"></div>
+				<div data-pitch="87"></div>
 			</div>
 		</div>
 	</div>
 
-	<div class="template" id="template-part-controls"></div>
-	<div class="template" id="template-part-control-array" >
-		<div class="part-control">
-			<div class="part-control-block-inner"></div>
-		</div>
-	</div>
 
-	<div class="template" id="template-beat-controls"></div>
 
-	<div class="template" id="template-beat-control-array">
-		<div class="beat-control-block">
-			<div class="beat-control-block-inner">
-				<div class="time"><div></div></div>
-				<div class="dot" data-pitch="0"><div></div></div>
-				<div class="dot" data-pitch="1"><div></div></div>
-				<div class="dot" data-pitch="2"><div></div></div>
-				<div class="dot" data-pitch="3"><div></div></div>
-				<div class="dot" data-pitch="4"><div></div></div>
-				<div class="dot" data-pitch="5"><div></div></div>
-				<div class="dot" data-pitch="6"><div></div></div>
-				<div class="dot" data-pitch="7"><div></div></div>
-				<div class="dot" data-pitch="8"><div></div></div>
-				<div class="dot" data-pitch="9"><div></div></div>
-				<div class="dot" data-pitch="10"><div></div></div>
-				<div class="dot" data-pitch="11"><div></div></div>
-				<div class="dot" data-pitch="12"><div></div></div>
-				<div class="dot" data-pitch="13"><div></div></div>
-				<div class="dot" data-pitch="14"><div></div></div>
-				<div class="dot" data-pitch="15"><div></div></div>
-				<div class="dot" data-pitch="16"><div></div></div>
-				<div class="dot" data-pitch="17"><div></div></div>
-				<div class="dot" data-pitch="18"><div></div></div>
-				<div class="dot" data-pitch="19"><div></div></div>
-				<div class="dot" data-pitch="20"><div></div></div>
-				<div class="dot" data-pitch="21"><div></div></div>
-				<div class="dot" data-pitch="22"><div></div></div>
-				<div class="dot" data-pitch="23"><div></div></div>
-				<div class="dot" data-pitch="24"><div></div></div>
-				<div class="dot" data-pitch="25"><div></div></div>
-				<div class="dot" data-pitch="26"><div></div></div>
-				<div class="dot" data-pitch="27"><div></div></div>
-				<div class="dot" data-pitch="28"><div></div></div>
-				<div class="dot" data-pitch="29"><div></div></div>
-				<div class="dot" data-pitch="30"><div></div></div>
-				<div class="dot" data-pitch="31"><div></div></div>
-				<div class="dot" data-pitch="32"><div></div></div>
-				<div class="dot" data-pitch="33"><div></div></div>
-				<div class="dot" data-pitch="34"><div></div></div>
-				<div class="dot" data-pitch="35"><div></div></div>
-				<div class="dot" data-pitch="36"><div></div></div>
-				<div class="dot" data-pitch="37"><div></div></div>
-				<div class="dot" data-pitch="38"><div></div></div>
-				<div class="dot" data-pitch="39"><div></div></div>
-				<div class="dot" data-pitch="40"><div></div></div>
-				<div class="dot" data-pitch="41"><div></div></div>
-				<div class="dot" data-pitch="42"><div></div></div>
-				<div class="dot" data-pitch="43"><div></div></div>
-				<div class="dot" data-pitch="44"><div></div></div>
-				<div class="dot" data-pitch="45"><div></div></div>
-				<div class="dot" data-pitch="46"><div></div></div>
-				<div class="dot" data-pitch="47"><div></div></div>
-				<div class="dot" data-pitch="48"><div></div></div>
-				<div class="dot" data-pitch="49"><div></div></div>
-				<div class="dot" data-pitch="50"><div></div></div>
-				<div class="dot" data-pitch="51"><div></div></div>
-				<div class="dot" data-pitch="52"><div></div></div>
-				<div class="dot" data-pitch="53"><div></div></div>
-				<div class="dot" data-pitch="54"><div></div></div>
-				<div class="dot" data-pitch="55"><div></div></div>
-				<div class="dot" data-pitch="56"><div></div></div>
-				<div class="dot" data-pitch="57"><div></div></div>
-				<div class="dot" data-pitch="58"><div></div></div>
-				<div class="dot" data-pitch="59"><div></div></div>
-				<div class="dot" data-pitch="60"><div></div></div>
-				<div class="dot" data-pitch="61"><div></div></div>
-				<div class="dot" data-pitch="62"><div></div></div>
-				<div class="dot" data-pitch="63"><div></div></div>
-				<div class="dot" data-pitch="64"><div></div></div>
-				<div class="dot" data-pitch="65"><div></div></div>
-				<div class="dot" data-pitch="66"><div></div></div>
-				<div class="dot" data-pitch="67"><div></div></div>
-				<div class="dot" data-pitch="68"><div></div></div>
-				<div class="dot" data-pitch="69"><div></div></div>
-				<div class="dot" data-pitch="70"><div></div></div>
-				<div class="dot" data-pitch="71"><div></div></div>
-				<div class="dot" data-pitch="72"><div></div></div>
-				<div class="dot" data-pitch="73"><div></div></div>
-				<div class="dot" data-pitch="74"><div></div></div>
-				<div class="dot" data-pitch="75"><div></div></div>
-				<div class="dot" data-pitch="76"><div></div></div>
-				<div class="dot" data-pitch="77"><div></div></div>
-				<div class="dot" data-pitch="78"><div></div></div>
-				<div class="dot" data-pitch="79"><div></div></div>
-				<div class="dot" data-pitch="80"><div></div></div>
-				<div class="dot" data-pitch="81"><div></div></div>
-				<div class="dot" data-pitch="82"><div></div></div>
-				<div class="dot" data-pitch="83"><div></div></div>
-				<div class="dot" data-pitch="84"><div></div></div>
-				<div class="dot" data-pitch="85"><div></div></div>
-				<div class="dot" data-pitch="86"><div></div></div>
-				<div class="dot" data-pitch="87"><div></div></div>
-			</div>
-			
-		</div>
+</div>
+
+
+
+<div class="template" id="template-beat-controls"></div>
+<div class="template" id="template-beat-time">
+	<div>
+		<div class="time"></div>
 	</div>
+</div>
+<div class="template" id="template-beat-control-array">
+	<div class="beat-control-block">
+		<div class="beat-control-block-inner">
+			<div class="dot" data-pitch="0"></div>
+			<div class="dot" data-pitch="1"></div>
+			<div class="dot" data-pitch="2"></div>
+			<div class="dot" data-pitch="3"></div>
+			<div class="dot" data-pitch="4"></div>
+			<div class="dot" data-pitch="5"></div>
+			<div class="dot" data-pitch="6"></div>
+			<div class="dot" data-pitch="7"></div>
+			<div class="dot" data-pitch="8"></div>
+			<div class="dot" data-pitch="9"></div>
+			<div class="dot" data-pitch="10"></div>
+			<div class="dot" data-pitch="11"></div>
+			<div class="dot" data-pitch="12"></div>
+			<div class="dot" data-pitch="13"></div>
+			<div class="dot" data-pitch="14"></div>
+			<div class="dot" data-pitch="15"></div>
+			<div class="dot" data-pitch="16"></div>
+			<div class="dot" data-pitch="17"></div>
+			<div class="dot" data-pitch="18"></div>
+			<div class="dot" data-pitch="19"></div>
+			<div class="dot" data-pitch="20"></div>
+			<div class="dot" data-pitch="21"></div>
+			<div class="dot" data-pitch="22"></div>
+			<div class="dot" data-pitch="23"></div>
+			<div class="dot" data-pitch="24"></div>
+			<div class="dot" data-pitch="25"></div>
+			<div class="dot" data-pitch="26"></div>
+			<div class="dot" data-pitch="27"></div>
+			<div class="dot" data-pitch="28"></div>
+			<div class="dot" data-pitch="29"></div>
+			<div class="dot" data-pitch="30"></div>
+			<div class="dot" data-pitch="31"></div>
+			<div class="dot" data-pitch="32"></div>
+			<div class="dot" data-pitch="33"></div>
+			<div class="dot" data-pitch="34"></div>
+			<div class="dot" data-pitch="35"></div>
+			<div class="dot" data-pitch="36"></div>
+			<div class="dot" data-pitch="37"></div>
+			<div class="dot" data-pitch="38"></div>
+			<div class="dot" data-pitch="39"></div>
+			<div class="dot" data-pitch="40"></div>
+			<div class="dot" data-pitch="41"></div>
+			<div class="dot" data-pitch="42"></div>
+			<div class="dot" data-pitch="43"></div>
+			<div class="dot" data-pitch="44"></div>
+			<div class="dot" data-pitch="45"></div>
+			<div class="dot" data-pitch="46"></div>
+			<div class="dot" data-pitch="47"></div>
+			<div class="dot" data-pitch="48"></div>
+			<div class="dot" data-pitch="49"></div>
+			<div class="dot" data-pitch="50"></div>
+			<div class="dot" data-pitch="51"></div>
+			<div class="dot" data-pitch="52"></div>
+			<div class="dot" data-pitch="53"></div>
+			<div class="dot" data-pitch="54"></div>
+			<div class="dot" data-pitch="55"></div>
+			<div class="dot" data-pitch="56"></div>
+			<div class="dot" data-pitch="57"></div>
+			<div class="dot" data-pitch="58"></div>
+			<div class="dot" data-pitch="59"></div>
+			<div class="dot" data-pitch="60"></div>
+			<div class="dot" data-pitch="61"></div>
+			<div class="dot" data-pitch="62"></div>
+			<div class="dot" data-pitch="63"></div>
+			<div class="dot" data-pitch="64"></div>
+			<div class="dot" data-pitch="65"></div>
+			<div class="dot" data-pitch="66"></div>
+			<div class="dot" data-pitch="67"></div>
+			<div class="dot" data-pitch="68"></div>
+			<div class="dot" data-pitch="69"></div>
+			<div class="dot" data-pitch="70"></div>
+			<div class="dot" data-pitch="71"></div>
+			<div class="dot" data-pitch="72"></div>
+			<div class="dot" data-pitch="73"></div>
+			<div class="dot" data-pitch="74"></div>
+			<div class="dot" data-pitch="75"></div>
+			<div class="dot" data-pitch="76"></div>
+			<div class="dot" data-pitch="77"></div>
+			<div class="dot" data-pitch="78"></div>
+			<div class="dot" data-pitch="79"></div>
+			<div class="dot" data-pitch="80"></div>
+			<div class="dot" data-pitch="81"></div>
+			<div class="dot" data-pitch="82"></div>
+			<div class="dot" data-pitch="83"></div>
+			<div class="dot" data-pitch="84"></div>
+			<div class="dot" data-pitch="85"></div>
+			<div class="dot" data-pitch="86"></div>
+			<div class="dot" data-pitch="87"></div>
+		</div>
+
+	</div>
+</div>
 </html>

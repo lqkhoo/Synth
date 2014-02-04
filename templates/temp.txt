@@ -1,0 +1,26 @@
+            /*
+            function initializeTop() {
+                var top = $('#part-top');
+                var i;
+                var div;
+                var str;
+                top.append($('<div></div>'));
+                for(i = 0; i < 88; i++) {
+                    str = SYNTH.TONES[i];
+                    div = $('<div></div>');
+                    if(str === 'C4') {
+                        div.attr({'id': 'mid'});
+                    }
+                    if(str.length > 2) {
+                        div.append($('<div>' + str.substr(0, 2)+ '</div>'));
+                        div.append($('<div>&nbsp;</div>'));
+                        div.addClass('black-key');
+                    } else {
+                        div.append($('<div>&nbsp;</div>'));
+                        div.append($('<div>' + str.charAt(0)+ '</div>'));
+                    }
+                    div.append($('<div class="num">' + str.charAt(str.length - 1) + '</div>'));
+                    top.append(div);
+                }
+            }
+            */
