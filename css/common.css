@@ -163,10 +163,12 @@ legend {
 }
 #part-anchor {
 	position: fixed;
+	top: 100px;
 	width: 50px;
 	height: 60px;
 	background-color: #eee;
 	border:1px solid #ccc;
+	cursor: pointer;
 }
 #part-left {
 	position: fixed;
@@ -174,7 +176,7 @@ legend {
 	width: 50px;
 	background-color: #EEE;
 }
-#part-left > div {
+#part-left-lower > div {
 	height: 20px;
 	background-color: #eee;
 	border-bottom: 1px solid #ccc;
@@ -186,7 +188,7 @@ legend {
 }
 #part-top {
 	position: fixed;
-	top: 100px; /* just under he top menus */
+	top: 100px;
 	margin-left: 50px;
 	height: 60px;
 	width: 1810px;

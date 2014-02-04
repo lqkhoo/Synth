@@ -114,7 +114,7 @@ var SYNTH = SYNTH || {};
             
             var obj = {
                 'id': null,
-                'value': null,
+                'value': null,      // unused field
                 'instrumentId': undefined,
                 'isSelected': false
             };
@@ -136,13 +136,13 @@ var SYNTH = SYNTH || {};
         },
         
         /** Gets value (duration) of note */
-        getValue: function() {
+        getValue: function() { // accessor to unused field
             var value = this.get('value');
             return value;
         },
         
         /** Sets new value (duration) for note */
-        setValue: function(newValue) {
+        setValue: function(newValue) { // accessor to unused field
             this.set({'value': newValue});
         },
         
@@ -206,6 +206,7 @@ var SYNTH = SYNTH || {};
                 'name': '(unnamed)',
                 'activePitches': activePitches,    // Frequencies which this instrument would play
                 'beats': undefined,
+                'frequencyMask': undefined,  // Mask of notes stored as a Beat object. If value is false, note of that frequency would not be played for any beat
                 'loudness': 1,
                 'soundCode': null,
                 'isActive': false   // whether instrument is current instrument being edited
@@ -284,6 +285,22 @@ var SYNTH = SYNTH || {};
                     beats[i].setNote(tone, bool);
                 }
             }
+        },
+        
+        /** Gets frequency mask */
+        getFrequencyMask: function() {
+            var frequencyMask = this.get('frequencyMask');
+            return frequencyMask;
+        },
+        
+        /** Sets frequency mask */
+        setFrequencyMask: function(newMask) {
+            this.set({'frequencyMask': newMask});
+        },
+        
+        /** Set new value for masks's frequency */
+        setFrequencyMaskValue: function(pitch, bool) {
+            this.frequencyMask.set(pitch, bool);
         },
         
         /** Gets loudness */
@@ -381,7 +398,7 @@ var SYNTH = SYNTH || {};
             return instrumentCollection.get(id);
         },
         
-        _newInstrument: function(nextInstrumentId, soundCode, instrumentName) {
+        _newInstrument: function(nextInstrumentId, soundCode, instrumentName, frequencyMask) {
             // Grab next id
             
                         
@@ -408,12 +425,17 @@ var SYNTH = SYNTH || {};
                 }
             }());
             
+            if(! frequencyMask) {
+                frequencyMask = new Beat();
+            }
+            
             // Initialize the new instrument
             var instrument = new Instrument({
                 'orchestra': this,
                 'id': nextInstrumentId,
                 'name': instrumentName,
                 'beats': beats,
+                'frequencyMask': frequencyMask,
                 'soundCode': soundCode
             });
             
@@ -612,7 +634,6 @@ var SYNTH = SYNTH || {};
                 var i, j;
                 for(i = 0; i < this.getScoreLength(); i++) {
                     instruments = this.getInstruments();
-                    console.log(i);
                     if(selectedBeats[i] !== undefined) {
                         beatsCollection = dummyInstrument.getBeatsCollection();
                         beatsCollection.remove(i);
@@ -624,7 +645,7 @@ var SYNTH = SYNTH || {};
                         numOfDeletedBeats++;
                     } else if(numOfDeletedBeats != 0) {
                         beatsCollection = dummyInstrument.getBeatsCollection();
-                        prevTime = dummyInstrument.get(i).getTime();
+                        prevTime = beatsCollection.get(i).getTime();
                         beatsCollection.get(i).setTime(prevTime - numOfDeletedBeats); 
                         for(j = 0; j < instruments.length; j++) {
                             beatsCollection = instruments[j].getBeatsCollection();
@@ -1041,16 +1062,29 @@ var SYNTH = SYNTH || {};
     
     var InstrumentGridHeaderView = Backbone.View.extend({
         el: '#part-left',
+        elAnchor: '#part-anchor',
+        elLower: '#part-left-lower',
         elRow: '#part-controls',
         _componentTemplate: SYNTH.templateCache['template-beat-time'],
         _modelBinder: undefined,
         _collectionBinder: undefined,
         initialize: function() {
             
+            var converter = function(direction, value) {
+                return value + 1;
+            };
+            
             var bindings = {
-                'id': {
-                    selector: '.time'
-                }
+                'id': [
+                    {
+                        selector: '.time',
+                        converter: converter
+                    },
+                    {
+                        selector: '.time',
+                        elAttribute: 'data-time'
+                    }
+               ]
             };
             
             this._collectionBinder = new Backbone.CollectionBinder(
@@ -1060,14 +1094,14 @@ var SYNTH = SYNTH || {};
         },
         
         render: function() {
-            this._collectionBinder.bind(this.model.getDummyInstrument().getBeatsCollection(), this.el);
+            this._collectionBinder.bind(this.model.getDummyInstrument().getBeatsCollection(), this.elLower);
             return this;
         },
         
         events: {
             'mousedown .time': 'onMouseDownTime',
             'mousedown #part-left > div': 'preventDefault',
-            'mousedown #part-anchor': 'deSelectAllBeats',
+            'mousedown #part-anchor': 'unselectAllBeats',
             'mouseup': 'onMouseUp'
         },
         
@@ -1076,7 +1110,7 @@ var SYNTH = SYNTH || {};
         },
         
         onMouseDownTime: function(event) {
-            var beat = $(event.currentTarget).html();
+            var beat = $(event.currentTarget).attr('data-time');
             var isSelected = $('#part-controls .beat-control-block-inner[data-time="' + beat + '"]').attr('data-isselected');
             if(isSelected === 'true') {
                 SYNTH.models.orchestra.setBeatSelection(parseInt(beat), false);
@@ -1121,7 +1155,16 @@ var SYNTH = SYNTH || {};
         
         onMouseUp: function(event) {
             this._undelegateMouseOverEvents();
+        },
+        
+        unselectAllBeats: function(event) {
+            this.model.unselectAllBeats();
+        },
+        
+        preventDefault: function(event) {
+            event.preventDefault();
         }
+        
     });
     
     var BeatControlView = Backbone.View.extend({
@@ -1293,7 +1336,6 @@ var SYNTH = SYNTH || {};
         // UI ops
         function initUI() {
             
-            
             function initializeTop() {
                 var top = $('#part-top');
                 var i;
@@ -1344,8 +1386,7 @@ var SYNTH = SYNTH || {};
             SYNTH.dom.left.attr({'style': 'top: ' + (- this.scrollTop + 160) + 'px'});
         });
         
-
-                
+        
     });
     
     
