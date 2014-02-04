@@ -113,7 +113,7 @@ var SYNTH = SYNTH || {};
         defaults: function() {
             
             var obj = {
-                'time': null,
+                'id': null,
                 'value': null,
                 'instrumentId': undefined,
                 'isSelected': false
@@ -127,8 +127,12 @@ var SYNTH = SYNTH || {};
         
         /** Get time */
         getTime: function() {
-            var time = this.get("time");
+            var time = this.get('id');
             return time;
+        },
+        
+        setTime: function(time) {
+            this.set({'id': time});
         },
         
         /** Gets value (duration) of note */
@@ -197,11 +201,7 @@ var SYNTH = SYNTH || {};
             'soundCode': null,
             'isActive': false   // whether instrument is current instrument being edited
         },
-        
-        changeId: function(newId) {
-            this.set("id", newId);
-        },
-        
+                
         /** Gets orchestra */
         getOrchestra: function() {
             var orchestra = this.get('orchestra');
@@ -239,13 +239,8 @@ var SYNTH = SYNTH || {};
         
         /** Gets specific beat */
         getBeat: function(n) {
-            var beats = this.getBeats();
-            var i;
-            for(i = 0; i < beats.length; i++) {
-                if(beats[i].get('time') === n) {
-                    return beats[i];
-                }
-            }
+            var beatCollection = this.getBeatsCollection();
+            return beatCollection.get(n);
         },
         
         /** Selects beat of given time value */
@@ -265,14 +260,14 @@ var SYNTH = SYNTH || {};
             var i;
             for(i = 0; i < n; i++) {
                 beatsCollection.add(new Beat({
-                    time: startBeat + i
+                    'id': startBeat + i
                 }));
             }
         },
         
         /** Sets specific beat */
         setNote: function(time, tone, bool) {
-            var beats = this.get("beats").models;
+            var beats = this.getBeats();
             var i;
             for(i = 0; i < beats.length; i++) {
                 if(beats[i].getTime() === time) {
@@ -360,13 +355,8 @@ var SYNTH = SYNTH || {};
         
         /** Get instrument with specified Id */
         getInstrumentById: function(id) {
-            var instruments = this.getInstruments();
-            var i;
-            for(i = 0; i < instruments.length; i++) {
-                if(instruments[i].getId() === id) {
-                    return instruments[i];
-                }
-            }
+            var instrumentCollection = this.getInstrumentCollection();
+            return instrumentCollection.get(id);
         },
                        
         /** Add an Instrument to the orchestra */
@@ -390,7 +380,7 @@ var SYNTH = SYNTH || {};
                         notes.push(false);
                     }
                     beat = new Beat({
-                        'time': i,
+                        'id': i,
                         'notes': notes,
                         'instrumentId': nextInstrumentId
                     });
@@ -420,13 +410,8 @@ var SYNTH = SYNTH || {};
         
         /** Remove an Instrument from the orchestra */
         removeInstrument: function(id) {
-            var instruments = this.getInstruments();
-            var i;
-            for(i = 0; i < instruments.length; i++) {
-                if(instruments[i].getId() === id) {
-                    instruments[i].destroy();
-                }
-            }
+            var instrumentsCollection = this.getInstrumentsCollection();
+            instrumentsCollection.pop(id).destroy();
         },
         
         /** Set new active instrument */
@@ -562,11 +547,48 @@ var SYNTH = SYNTH || {};
                 }
             }
             this.set({'beatsSelected': {}});
-            
         },
         
         /** Delete selected beats */
-        deleteBeats: function() {
+        deleteSelectedBeats: function() {
+            var selectedBeats = this.get('beatsSelected');
+            
+            function isEmpty() {
+                for(var prop in selectedBeats) {
+                    if(selectedBeats.hasOwnProperty(prop)) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+            
+            if(! isEmpty(selectedBeats)) {
+                
+                var instruments;
+                var beatsCollection;
+                var numOfDeletedBeats = 0;
+                var prevTime;
+                var i, j;
+                for(i = 0; i < this.getScoreLength(); i++) {
+                    instruments = this.getInstruments();
+                    console.log(i);
+                    if(selectedBeats[i] !== undefined) {
+                        for(j = 0; j < instruments.length; j++) {
+                            beatsCollection = instruments[j].getBeatsCollection();
+                            beatsCollection.remove(i);
+                        }
+                        numOfDeletedBeats++;
+                    } else if(numOfDeletedBeats != 0) {
+                        for(j = 0; j < instruments.length; j++) {
+                            beatsCollection = instruments[j].getBeatsCollection();
+                            prevTime = beatsCollection.get(i).getTime();
+                            beatsCollection.get(i).setTime(prevTime - numOfDeletedBeats);
+                        }
+                    }
+                }
+                this.set({'beatsSelected': {}});
+                this.setScoreLength(this.getScoreLength() - numOfDeletedBeats);
+            }
             //TODO
         },
         
@@ -1044,7 +1066,7 @@ var SYNTH = SYNTH || {};
             }
             
             var bindings = {
-                'time': [
+                'id': [
                     {
                         selector: '.beat-control-block-inner',
                         elAttribute: 'data-time'
@@ -1145,9 +1167,7 @@ var SYNTH = SYNTH || {};
         },
         
         deleteBeats: function(event) {
-            //TODO
-            console.log('delete beats fired');
-            console.log(event);
+            this.model.deleteSelectedBeats();
         }
     });
     
