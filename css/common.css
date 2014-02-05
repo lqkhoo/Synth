@@ -145,6 +145,8 @@ legend {
 }
 #grid-event-capture-layer {
 	cursor: pointer;
+	display: inline-block;
+	position: relative;
 	/* z-index: 100; */
 }
 .event-layer-row {
