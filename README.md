@@ -2,4 +2,4 @@ Synth
 =====
 Experimental synthesizer with Timbre.js
 
-Barely got the framework working. Please check back later.
+Dev diary: http://lqkhoo.com/wiki/index.php/Dev:SynthJS
