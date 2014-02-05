@@ -335,11 +335,22 @@ var SYNTH = SYNTH || {};
         /** Add n beats at the end, starting from given beat */
         addBeats: function(n, startBeat) {
             var beatsCollection = this.getBeatsCollection();
-            var i;
+            var i, j;
+            var beat;
+            var array;
             for(i = 0; i < n; i++) {
-                beatsCollection.add(new Beat({
-                    'id': startBeat + i
-                }));
+                notes = new Notes();
+                array = [];
+                for(j = 0; j < 88; j++) {
+                    array.push(false);
+                }
+                beat = new Beat({
+                    'id': startBeat + i,
+                    'notes': notes,
+                    'instrumentId': this.getId()
+                });
+                beatsCollection.add(beat);
+                var newNoteView = new NoteControlView({model: beat});
             }
         },
         
@@ -727,6 +738,12 @@ var SYNTH = SYNTH || {};
             return isPlaying;
         },
         
+        /** Get player */
+        _getPlayer: function() {
+            var player = this.get('player');
+            return player;
+        },
+        
         /** Play all instruments registered within the orchestra */
         play: function() {
             this.playFromBeat(0);
@@ -790,7 +807,7 @@ var SYNTH = SYNTH || {};
         
         /** Stop all instruments registered within the orchestra */
         stop: function() {
-            var player = this.get('player');
+            var player = this._getPlayer();
             player.stop();
             this.set({'isPlaying': false});
         },
@@ -1062,7 +1079,6 @@ var SYNTH = SYNTH || {};
         },
         
         render: function() {
-            console.log(this.model);
             this._collectionBinder.bind(this.model.getNotesCollection(), this.el);
             return this;
         },
@@ -1315,7 +1331,6 @@ var SYNTH = SYNTH || {};
         },
         
         calcCoords: function(event) {
-            //TODO
             event.preventDefault();
             //console.log('------------');
             //console.log(event.target);
@@ -1400,7 +1415,6 @@ var SYNTH = SYNTH || {};
         var instrumentPartControl = new InstrumentPartView({model: SYNTH.models.orchestra});
         var instrumentGridHeaderControl = new InstrumentGridHeaderView({model: SYNTH.models.orchestra});
         var instrumentGridControl = new InstrumentGridView({model: SYNTH.models.orchestra});
-        SYNTH.views.beatControls = {};
         
         // Preconfigure orchestra
         SYNTH.models.orchestra.addInstrument('synthPiano', 'instrument1');
