@@ -34,7 +34,7 @@ var SYNTH = SYNTH || {};
                 }
             },
             error: function() {
-                console.error('Error fetching templates');
+                throw 'Error fetching templates';
             }
         });
     }
@@ -657,7 +657,7 @@ var SYNTH = SYNTH || {};
                 this.set({'beatsSelected': {}});
                 this.setScoreLength(this.getScoreLength() - numOfDeletedBeats);
             }
-            //TODO
+            
         },
         
         // Player controls
@@ -950,7 +950,7 @@ var SYNTH = SYNTH || {};
     });
     
     var InstrumentPartView = Backbone.View.extend({
-        el: '#part-controls',
+        el: '#part-control-array',
         elPartLeft: '#part-left',
         _template: SYNTH.templateCache['template-part-controls'],
         _componentTemplate: SYNTH.templateCache['template-part-control-array'],
@@ -984,7 +984,7 @@ var SYNTH = SYNTH || {};
         },
         
         render: function() {
-            this.$el.html(this._template);
+            this.$el.html(this._template);  //TODO review
             this._collectionBinder.bind(this.model.getInstrumentCollection(), this.el);
             return this;
         },
@@ -1066,7 +1066,6 @@ var SYNTH = SYNTH || {};
         elLower: '#part-left-lower',
         elRow: '#part-controls',
         _componentTemplate: SYNTH.templateCache['template-beat-time'],
-        _modelBinder: undefined,
         _collectionBinder: undefined,
         initialize: function() {
             
@@ -1102,7 +1101,7 @@ var SYNTH = SYNTH || {};
             'mousedown .time': 'onMouseDownTime',
             'mousedown #part-left > div': 'preventDefault',
             'mousedown #part-anchor': 'unselectAllBeats',
-            'mouseup': 'onMouseUp'
+            'mouseup': 'onMouseUp',
         },
         
         close: function() {
@@ -1165,6 +1164,43 @@ var SYNTH = SYNTH || {};
             event.preventDefault();
         }
         
+    });
+    
+    var InstrumentGridView = Backbone.View.extend({
+        el: '#grid-event-capture-layer',
+        columnEl: '#grid-event-capture-layer-columns',
+        _componentTemplate: SYNTH.templateCache['template-grid-event-capture-layer-row'],
+        _columnTemplate: SYNTH.templateCache['template-grid-event-capture-layer-column'],
+        _modelBinder: undefined,
+        _collectionBinder: undefined,
+        initialize: function() {
+            
+            var bindings = {
+                    //NONE
+                };
+            
+            this._collectionBinder = new Backbone.CollectionBinder(
+                    new Backbone.CollectionBinder.ElManagerFactory(this._componentTemplate, bindings)
+            );
+            $(this.columnEl).html(this._columnTemplate);
+            this.render();
+        },
+        
+        render: function() {
+            this._collectionBinder.bind(this.model.getDummyInstrument().getBeatsCollection(), this.el);
+            return this;
+        },
+        
+        events: {
+            'mousedown': 'calcCoords'
+        },
+        
+        calcCoords: function(event) {
+            //TODO
+            event.preventDefault();
+            console.log(event);
+            console.log(event.currentTarget);
+        }
     });
     
     var BeatControlView = Backbone.View.extend({
@@ -1324,6 +1360,7 @@ var SYNTH = SYNTH || {};
         SYNTH.views.instrumentControl = new InstrumentControlView({model: SYNTH.models.orchestra});
         SYNTH.views.instrumentPartControl = new InstrumentPartView({model: SYNTH.models.orchestra});
         SYNTH.views.instrumentGridHeaderControl = new InstrumentGridHeaderView({model: SYNTH.models.orchestra});
+        SYNTH.views.instrumentGridControl = new InstrumentGridView({model: SYNTH.models.orchestra});
         SYNTH.views.beatControls = {};
         
         // Preconfigure orchestra
@@ -1385,7 +1422,6 @@ var SYNTH = SYNTH || {};
             SYNTH.dom.top.attr({'style': 'left: ' + (- this.scrollLeft) + 'px'});
             SYNTH.dom.left.attr({'style': 'top: ' + (- this.scrollTop + 160) + 'px'});
         });
-        
         
     });
     

@@ -140,16 +140,36 @@ legend {
 	position: relative;
 	overflow: auto;
 }
+#grid-event-capture-layer-wrapper {
+	height: 0;
+}
+#grid-event-capture-layer {
+	cursor: pointer;
+	/* z-index: 100; */
+}
+.event-layer-row {
+	height: 20px;
+	width: 1760px;
+	border-bottom: 1px solid #ccc; /* TODO change */
+	position: relative;
+	z-index: 50;
+}
+
 .part-control {
 	height: 0;
 	display: inline-block;
 }
-.part-control-v-grid > div {
+#grid-event-capture-layer-columns > div {
 	position: absolute;
 	height: 100%;
 	width: 20px;
 	border-right: 1px solid #eee;
+	z-index: 51;
 }
+#grid-event-capture-layer-columns > div:hover {
+	background-color: rgba(200,200,200,0.2); /* TODO change */
+}
+
 .part-control-block-inner {
 	display: inline-block;
 	position: relative;
@@ -180,6 +200,7 @@ legend {
 	height: 20px;
 	background-color: #eee;
 	border-bottom: 1px solid #ccc;
+	border-right: 1px solid #ccc;
 	padding-right: 5px;
 	color: #666;
 	font-size: 0.8em;
@@ -217,7 +238,6 @@ legend {
 	display: inline-block;
 	height: 20px;
 	width: 1760px;
-	border-bottom: 1px solid #eee;
 	white-space: nowrap;
 }
 .beat-control-block-inner[data-isselected="true"] {
@@ -321,20 +341,6 @@ legend {
 .dot[data-active="true"] {
 	background-color: #eee;
 }
-
-.dot[data-active="true"] > div {
-	background-color: #ccc;
-} 
-
-.dot > div {
-	border-radius: 2px;
-	position: relative;
-	height: 70%;
-	width: 70%;
-	margin: auto;
-	top: 15%;
-}
-
 
 #site-right {
 	background-color: #eee;

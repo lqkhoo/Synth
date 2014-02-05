@@ -1,26 +1,445 @@
-            /*
-            function initializeTop() {
-                var top = $('#part-top');
-                var i;
-                var div;
-                var str;
-                top.append($('<div></div>'));
-                for(i = 0; i < 88; i++) {
-                    str = SYNTH.TONES[i];
-                    div = $('<div></div>');
-                    if(str === 'C4') {
-                        div.attr({'id': 'mid'});
-                    }
-                    if(str.length > 2) {
-                        div.append($('<div>' + str.substr(0, 2)+ '</div>'));
-                        div.append($('<div>&nbsp;</div>'));
-                        div.addClass('black-key');
-                    } else {
-                        div.append($('<div>&nbsp;</div>'));
-                        div.append($('<div>' + str.charAt(0)+ '</div>'));
-                    }
-                    div.append($('<div class="num">' + str.charAt(str.length - 1) + '</div>'));
-                    top.append(div);
-                }
-            }
-            */
+				<div id="part-top">
+					<div>
+						<div>&nbsp;</div>
+						<div>A</div>
+						<div class="num">0</div>
+					</div>
+					<div class="black-key">
+						<div>Bb</div>
+						<div>&nbsp;</div>
+						<div class="num">0</div>
+					</div>
+					<div>
+						<div>&nbsp;</div>
+						<div>B</div>
+						<div class="num">0</div>
+					</div>
+					<div>
+						<div>&nbsp;</div>
+						<div>C</div>
+						<div class="num">1</div>
+					</div>
+					<div class="black-key">
+						<div>C#</div>
+						<div>&nbsp;</div>
+						<div class="num">1</div>
+					</div>
+					<div>
+						<div>&nbsp;</div>
+						<div>D</div>
+						<div class="num">1</div>
+					</div>
+					<div class="black-key">
+						<div>Eb</div>
+						<div>&nbsp;</div>
+						<div class="num">1</div>
+					</div>
+					<div>
+						<div>&nbsp;</div>
+						<div>E</div>
+						<div class="num">1</div>
+					</div>
+					<div>
+						<div>&nbsp;</div>
+						<div>F</div>
+						<div class="num">1</div>
+					</div>
+					<div class="black-key">
+						<div>F#</div>
+						<div>&nbsp;</div>
+						<div class="num">1</div>
+					</div>
+					<div>
+						<div>&nbsp;</div>
+						<div>G</div>
+						<div class="num">1</div>
+					</div>
+					<div class="black-key">
+						<div>G#</div>
+						<div>&nbsp;</div>
+						<div class="num">1</div>
+					</div>
+					<div>
+						<div>&nbsp;</div>
+						<div>A</div>
+						<div class="num">1</div>
+					</div>
+					<div class="black-key">
+						<div>Bb</div>
+						<div>&nbsp;</div>
+						<div class="num">1</div>
+					</div>
+					<div>
+						<div>&nbsp;</div>
+						<div>B</div>
+						<div class="num">1</div>
+					</div>
+					<div>
+						<div>&nbsp;</div>
+						<div>C</div>
+						<div class="num">2</div>
+					</div>
+					<div class="black-key">
+						<div>C#</div>
+						<div>&nbsp;</div>
+						<div class="num">2</div>
+					</div>
+					<div>
+						<div>&nbsp;</div>
+						<div>D</div>
+						<div class="num">2</div>
+					</div>
+					<div class="black-key">
+						<div>Eb</div>
+						<div>&nbsp;</div>
+						<div class="num">2</div>
+					</div>
+					<div>
+						<div>&nbsp;</div>
+						<div>E</div>
+						<div class="num">2</div>
+					</div>
+					<div>
+						<div>&nbsp;</div>
+						<div>F</div>
+						<div class="num">2</div>
+					</div>
+					<div class="black-key">
+						<div>F#</div>
+						<div>&nbsp;</div>
+						<div class="num">2</div>
+					</div>
+					<div>
+						<div>&nbsp;</div>
+						<div>G</div>
+						<div class="num">2</div>
+					</div>
+					<div class="black-key">
+						<div>G#</div>
+						<div>&nbsp;</div>
+						<div class="num">2</div>
+					</div>
+					<div>
+						<div>&nbsp;</div>
+						<div>A</div>
+						<div class="num">2</div>
+					</div>
+					<div class="black-key">
+						<div>Bb</div>
+						<div>&nbsp;</div>
+						<div class="num">2</div>
+					</div>
+					<div>
+						<div>&nbsp;</div>
+						<div>B</div>
+						<div class="num">2</div>
+					</div>
+					<div>
+						<div>&nbsp;</div>
+						<div>C</div>
+						<div class="num">3</div>
+					</div>
+					<div class="black-key">
+						<div>C#</div>
+						<div>&nbsp;</div>
+						<div class="num">3</div>
+					</div>
+					<div>
+						<div>&nbsp;</div>
+						<div>D</div>
+						<div class="num">3</div>
+					</div>
+					<div class="black-key">
+						<div>Eb</div>
+						<div>&nbsp;</div>
+						<div class="num">3</div>
+					</div>
+					<div>
+						<div>&nbsp;</div>
+						<div>E</div>
+						<div class="num">3</div>
+					</div>
+					<div>
+						<div>&nbsp;</div>
+						<div>F</div>
+						<div class="num">3</div>
+					</div>
+					<div class="black-key">
+						<div>F#</div>
+						<div>&nbsp;</div>
+						<div class="num">3</div>
+					</div>
+					<div>
+						<div>&nbsp;</div>
+						<div>G</div>
+						<div class="num">3</div>
+					</div>
+					<div class="black-key">
+						<div>G#</div>
+						<div>&nbsp;</div>
+						<div class="num">3</div>
+					</div>
+					<div>
+						<div>&nbsp;</div>
+						<div>A</div>
+						<div class="num">3</div>
+					</div>
+					<div class="black-key">
+						<div>Bb</div>
+						<div>&nbsp;</div>
+						<div class="num">3</div>
+					</div>
+					<div>
+						<div>&nbsp;</div>
+						<div>B</div>
+						<div class="num">3</div>
+					</div>
+					<div id="mid">
+						<div>&nbsp;</div>
+						<div>C</div>
+						<div class="num">4</div>
+					</div>
+					<div class="black-key">
+						<div>C#</div>
+						<div>&nbsp;</div>
+						<div class="num">4</div>
+					</div>
+					<div>
+						<div>&nbsp;</div>
+						<div>D</div>
+						<div class="num">4</div>
+					</div>
+					<div class="black-key">
+						<div>Eb</div>
+						<div>&nbsp;</div>
+						<div class="num">4</div>
+					</div>
+					<div>
+						<div>&nbsp;</div>
+						<div>E</div>
+						<div class="num">4</div>
+					</div>
+					<div>
+						<div>&nbsp;</div>
+						<div>F</div>
+						<div class="num">4</div>
+					</div>
+					<div class="black-key">
+						<div>F#</div>
+						<div>&nbsp;</div>
+						<div class="num">4</div>
+					</div>
+					<div>
+						<div>&nbsp;</div>
+						<div>G</div>
+						<div class="num">4</div>
+					</div>
+					<div class="black-key">
+						<div>G#</div>
+						<div>&nbsp;</div>
+						<div class="num">4</div>
+					</div>
+					<div>
+						<div>&nbsp;</div>
+						<div>A</div>
+						<div class="num">4</div>
+					</div>
+					<div class="black-key">
+						<div>Bb</div>
+						<div>&nbsp;</div>
+						<div class="num">4</div>
+					</div>
+					<div>
+						<div>&nbsp;</div>
+						<div>B</div>
+						<div class="num">4</div>
+					</div>
+					<div>
+						<div>&nbsp;</div>
+						<div>C</div>
+						<div class="num">5</div>
+					</div>
+					<div class="black-key">
+						<div>C#</div>
+						<div>&nbsp;</div>
+						<div class="num">5</div>
+					</div>
+					<div>
+						<div>&nbsp;</div>
+						<div>D</div>
+						<div class="num">5</div>
+					</div>
+					<div class="black-key">
+						<div>Eb</div>
+						<div>&nbsp;</div>
+						<div class="num">5</div>
+					</div>
+					<div>
+						<div>&nbsp;</div>
+						<div>E</div>
+						<div class="num">5</div>
+					</div>
+					<div>
+						<div>&nbsp;</div>
+						<div>F</div>
+						<div class="num">5</div>
+					</div>
+					<div class="black-key">
+						<div>F#</div>
+						<div>&nbsp;</div>
+						<div class="num">5</div>
+					</div>
+					<div>
+						<div>&nbsp;</div>
+						<div>G</div>
+						<div class="num">5</div>
+					</div>
+					<div class="black-key">
+						<div>G#</div>
+						<div>&nbsp;</div>
+						<div class="num">5</div>
+					</div>
+					<div>
+						<div>&nbsp;</div>
+						<div>A</div>
+						<div class="num">5</div>
+					</div>
+					<div class="black-key">
+						<div>Bb</div>
+						<div>&nbsp;</div>
+						<div class="num">5</div>
+					</div>
+					<div>
+						<div>&nbsp;</div>
+						<div>B</div>
+						<div class="num">5</div>
+					</div>
+					<div>
+						<div>&nbsp;</div>
+						<div>C</div>
+						<div class="num">6</div>
+					</div>
+					<div class="black-key">
+						<div>C#</div>
+						<div>&nbsp;</div>
+						<div class="num">6</div>
+					</div>
+					<div>
+						<div>&nbsp;</div>
+						<div>D</div>
+						<div class="num">6</div>
+					</div>
+					<div class="black-key">
+						<div>Eb</div>
+						<div>&nbsp;</div>
+						<div class="num">6</div>
+					</div>
+					<div>
+						<div>&nbsp;</div>
+						<div>E</div>
+						<div class="num">6</div>
+					</div>
+					<div>
+						<div>&nbsp;</div>
+						<div>F</div>
+						<div class="num">6</div>
+					</div>
+					<div class="black-key">
+						<div>F#</div>
+						<div>&nbsp;</div>
+						<div class="num">6</div>
+					</div>
+					<div>
+						<div>&nbsp;</div>
+						<div>G</div>
+						<div class="num">6</div>
+					</div>
+					<div class="black-key">
+						<div>G#</div>
+						<div>&nbsp;</div>
+						<div class="num">6</div>
+					</div>
+					<div>
+						<div>&nbsp;</div>
+						<div>A</div>
+						<div class="num">6</div>
+					</div>
+					<div class="black-key">
+						<div>Bb</div>
+						<div>&nbsp;</div>
+						<div class="num">6</div>
+					</div>
+					<div>
+						<div>&nbsp;</div>
+						<div>B</div>
+						<div class="num">6</div>
+					</div>
+					<div>
+						<div>&nbsp;</div>
+						<div>C</div>
+						<div class="num">7</div>
+					</div>
+					<div class="black-key">
+						<div>C#</div>
+						<div>&nbsp;</div>
+						<div class="num">7</div>
+					</div>
+					<div>
+						<div>&nbsp;</div>
+						<div>D</div>
+						<div class="num">7</div>
+					</div>
+					<div class="black-key">
+						<div>Eb</div>
+						<div>&nbsp;</div>
+						<div class="num">7</div>
+					</div>
+					<div>
+						<div>&nbsp;</div>
+						<div>E</div>
+						<div class="num">7</div>
+					</div>
+					<div>
+						<div>&nbsp;</div>
+						<div>F</div>
+						<div class="num">7</div>
+					</div>
+					<div class="black-key">
+						<div>F#</div>
+						<div>&nbsp;</div>
+						<div class="num">7</div>
+					</div>
+					<div>
+						<div>&nbsp;</div>
+						<div>G</div>
+						<div class="num">7</div>
+					</div>
+					<div class="black-key">
+						<div>G#</div>
+						<div>&nbsp;</div>
+						<div class="num">7</div>
+					</div>
+					<div>
+						<div>&nbsp;</div>
+						<div>A</div>
+						<div class="num">7</div>
+					</div>
+					<div class="black-key">
+						<div>Bb</div>
+						<div>&nbsp;</div>
+						<div class="num">7</div>
+					</div>
+					<div>
+						<div>&nbsp;</div>
+						<div>B</div>
+						<div class="num">7</div>
+					</div>
+					<div>
+						<div>&nbsp;</div>
+						<div>C</div>
+						<div class="num">8</div>
+					</div>
+				</div>
+
+
+
