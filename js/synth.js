@@ -1203,7 +1203,12 @@ var SYNTH = SYNTH || {};
             //console.log('offsetX: ' + event.offsetX + '\tY: ' + event.offsetY);
             //console.log('pageX  : ' + event.pageX + '\tY: ' + event.pageY);
             //console.log('screenX: ' + event.screenX + '\tY: ' + event.screenY);
-            var beat = Math.floor(event.offsetY / 20);
+            //console.log(event.originalEvent.layerX);
+            //console.log(event.originalEvent.layerY);
+            
+            var beat;
+            if(event.offfsetY) { beat = Math.floor(event.offsetY / 20); } // Chrome
+            else { beat = Math.floor(event.originalEvent.layerY / 20); } // Firefox
             var pitch = parseInt(event.target.getAttribute('data-pitch'));
             var isNowActive = this.model.getActiveInstrument().toggleNote(beat, pitch, true);
             
@@ -1217,13 +1222,17 @@ var SYNTH = SYNTH || {};
         },
         
         _selectOnMouseMove: function(event) {
-            var beat = Math.floor(event.offsetY / 20);
+            var beat;
+            if(event.offfsetY) { beat = Math.floor(event.offsetY / 20); } // Chrome
+            else { beat = Math.floor(event.originalEvent.layerY / 20); } // Firefox
             var pitch = parseInt(event.target.getAttribute('data-pitch'));
             SYNTH.models.orchestra.getActiveInstrument().setNote(beat, pitch, true);
         },
         
         _deSelectOnMouseMove: function(event) {
-            var beat = Math.floor(event.offsetY / 20);
+            var beat;
+            if(event.offfsetY) { beat = Math.floor(event.offsetY / 20); } // Chrome
+            else { beat = Math.floor(event.originalEvent.layerY / 20); } // Firefox
             var pitch = parseInt(event.target.getAttribute('data-pitch'));
             SYNTH.models.orchestra.getActiveInstrument().setNote(beat, pitch, false);
         },
