@@ -9,6 +9,7 @@
 	<link type="text/css" rel="stylesheet" media="all" href="css/common.css"></link>
 	<!-- scripts -->
 	<script type="text/javascript" src="js/jquery-2.0.3.min.js"></script>
+	<script type="text/javascript" src="js/bootstrap.min.js"></script>
 	<script type="text/javascript" src="js/underscore-min.js"></script>
 	<script type="text/javascript" src="js/backbone-min.js"></script>
 	<script type="text/javascript" src="js/Backbone.ModelBinder.min.js"></script>
@@ -21,9 +22,7 @@
 		<div id="site-top">
 			<div id="logo">logo here</div>
 			<div id="upper-controls">
-				<div id="add-instrument-controls">add instrument</div>
 				<div id="add-bar-controls"><!-- template-bar-controls --></div>
-				<div id="player-controls"><!-- template-player-controls --></div>
 				<div id="load-track-controls">track selector</div>
 				<div id="waveform-editor">waveform editor</div>
 			</div>
@@ -35,11 +34,11 @@
 					<div id="part-controls">
 						<div id="grid-event-capture-layer-wrapper">
 							<div id="grid-event-capture-layer">
-								<div id="grid-event-capture-layer-columns"></div>
+								<!-- event capture layer -->
+								<div id="grid-event-capture-layer-columns"><!-- event capture layer columns --></div>
 							</div>
-							<!-- event capture layer -->
 						</div>
-						<div id="part-control-array"></div>
+						<div id="part-control-array"><!-- part control --></div>
 					</div>
 				</div>
 				<div id="part-top"></div>
@@ -49,7 +48,16 @@
 				</div>
 			</div>
 			<div id="site-right">
-				<div id="instrument-controls"><!-- template-instrument-controls --></div>
+				<div id="player-controls"><!-- template-player-controls --></div>
+				<div id="instrument-controls-wrapper">
+					<div class="nav-header">Instruments</div>
+					<div id="instrument-controls">
+						<div id="add-instrument-controls">add instrument</div>
+						<div id="instrument-list">
+							<!-- template-instrument-controls -->
+						</div>
+					</div>
+				</div>
 			</div>
 		</div>
 		<div id="site-bottom">
