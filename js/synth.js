@@ -105,7 +105,17 @@ var SYNTH = SYNTH || {};
      */
     var Note = Backbone.Model.extend({
         defaults: {
-            'id': null
+            'id': null,
+            'beat': null,
+        },
+        
+        getBeat: function() {
+            var beat = this.get('beat');
+            return beat;
+        },
+        
+        setBeat: function(beat) {
+            this.set({'beat': beat});
         }
     });
     
@@ -186,7 +196,10 @@ var SYNTH = SYNTH || {};
         _setNotesCollection: function(pitch, value) {
             if(value) {
                 var collection = this.getNotesCollection();
-                collection.add(new Note({'id': pitch}));
+                collection.add(new Note({
+                    'id': pitch,
+                    'beat': this
+                }));
                 
             } else {
                 this.getNotesCollection().remove(pitch);
@@ -661,6 +674,44 @@ var SYNTH = SYNTH || {};
             this.set({'beatsSelected': {}});
         },
         
+        /** Delete beat at given time */
+        _deleteBeat: function(time) {
+            
+            function del(time, instrument) {
+                var beatsCollection = instrument.getBeatsCollection();
+                beatsCollection.remove(time);
+            }
+            
+            var i;
+            var dummyInstrument = this.getDummyInstrument();
+            var instruments = this.getInstruments();
+            
+            del(time, dummyInstrument);
+            for(i = 0; i < instruments.length; i++) {
+                del(time, instruments[i]);
+            }
+            
+        },
+        
+        _shiftBeatsBackwards: function(time, places) {
+            
+            function shift(time, places, instrument) {
+                var beatsCollection = instrument.getBeatsCollection();
+                prevTime = beatsCollection.get(time).getTime();
+                beatsCollection.get(time).setTime(prevTime - places); 
+            }
+            
+            var i;
+            var dummyInstrument = this.getDummyInstrument();
+            var instruments = this.getInstruments();
+            
+            shift(time, places, dummyInstrument);
+            for(i = 0; i < instruments.length; i++) {
+                shift(time, places, instruments[i]);
+            }      
+            
+        },
+        
         /** Delete selected beats */
         deleteSelectedBeats: function() {
             var selectedBeats = this.get('beatsSelected');
@@ -676,32 +727,15 @@ var SYNTH = SYNTH || {};
             
             if(! isEmpty(selectedBeats)) {
                 
-                var instruments;
-                var dummyInstrument = this.getDummyInstrument();
-                var beatsCollection;
                 var numOfDeletedBeats = 0;
-                var prevTime;
                 var i, j;
                 for(i = 0; i < this.getScoreLength(); i++) {
                     instruments = this.getInstruments();
                     if(selectedBeats[i] !== undefined) {
-                        beatsCollection = dummyInstrument.getBeatsCollection();
-                        beatsCollection.remove(i);
-                        for(j = 0; j < instruments.length; j++) {
-                            beatsCollection = instruments[j].getBeatsCollection();
-                            beatsCollection.remove(i);
-                            
-                        }
+                        this._deleteBeat(i);
                         numOfDeletedBeats++;
                     } else if(numOfDeletedBeats != 0) {
-                        beatsCollection = dummyInstrument.getBeatsCollection();
-                        prevTime = beatsCollection.get(i).getTime();
-                        beatsCollection.get(i).setTime(prevTime - numOfDeletedBeats); 
-                        for(j = 0; j < instruments.length; j++) {
-                            beatsCollection = instruments[j].getBeatsCollection();
-                            prevTime = beatsCollection.get(i).getTime();
-                            beatsCollection.get(i).setTime(prevTime - numOfDeletedBeats);
-                        }
+                        this._shiftBeatsBackwards(i, numOfDeletedBeats);
                     }
                 }
                 this.set({'beatsSelected': {}});
@@ -1056,20 +1090,24 @@ var SYNTH = SYNTH || {};
         close: function() {
             this._collectionBinder.unbind();
         }
-                
+        
     });
     
     var NoteControlView = Backbone.View.extend({
         el: '',
+        _template: undefined,
         _componentTemplate: SYNTH.templateCache['template-dot'],
+        _modelBinder: undefined,
         _collectionBinder: undefined,
         initialize: function() {
+            
             var bindings = {
                 'id': {
                     'selector': '.dot',
                     'elAttribute': 'data-pitch'
-                }
+                },
             };
+            this.listenTo(this.model, 'change:id', this.rebindElAndRender);
             
             this.el = '.part-control-block-inner[data-id="' + this.model.getInstrumentId() + '"] .beat-control-block-inner[data-time="' + this.model.getTime() + '"]';
             this._collectionBinder = new Backbone.CollectionBinder(
@@ -1081,6 +1119,16 @@ var SYNTH = SYNTH || {};
         render: function() {
             this._collectionBinder.bind(this.model.getNotesCollection(), this.el);
             return this;
+        },
+        
+        rebindElAndRender: function() {
+            this._collectionBinder.unbind();
+            this.el = '.part-control-block-inner[data-id="' + this.model.getInstrumentId() + '"] .beat-control-block-inner[data-time="' + this.model.getTime() + '"]';
+            this.render();
+        },
+        
+        foo: function() {
+            console.log('foo');
         },
         
         close: function() {
@@ -1346,11 +1394,9 @@ var SYNTH = SYNTH || {};
             if(event.offsetY) { beat = Math.floor(event.originalEvent.offsetY / 20); } // Chrome / Opera
             else { beat = Math.floor(event.originalEvent.layerY / 20); } // Firefox
             var pitch = parseInt(event.target.getAttribute('data-pitch'));
-            var isNowActive = this.model.getActiveInstrument().toggleNote(beat, pitch, true);
+            var isNowActive = this.model.getActiveInstrument().toggleNote(beat, pitch);
             
-            
-            
-            // Just bind to something, as couldn't bind to self via ''. '*' is a bad idea as it triggers multiple events
+            // Just bind to something, as couldn't bind to self via ''. '*' is a bad idea and it triggers multiple events
             if(isNowActive) {
                 this.$el.delegate('#grid-event-capture-layer-columns', 'mousemove', this._selectOnMouseMove);
             } else {
