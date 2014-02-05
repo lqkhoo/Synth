@@ -165,6 +165,13 @@ var SYNTH = SYNTH || {};
             this.set(pitch, value);
         },
         
+        /** Toggle note */
+        toggleNote: function(pitch) {
+            var value = ! this.get(pitch);
+            this.set(pitch, value);
+            return value;
+        },
+        
         /** Get instrument */
         getInstrumentId: function() {
             var instrumentId = this.get('instrumentId');
@@ -277,14 +284,15 @@ var SYNTH = SYNTH || {};
         },
         
         /** Sets specific beat */
-        setNote: function(time, tone, bool) {
-            var beats = this.getBeats();
-            var i;
-            for(i = 0; i < beats.length; i++) {
-                if(beats[i].getTime() === time) {
-                    beats[i].setNote(tone, bool);
-                }
-            }
+        setNote: function(time, pitch, bool) {
+            var beatsCollection = this.getBeatsCollection();
+            beatsCollection.get(time).setNote(pitch, bool);
+        },
+        
+        /** Toggles note for specific beat */
+        toggleNote: function(time, pitch) {
+            var beatsCollection = this.getBeatsCollection();
+            return beatsCollection.get(time).toggleNote(pitch);
         },
         
         /** Gets frequency mask */
@@ -456,7 +464,7 @@ var SYNTH = SYNTH || {};
             SYNTH.views.beatControls[nextInstrumentId] = new BeatControlView({model: instrument});
             
             if(initialCount === 0) {
-                this.setNewActiveInstrument(nextInstrumentId);
+                this.setActiveInstrument(nextInstrumentId);
             } 
             
             nextInstrumentId += 1;
@@ -472,8 +480,14 @@ var SYNTH = SYNTH || {};
             instrumentsCollection.pop(id).destroy();
         },
         
+        /** Get current active instrument */
+        getActiveInstrument: function() {
+            var activeInstrument = this.getInstrumentById(this.get('activeInstrumentId'));
+            return activeInstrument;
+        },
+        
         /** Set new active instrument */
-        setNewActiveInstrument: function(id) {
+        setActiveInstrument: function(id) {
             if(this.get('activeInstrumentId') !== undefined) {
                 this.getInstrumentById(this.get('activeInstrumentId')).setIsActive(false);
             }
@@ -940,7 +954,7 @@ var SYNTH = SYNTH || {};
         },
         
         setAsActiveInstrument: function(event) {
-            this.model.setNewActiveInstrument(parseInt($(event.target).attr('data-id')));
+            this.model.setActiveInstrument(parseInt($(event.target).attr('data-id')));
         },
         
         stopPropagation: function(event) {
@@ -1064,7 +1078,6 @@ var SYNTH = SYNTH || {};
         el: '#part-left',
         elAnchor: '#part-anchor',
         elLower: '#part-left-lower',
-        elRow: '#part-controls',
         _componentTemplate: SYNTH.templateCache['template-beat-time'],
         _collectionBinder: undefined,
         initialize: function() {
@@ -1123,11 +1136,9 @@ var SYNTH = SYNTH || {};
         
         _delegateMouseOverTime: function(bool) {
             if(bool) {
-                $(this.elRow).delegate('.beat-control-block-inner', 'mouseover', this._deSelectOnMouseOverBeatRow);
-                $(this.el).delegate('.time', 'mouseover', this._deSelectOnMouseOverBeat);
+                this.$el.delegate('.time', 'mouseover', this._deSelectOnMouseOverBeat);
             } else {
-                $(this.elRow).delegate('.beat-control-block-inner', 'mouseover', this._selectOnMouseOverBeatRow);
-                $(this.el).delegate('.time', 'mouseover', this._selectOnMouseOverBeat);
+                this.$el.delegate('.time', 'mouseover', this._selectOnMouseOverBeat);
             }
         },
         
@@ -1138,22 +1149,9 @@ var SYNTH = SYNTH || {};
         _deSelectOnMouseOverBeat: function(event) {
             SYNTH.models.orchestra.setBeatSelection(parseInt($(event.currentTarget).html()) - 1, false);
         },
-        
-        _selectOnMouseOverBeatRow: function(event) {
-            SYNTH.models.orchestra.setBeatSelection(parseInt($(event.currentTarget).attr('data-time')) - 1, true);
-        },
-        
-        _deSelectOnMouseOverBeatRow: function(event) {
-            SYNTH.models.orchestra.setBeatSelection(parseInt($(event.currentTarget).attr('data-time')) - 1, false);
-        },
-        
-        _undelegateMouseOverEvents: function() {
-            $(this.el).undelegate('.time', 'mouseover');
-            $(this.elRow).undelegate('.beat-control-block-inner', 'mouseover');
-        },
-        
+             
         onMouseUp: function(event) {
-            this._undelegateMouseOverEvents();
+            this.$el.undelegate('.time', 'mouseover');
         },
         
         unselectAllBeats: function(event) {
@@ -1192,15 +1190,49 @@ var SYNTH = SYNTH || {};
         },
         
         events: {
-            'mousedown': 'calcCoords'
+            'mousedown': 'calcCoords',
+            'mouseup': 'onMouseUp'
         },
         
         calcCoords: function(event) {
             //TODO
             event.preventDefault();
-            console.log(event);
-            console.log(event.currentTarget);
+            //console.log('------------');
+            //console.log(event.target);
+            //console.log('clientX: ' + event.clientX + '\tY: ' + event.clientY);
+            //console.log('offsetX: ' + event.offsetX + '\tY: ' + event.offsetY);
+            //console.log('pageX  : ' + event.pageX + '\tY: ' + event.pageY);
+            //console.log('screenX: ' + event.screenX + '\tY: ' + event.screenY);
+            var beat = Math.floor(event.offsetY / 20);
+            var pitch = parseInt(event.target.getAttribute('data-pitch'));
+            var isNowActive = this.model.getActiveInstrument().toggleNote(beat, pitch, true);
+            
+            // Just bind to something, as couldn't bind to self via ''. '*' is a bad idea as it triggers multiple events
+            if(isNowActive) {
+                this.$el.delegate('#grid-event-capture-layer-columns', 'mousemove', this._selectOnMouseMove);
+            } else {
+                this.$el.delegate('#grid-event-capture-layer-columns', 'mousemove', this._deSelectOnMouseMove);
+            }
+            
+        },
+        
+        _selectOnMouseMove: function(event) {
+            var beat = Math.floor(event.offsetY / 20);
+            var pitch = parseInt(event.target.getAttribute('data-pitch'));
+            SYNTH.models.orchestra.getActiveInstrument().setNote(beat, pitch, true);
+        },
+        
+        _deSelectOnMouseMove: function(event) {
+            var beat = Math.floor(event.offsetY / 20);
+            var pitch = parseInt(event.target.getAttribute('data-pitch'));
+            SYNTH.models.orchestra.getActiveInstrument().setNote(beat, pitch, false);
+        },
+        
+        onMouseUp: function(event) {
+            this.$el.undelegate('#grid-event-capture-layer-columns', 'mousemove');
         }
+        
+        
     });
     
     var BeatControlView = Backbone.View.extend({

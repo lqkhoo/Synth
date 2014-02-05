@@ -340,7 +340,11 @@ legend {
 [data-pitch="86"] { left: 1720px; }
 [data-pitch="87"] { left: 1740px; }
 
+.dot[data-active="false"] {
+	display: none;
+}
 .dot[data-active="true"] {
+	display: block;
 	background-color: #eee;
 }
 
