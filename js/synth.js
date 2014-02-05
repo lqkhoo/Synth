@@ -1132,19 +1132,19 @@ var SYNTH = SYNTH || {};
         },
         
         _selectOnMouseOverBeat: function(event) {
-            SYNTH.models.orchestra.setBeatSelection(parseInt($(event.currentTarget).html()), true);
+            SYNTH.models.orchestra.setBeatSelection(parseInt($(event.currentTarget).html()) - 1, true);
         },
         
         _deSelectOnMouseOverBeat: function(event) {
-            SYNTH.models.orchestra.setBeatSelection(parseInt($(event.currentTarget).html()), false);
+            SYNTH.models.orchestra.setBeatSelection(parseInt($(event.currentTarget).html()) - 1, false);
         },
         
         _selectOnMouseOverBeatRow: function(event) {
-            SYNTH.models.orchestra.setBeatSelection(parseInt($(event.currentTarget).attr('data-time')), true);
+            SYNTH.models.orchestra.setBeatSelection(parseInt($(event.currentTarget).attr('data-time')) - 1, true);
         },
         
         _deSelectOnMouseOverBeatRow: function(event) {
-            SYNTH.models.orchestra.setBeatSelection(parseInt($(event.currentTarget).attr('data-time')), false);
+            SYNTH.models.orchestra.setBeatSelection(parseInt($(event.currentTarget).attr('data-time')) - 1, false);
         },
         
         _undelegateMouseOverEvents: function() {

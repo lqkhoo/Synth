@@ -1,3 +1,21 @@
+Layers
+======
+
+Element											z-index
+
+#site-top										101	[MENU]
+#site-right										100	[MENU]
+
+#grid-event-capture-layer-columns > div			51
+.event-layer-row								50
+
+
+#site-bottom									20	[MENU]
+
+.part-control-block-inner.active				20
+.part-control-block-inner.inactive				5
+
+
 Get frequency from note
 =======================
 Note.fromLatin('A4').frequency();

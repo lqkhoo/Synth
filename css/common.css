@@ -13,7 +13,7 @@ legend {
 	height: 100px;
 	position: relative;
 	z-index: 101;
-	box-shadow: rgba(50, 50, 50, 0.5) 0 2px 5px;
+	box-shadow: rgba(50,50,50,0.5) 0 2px 5px;
 }
 
 .nav-header {
