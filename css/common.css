@@ -1,3 +1,11 @@
+@font-face {
+    font-family: vibrocen;
+    src: url("../fonts/vibrocen.ttf") format("truetype"),
+         url("../fonts/vibrocen.woff") format("woff"),
+         url("../fonts/vibrocen.eof") format("eof"),
+         url("../fonts/vibrocen.svg") format("svg");
+}
+
 /* html, body { overflow: hidden; } */
 
 legend {
@@ -31,9 +39,88 @@ legend {
 	font-size: 0.9em;
 }
 #logo {
-	width: 200px;
+	font-size: 1.1em;
 	height: 100%;
 	float: left;
+	font-family: vibrocen;
+	font-style: italic;
+	text-align: center;
+}
+#logo .inner {
+	margin: auto;
+	padding: 0 1em;
+	height: 100%;
+	background:        -webkit-gradient(linear, left top, left bottom, color-stop(0%,hsl(240,33%,20%)), color-stop(45%,hsl(240,33%,20%)), color-stop(45%,hsla(240,100%,60%, 0.5)));
+	background: -webkit-linear-gradient(top, hsl(240,33%,20%) 0%, hsl(240,33%,20%) 45%, hsla(240,100%,60%, 0.5) 56%);
+	background:    -moz-linear-gradient(top, hsl(240,33%,20%) 0%, hsl(240,33%,20%) 45%, hsla(240,100%,60%, 0.5) 56%);
+	background:     -ms-linear-gradient(top, hsl(240,33%,20%) 0%, hsl(240,33%,20%) 45%, hsla(240,100%,60%, 0.5) 56%);
+	background:      -o-linear-gradient(top, hsl(240,33%,20%) 0%, hsl(240,33%,20%) 45%, hsla(240,100%,60%, 0.5) 56%);
+	background:   linear-gradient(to bottom, hsl(240,33%,20%) 0%, hsl(240,33%,20%) 45%, hsla(240,100%,60%, 0.5) 56%);
+	box-shadow: rgba(50,50,50,0.5) 0.1em 0.1em 0.1em inset, rgba(50,50,50,0.5) -0.1em -0.1em 0.1em inset;
+	background-color: #224;
+}
+#logo .title {
+	font-size: 3.5em;
+	font-weight: bold;
+	color: #eee;
+	text-shadow: hsla(240, 33%, 20%, 0.5) 0.02em 0.02em 0.01em, hsla(341, 84%, 58%, 0.9) 0 0 1em;
+}
+#logo .s {
+	position: relative;
+	left: 0.3em;
+}
+#logo .h {
+	position: relative;
+	left: -0.3em;
+}
+#logo .ynt {
+	font-size: 0.65em;
+	position: relative;
+}
+#logo .js {
+	font-size: 0.4em;
+	position: relative;
+	left: -1.1em;
+	top: -0.9em;
+	color: hsl(233, 58%, 45%);
+	text-shadow: rgba(50,50,50,0.3) 0.1em 0.1em 0.1em;
+}
+#logo .subtitle {
+	font-size: 1.1em;
+	color: #ccc;
+	position: relative;
+	top: -1.7em;
+	left: -1.3em;
+	text-shadow: rgba(50,50,50,0.5) 0.08em 0.08em 0.01em;
+}
+#logo .sub {
+	font-size: 0.7em;
+	position: relative;
+	left: -0.4em;
+	margin-right: -0.2em;
+}
+#logo .note {
+	position: relative;
+	font-size: 2.9em;
+	line-height: 0;
+	top: -1.0em;
+	left: 1.2em;
+	color: hsl(341, 84%, 58%);
+	text-shadow: rgba(50,50,50,0.5) 0.1em 0.1em 0.01em;
+}
+#logo .line {
+	min-height: 1px;
+	height: 0.01em;
+	width: 15em;
+	margin: auto;
+	position: relative;
+	top: -1.6em;
+	background:        -webkit-gradient(linear, left top, right top, color-stop(0%,rgba(255,255,255,0)), color-stop(30%,rgba(255,255,255,1)), color-stop(70%,rgba(255,255,255,1)), color-stop(100%,rgba(255,255,255,0)));
+	background: -webkit-linear-gradient(left, rgba(255,255,255,0) 0%, rgba(255,255,255,1) 30%, rgba(255,255,255,1) 70%, rgba(255,255,255,0) 100%);
+	background:    -moz-linear-gradient(left, rgba(255,255,255,0) 0%, rgba(255,255,255,1) 30%, rgba(255,255,255,1) 70%, rgba(255,255,255,0) 100%);
+	background:     -ms-linear-gradient(left, rgba(255,255,255,0) 0%, rgba(255,255,255,1) 30%, rgba(255,255,255,1) 70%, rgba(255,255,255,0) 100%);
+	background:      -o-linear-gradient(left, rgba(255,255,255,0) 0%, rgba(255,255,255,1) 30%, rgba(255,255,255,1) 70%, rgba(255,255,255,0) 100%);
+	background:     linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,1) 30%, rgba(255,255,255,1) 70%, rgba(255,255,255,0) 100%);
 }
 
 #upper-controls {
