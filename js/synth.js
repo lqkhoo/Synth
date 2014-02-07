@@ -15,27 +15,6 @@ var SYNTH = (function($, Backbone, Timbre, MUSIC, Note, Interval) {
     
     // Declare | Command class ----------------------------------------------------------------------
     
-    /*
-    var Command = Backbone.Model.extend({
-        defaults: {
-            scope: undefined,
-            exec: undefined,
-            undo: undefined
-        },
-        initialize: function() {
-        },
-        exec: function() {
-            var exec = this.get('exec');
-            exec.func.apply(this.get('scope'), exec.args);
-            
-        },
-        undo: function() {
-            var undo = this.get('undo');
-            undo.func.apply(this.get('scope'), undo.args);
-        }
-    });
-    */
-    
     function Command(args) {
         var self = this;
         this._scope = args.scope;
@@ -940,7 +919,7 @@ var SYNTH = (function($, Backbone, Timbre, MUSIC, Note, Interval) {
         }
         
     });
-        
+    
     /** Collection of beats */
     var Beats = Backbone.Collection.extend({
         model: Beat,
@@ -996,6 +975,7 @@ var SYNTH = (function($, Backbone, Timbre, MUSIC, Note, Interval) {
                 'beats': undefined,
                 'loudness': 1,
                 'soundCode': null,
+                'isMuted': false,
                 'isActive': false   // whether instrument is current instrument being edited
             };
         },
@@ -1109,6 +1089,16 @@ var SYNTH = (function($, Backbone, Timbre, MUSIC, Note, Interval) {
             this.set({'soundCode': newsoundCode});
         },
 
+        /** Get muted state */
+        getIsMuted: function() {
+            var isMuted = this.get('isMuted');
+            return isMuted;
+        },
+        
+        setIsMuted: function(isMuted) {
+            this.set(isMuted, isMuted);
+        },
+        
         /** Get whether instrument is being actively edited */
         getIsActive: function() {
             var isActive = this.get('isActive');
@@ -1571,8 +1561,11 @@ var SYNTH = (function($, Backbone, Timbre, MUSIC, Note, Interval) {
         
         /** Stop all instruments registered within the orchestra */
         stop: function() {
+            // Player is only initialized when playedFromBeat() called. Potentially null
             var player = this._getPlayer();
-            player.stop();
+            if(player !== null) {
+                player.stop();
+            }
             this.set({'isPlaying': false});
         },
         
