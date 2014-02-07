@@ -38,10 +38,18 @@ legend {
 	color: #666;
 	font-size: 0.9em;
 }
+#permanent-top {
+	float: left;
+	height: 100%;
+}
+#permanent-top > div {
+	display: inline-block;
+	height: 100%;
+	vertical-align: top;
+}
 #logo {
 	font-size: 1.1em;
 	height: 100%;
-	float: left;
 	font-family: vibrocen;
 	font-style: italic;
 	text-align: center;
@@ -127,7 +135,6 @@ legend {
 	width: 100%;
 	min-width: 1000px;
 	height: 100%;
-	position: relative;
 }
 
 #upper-controls > div {
