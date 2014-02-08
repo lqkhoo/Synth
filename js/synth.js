@@ -73,7 +73,6 @@ var SYNTH = (function($, Backbone, Timbre, MUSIC, MUSIC_Note, MUSIC_Interval) {
     // Op | Augment Music.js library scale definition with chromatic scale
     MUSIC.scales['chromatic'] = MUSIC.scales['chromatic'] || ['minor second', 'major second', 'minor third', 'major third', 'fourth', 'augmented fourth', 'fifth', 'minor sixth', 'major sixth', 'minor seventh', 'major seventh'];
     
-    
     // Declare | Sound definitions ----------------------------------------------------------------------------
     function makeTimbre(soundCode, frequencyArray, loudness, attack, decay, sustain, release) {
         
@@ -139,6 +138,12 @@ var SYNTH = (function($, Backbone, Timbre, MUSIC, MUSIC_Note, MUSIC_Interval) {
             var redoStack = this.get('redoStack');
             return redoStack;
         },
+        getUndoStackLength: function() {
+            return this._getUndoStack().length;
+        },
+        getRedoStackLength: function() {
+            return this._getRedoStack().length;
+        },
         invoke: function(command) {
             this._getUndoStack().push(command);
             command.exec();
@@ -163,108 +168,7 @@ var SYNTH = (function($, Backbone, Timbre, MUSIC, MUSIC_Note, MUSIC_Interval) {
     });
     
     // Declare | Views -----------------------------------------------------------------------------------------
-    
-    var PlayerControlView = Backbone.View.extend({
-        el: '#player-controls',
-        _template: SYNTH.templateCache['template-player-controls'],
-        _modelBinder: undefined,
-        initialize: function() {
-            this._modelBinder = new Backbone.ModelBinder();
-            this.render();
-        },
         
-        render: function() {
-            var playButtonConverter = function(direction, value) {
-                if(value) {
-                    return 'glyphicon glyphicon-pause';
-                } else {
-                    return 'glyphicon glyphicon-play';
-                }
-            };
-            
-            var loopButtonConverter = function(direction, value) {
-                if(value) {
-                    return 'active';
-                } else {
-                    return '';
-                }
-            };
-            
-            var inputBarConverter = function(direction, value) {
-                if(direction === 'ViewToModel') {
-                    return parseInt(value) - 1;
-                } else {
-                    return value + 1;
-                }
-                
-            };
-            
-            this.$el.html(this._template);
-            var bindings = {
-                'isPlaying': {
-                    selector: '#button-play-pause',
-                    elAttribute: "class",
-                    converter: playButtonConverter
-                },
-                'currentBeat': [
-                    {
-                        selector: '[data-attr="beat"]',
-                        converter: inputBarConverter
-                    },
-                    {
-                        selector: '#input-playback-bar',
-                        converter: inputBarConverter
-                    }
-                ],
-                'scoreLength': [
-                    {
-                        selector: '#input-playback-bar',
-                        elAttribute: 'max'
-                    },
-                    {
-                        selector: '#score-length'
-                    }
-                ],
-                'isLooping': {
-                    selector: '#button-loop',
-                    elAttribute: 'class',
-                    converter: loopButtonConverter
-                }
-            };
-            this._modelBinder.bind(this.model, this.el, bindings);
-            return this;
-        },
-        
-        close: function() {
-            this._modelBinder.unbind();
-            this.$el.empty();
-        },
-        
-        events: {
-            'click #button-play-pause': 'togglePlay',
-            'click #button-to-beginning': 'rewindToStart',
-            'click #button-to-end': 'forwardToEnd',
-            'click #button-loop': 'toggleLoop'
-        },
-        
-        togglePlay: function() {
-            this.model.togglePlay();
-        },
-        
-        rewindToStart: function() {
-            this.model.rewindToStart();
-        },
-        
-        forwardToEnd: function() {
-            this.model.forwardToEnd();
-        },
-        
-        toggleLoop: function() {
-            this.model.toggleLoop();
-        }
-        
-    });
-    
     var InstrumentControlView = Backbone.View.extend({
         el: '#instrument-list',
         _componentTemplate: SYNTH.templateCache['template-instrument-control-block'],
@@ -628,7 +532,7 @@ var SYNTH = (function($, Backbone, Timbre, MUSIC, MUSIC_Note, MUSIC_Interval) {
         }
         
     });
-        
+    
     var UndoRedoStackView = Backbone.View.extend({
         el: '#undo-redo',
         undoButton: '#button-undo',
@@ -893,144 +797,313 @@ var SYNTH = (function($, Backbone, Timbre, MUSIC, MUSIC_Note, MUSIC_Interval) {
     });
     
     /**
+     * 
+     */
+    var DummyInstrument = Instrument.extend({
+        defaults: {
+            'beatsSelected': []
+        }
+    });
+    
+    /**
      * The orchestra
      */
     var Orchestra = Backbone.Model.extend({
+        defaults: {
+            'controller': null,
+            'player': null,
+            'instrumentCollection': null,
+            'dummyInstrument': null,
+            'nextInstrumentId': 0,
+            'scoreLength': 24
+        },
+        // getters | setters
+        getController: function() {
+            var controller = this.get('controller');
+            return controller;
+        },
+        getPlayer: function() {
+            var player = this.get('player');
+            return player;
+        },
+        getInstrumentCollection: function() {
+            var collection = this.get('instrumentCollection');
+            return collection;
+        },
+        getInstruments: function() {
+            var models = this.getInstrumentCollection().models;
+            return models;
+        },
+        getDummyInstrument: function() {
+            var dummy = this.get('dummyInstrument');
+            return dummy;
+        },
+        getNextInstrumentId: function() {
+            var nextInstrumentId = this.get('nextInstrumentId');
+            return nextInstrumentId;
+        },
+        _setNextInstrumentId: function(newId) {
+            this.set('nextInstrumentId', newId);
+            return newId;
+        },
+        getScoreLength: function() {
+            var scoreLength = this.get('scoreLength');
+            return scoreLength;
+        },
+        _setScoreLength: function(newScoreLength) {
+            this.set('scoreLength', newScoreLEngth);
+            return newScoreLength;
+        },
         
+        // methods
+        addNewInstrument: function(instrumentName) {
+            var instrument = new Instrument({
+                name: instrumentName
+            });
+            this.getInstrumentCollection().add(instrument);
+            return instrument;
+        }
     });
     
     //TODO refactor orchestra into player
     /** Object responsible for playing the orchestra */
     var Player = Backbone.Model.extend({
-        
+        defaults: {
+            'playSpeed': 300,   // in milliseconds per square
+            'currentBeat': 0,
+            'isPlaying': false,
+            'isLooping': false,
+            'orchestra': null,
+            'controller': null
+        }
     });
     
     /**
-     * The controller class to complete MVC. All views should interface
+     * State of views. Helper class for Controller
+     */
+    //TODO delete
+    /*
+    var ViewStateModel = Backbone.Model.extend({
+        defaults: {
+            isPlayerControlPanelActive: true,
+            isInstrumentControlPanelActive: true,
+            isEditControlPanelActive: true
+        },
+        
+        getIsPlayerControlPanelActive: function() {
+            var isActive = this.get('isPlayerControlPanelActive');
+            return isActive;
+        },
+        
+        //TODO init/close view
+        toggleIsPlayerControlPanelActive: function() {
+            var newIsActive = ! this.getIsPlayerControlPanelActive();
+            this.set('isPlayerControlPanelActive', newIsActive);
+        },
+        getIsInsrumentControlPanelActive: function() {
+            var isActive = this.get('isInstrumentControlPanelActive');
+            return isActive;
+        },
+        
+        //TODO init/close view
+        toggleIsInstrumentControlPanelActive: function() {
+            var newIsActive = ! this.getIsInstrumentControlPanelActive();
+            this.set('isInstrumentControlPanelActive', newIsActive);
+        },
+        getIsEditControlPanelActive: function() {
+            var isActive = this.get('isEditControlPanelActive');
+            return isActive;
+        },
+        
+        //TODO init/close view
+        toggleIsEditControlPanelActive: function() {
+            var newIsActive = ! this.getIsEditControlPanelActive();
+            this.set('isEditControlPanelActive', newIsActive);
+        }
+        
+    });
+    */
+    
+    /**
+     * The top-level controller class to complete MVC.
+     * All top-level views should interface
      * only with this model. Methods which push Commands onto the
      * redo / undo stack are called invocations, and are prefixed with 
      * 'invoke_'
      */
     var Controller = Backbone.Model.extend({
         defaults: {
-            'orchestra': null
+            // 'mode': 'synth' / 'game',
+            'orchestra': null,
+            'invoker': null,
         },
         
         getOrchestra: function() {
             var orchestra = this.get('orchestra');
             return orchestra;
         },
+        getInvoker: function() {
+            var invoker = this.get('invoker');
+            return invoker;
+        },
         
-        setOrchestra: function(newOrchestra) {
-            this.set('orchestra', newOrchestra);
-            return newOrchestra;
+        // methods
+        invoke_undo: function() {
+            this.getInvoker().undo();
+        },
+        
+        invoke_redo: function() {
+            this.getInvoker().redo();
         }
     });
     
-        
-    // Establish | Variables ---------------------------------------------------------------------------
-    SYNTH.models = {}; // Top-level models are held here
-    SYNTH.domCache = {};
-    SYNTH.invoker = new Invoker();
-    
-    
-    // Op | Initialize models -----------------------------------------------------------------------------
-    SYNTH.models.orchestra = new Orchestra();
-    
-    // Op | Document.ready --------------------------------------------------------------------------------
-    
-    $(document).ready(function() {
-        
-        // Initialize top level views
-        //TODO
-        /*
-        new PlayerControlView({model: SYNTH.models.orchestra});
-        new BarControlView({model: SYNTH.models.orchestra});
-        new InstrumentControlView({model: SYNTH.models.orchestra});
-        new InstrumentPartView({model: SYNTH.models.orchestra});
-        new InstrumentGridHeaderView({model: SYNTH.models.orchestra});
-        new UndoRedoStackView({model: SYNTH.invoker});
-        */
-        
-        // Preconfigure orchestra
-        /*
-        SYNTH.models.orchestra.addInstrument('synthPiano', 'instrument1');
-        SYNTH.models.orchestra.addInstrument('synthPiano', 'instrument2');
-        SYNTH.models.orchestra.addInstrument('synthPiano', 'instrument3');
-        SYNTH.models.orchestra.addInstrument('synthPiano', 'instrument4');
-        */
-        
-        // UI ops
-        (function() {
-            
-            function initializeTop() {
-                var top = $('#part-top');
-                var i;
-                var div;
-                var str;
-                for(i = 0; i < 88; i++) {
-                    str = SYNTH.TONES[i];
-                    div = $('<div></div>');
-                    if(str === 'C4') {
-                        div.attr({'id': 'mid'});
-                    }
-                    if(str.length > 2) {
-                        div.append($('<div>' + str.substr(0, 2)+ '</div>'));
-                        div.append($('<div>&nbsp;</div>'));
-                        div.addClass('black-key');
-                    } else {
-                        div.append($('<div>&nbsp;</div>'));
-                        div.append($('<div>' + str.charAt(0)+ '</div>'));
-                    }
-                    div.append($('<div class="num">' + str.charAt(str.length - 1) + '</div>'));
-                    top.append(div);
-                }
-            }
-            
-            function resizeUI() {
-                var windowHeight = $(window).height() - 100 - 25;    // 100px #site-top 25px #site-bottom
-                var partHeight = windowHeight - 60; // 60px static top frequency row
-                var instrumentControlHeight = windowHeight - 100 - 25 - 20;   // ditto above - 20px instrument .nav-menu 
-                $('#site-main').attr({'style': 'height: ' + windowHeight + 'px;'});
-                $('#part-controls').attr({'style': 'height: ' + partHeight + 'px;'});
-                $('#instrument-controls').attr({'style': 'height: ' + instrumentControlHeight + 'px;'});
-            }
-            
-            initializeTop();
-            resizeUI();
-            $(window).resize(resizeUI);
-            
-            $('#site-bottom').click(function() {
-                $(this).toggleClass('expanded');
-            });
-        }());
-        
-        // Scroll syncing
-        SYNTH.domCache.top = $('#part-top');
-        SYNTH.domCache.left = $('#part-left');
-        $('#part-controls').scroll(function() {
-            SYNTH.domCache.top.attr({'style': 'left: ' + (- this.scrollLeft) + 'px'});
-            SYNTH.domCache.left.attr({'style': 'top: ' + (- this.scrollTop + 160) + 'px'});
-        });
-        
+    var TopLevelView = Backbone.View.extend({
+        el: '#body',
+        model: null,
+        initialize: function() {
+            new EditControlPanelView({model: this.model});
+            new PlayerControlPanelView({model: this.model});
+            new InstrumentControlPanelView({model: this.model});
+            new GridView({model: this.model});
+        },
     });
     
-    // Expose for testing
-    SYNTH.api = {};
-    SYNTH.api.Command = Command;
-    SYNTH.api.Invoker = Invoker;
-    SYNTH.api.Note = Note;
-    SYNTH.api.Notes = Notes;
-    SYNTH.api.Pitch = Pitch;
-    SYNTH.api.Pitches = Pitches;
-    SYNTH.api.SoundGenerator = SoundGenerator;
-    SYNTH.api.Instrument = Instrument;
-    SYNTH.api.Instruments = Instruments;
-    SYNTH.api.Orchestra = Orchestra;
-    SYNTH.api.Player = Player;
-    SYNTH.api.Controller = Controller;
-    return SYNTH.api;
+    var PlayerControlPanelView = Backbone.View.extend({
+        el: '#player-controls',
+        model: null,
+        template: SYNTH.templateCache['template-player-controls'],
+        initialize: function() {
+            this.$el.html(this.template);
+        },
+        close: function() {
+            this.$el.empty();
+            // default unbind behavior
+        },
+        events: {
+            
+        },
+        bindings: {
+            'button#button-play-pause': '',
+            'button#button-to-beginning': 'disabled:isRedoStackEmpty'
+        }
+    });
     
+    var GridView = Backbone.View.extend({
+        el: '#site-content-wrapper'
+    });
+    
+    // done
+    var InstrumentControlPanelView = Backbone.View.extend({
+        el: '#instrument-list',
+        model: null,
+        collectionTemplate: SYNTH.templateCache['template-instrument-control-block'],
+        instrumentCollectionBinder: null,
+        initialize: function() {
+            
+            var converter = function(direction, value) {
+                if(value) { return 'btn-primary'; }
+                return 'btn-default';
+            };
+            
+            var bindings = {
+                'name': {
+                    selector: '[data-binding="name"]'
+                },
+                'id': [
+                    {
+                        selector: '[data-binding="instrument-id"]'
+                    },
+                    {
+                        selector: '.instrument-control-block',
+                        elAttribute: 'data-id'
+                    }
+                ],
+                'volume': '[data-binding="volume"]',
+                'isActive': {
+                    selector: '.instrument-control-block',
+                    elAttribute: 'class',
+                    converter: converter
+                }
+            };
+            
+            this.collectionBinder = new Backbone.CollectionBinder(
+                    new Backbone.CollectionBinder.ElManagerFactory(this.collectionTemplate, bindings));
+            this.render();
+        },
+        render: function() {
+            this.collectionBinder.bind(this.model.getOrchestra().getInstrumentCollection(), this.el);
+            return this;
+        }
+    });
+    
+    // done
+    var EditControlPanelView = Backbone.View.extend({
+        el: '#edit-controls',
+        model: null,
+        invokerModelBinder: null,
+        template: SYNTH.templateCache['template-edit-controls'],
+        initialize: function() {
+            this.$el.html(this.template);
+            this.invokerModelBinder = new Backbone.ModelBinder();
+            this.render();
+        },
+        render: function() {
+            
+            function buttonConverter(direction, value) {
+                if(value.length === 0) {
+                    return true;
+                }
+                return false;
+            };
+            
+            this.invokerModelBinder.bind(this.model.getInvoker(), this.el, {
+                undoStack: {
+                    selector: '#button-undo',
+                    elAttribute: 'disabled',
+                    converter: buttonConverter
+                },
+                redoStack: {
+                    selector: '#button-redo',
+                    elAttribute: 'disabled',
+                    converter: buttonConverter
+                }
+            });
+        },
+        close: function() {
+            this.invokerModelBinder.unbind();
+            this.$el.empty();
+        },
+        events: {
+            'click #button-undo': 'undo',
+            'click #button-redo': 'redo',
+            'change:undoStack': 'render',
+            'change:redoStack': 'render'
+        },
+        
+        // event handlers
+        undo: function() {
+            this.model.invoke_undo();
+        },
+        redo: function() {
+            this.model.invoke_redo();
+        }
+    });
+    
+    // Expose
+    SYNTH.TopLevelView = TopLevelView;
+    SYNTH.Command = Command;
+    SYNTH.Invoker = Invoker;
+    SYNTH.Note = Note;
+    SYNTH.Notes = Notes;
+    SYNTH.Pitch = Pitch;
+    SYNTH.Pitches = Pitches;
+    SYNTH.SoundGenerator = SoundGenerator;
+    SYNTH.Instrument = Instrument;
+    SYNTH.Instruments = Instruments;
+    SYNTH.Orchestra = Orchestra;
+    SYNTH.Player = Player;
+    SYNTH.Controller = Controller;
+    return SYNTH;
 });
 
 SYNTH.prototype = {};

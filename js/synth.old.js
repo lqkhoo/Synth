@@ -29,7 +29,7 @@ var SYNTH = (function($, Backbone, Timbre, MUSIC, Note, Interval) {
             self._undoFunc.apply(self._scope, self._undoArgs);
         };
     };
-        
+    
     var Invoker = Backbone.Model.extend({
         defaults: {            
             'undoStack': [],
@@ -292,25 +292,7 @@ var SYNTH = (function($, Backbone, Timbre, MUSIC, Note, Interval) {
             };
             
             var modelBindings = {
-                'name': {
-                    selector: '[data-attr="name"]'
-                },
-                'id': [
-                    {
-                        selector: '[data-attr="instrument-id"]'
-                        
-                    },
-                    {
-                        selector: '.instrument-control-block',
-                        elAttribute: 'data-id'
-                    }
-                ],
-                'loudness': '[data-attr="loudness"]',
-                'isActive': {
-                    selector: '.instrument-control-block',
-                    elAttribute: 'class',
-                    converter: converter
-                }
+
             };
                         
             this._modelBinder = new Backbone.ModelBinder();

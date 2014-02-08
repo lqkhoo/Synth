@@ -14,19 +14,15 @@ var Tests = function($, Backbone, Timbre, MUSIC, MUSIC_Note, MUSIC_Interval) {
     
     // tests
     
-    this.Command = function() {
-        //TODO
-    };
+    //TODO - Command
     
-    this.Invoker = function() {
-        //TODO
-    };
+    //TODO - Invoker
     
     this.Note = function() {
         module('Note');
         
         function setup() {
-            var model = new SYNTH.api.Note();
+            var model = new SYNTH.Note();
             return model;
         };
         // no teardown
@@ -81,7 +77,7 @@ var Tests = function($, Backbone, Timbre, MUSIC, MUSIC_Note, MUSIC_Interval) {
         module('Pitch');
         
         function setup() {
-            var model = new SYNTH.api.Pitch();
+            var model = new SYNTH.Pitch();
             return model;
         };
         // no teardown
@@ -129,14 +125,14 @@ var Tests = function($, Backbone, Timbre, MUSIC, MUSIC_Note, MUSIC_Interval) {
         
         test('setNoteCollection()', function() {
             var model = setup();
-            var val = new SYNTH.api.Notes();
+            var val = new SYNTH.Notes();
             equal(model.setNoteCollection(val), val);
             equal(model.get('noteCollection'), val);
         });
         
         test('getNotes()', function() {
             var model = setup();
-            model.setNoteCollection(new SYNTH.api.Notes);
+            model.setNoteCollection(new SYNTH.Notes);
             equal(model.getNotes(), model.getNoteCollection().models);
         });
         
@@ -180,9 +176,22 @@ var Tests = function($, Backbone, Timbre, MUSIC, MUSIC_Note, MUSIC_Interval) {
         module('Instrument');
         
         function setup() {
-            var model = new SYNTH.api.Instrument();
+            var model = new SYNTH.Instrument();
             return model;
         };
+        
+        test('defaults', function() {
+            var model = setup();
+            equal(getNumOfAttributes(model), 8);
+            equal(model.get('id'), null);
+            equal(model.get('name'), '(unnamed)');
+            equal(model.get('orchestra'), null);
+            equal(model.get('pitchCollection'), null);
+            equal(model.get('soundGenerator'), null);
+            equal(model.get('volume'), 1);
+            equal(model.get('isMuted'), false);
+            equal(model.get('isSelected'), false);
+        });
         
         test('getId()', function() {
             var model = setup();
@@ -220,7 +229,7 @@ var Tests = function($, Backbone, Timbre, MUSIC, MUSIC_Note, MUSIC_Interval) {
         
         test('setOrchestra()', function() {
             var model = setup();
-            var val = new SYNTH.api.Orchestra();
+            var val = new SYNTH.Orchestra();
             equal(model.setOrchestra(val), val);
             equal(model.get('orchestra'), val);
         });
@@ -232,7 +241,7 @@ var Tests = function($, Backbone, Timbre, MUSIC, MUSIC_Note, MUSIC_Interval) {
         
         test('setPitchCollection()', function() {
             var model = setup();
-            var val = new SYNTH.api.Pitches();
+            var val = new SYNTH.Pitches();
             equal(model.setPitchCollection(val), val);
             equal(model.get('pitchCollection'), val);
         });
@@ -244,7 +253,7 @@ var Tests = function($, Backbone, Timbre, MUSIC, MUSIC_Note, MUSIC_Interval) {
         
         test('setSoundGenerator()', function() {
             var model = setup();
-            var val = new SYNTH.api.SoundGenerator();
+            var val = new SYNTH.SoundGenerator();
             equal(model.setSoundGenerator(val), val);
             equal(model.get('soundGenerator'), val);
         });
@@ -286,27 +295,45 @@ var Tests = function($, Backbone, Timbre, MUSIC, MUSIC_Note, MUSIC_Interval) {
         });
     };
     
-    //TODO - Orchestra
+    //TODO
+    this.Orchestra = function() {
+        module('Orchestra');
+        
+        
+    };
     
     this.Controller = function() {
         module('Controller');
         
         function setup() {
-            var model = new SYNTH.api.Controller();
+            var model = new SYNTH.Controller({
+                'orchestra': new SYNTH.Orchestra(),
+                'invoker': new SYNTH.Invoker()
+            });
             return model;
         };
         // no teardown
+        
+        test('defaults', function() {
+            var orchestra = new SYNTH.Orchestra();
+            var invoker = new SYNTH.Invoker();
+            var model = new SYNTH.Controller({
+                'orchestra': orchestra,
+                'invoker': invoker
+            });
+            equal(getNumOfAttributes(model), 2);
+            equal(model.get('orchestra'), orchestra);
+            equal(model.get('invoker'), invoker);
+        });
         
         test('getOrchestra()', function() {
             var model = setup();
             equal(model.getOrchestra(), model.get('orchestra'));
         });
         
-        test('setOrchestra()', function() {
+        test('getInvoker()', function() {
             var model = setup();
-            var val = new SYNTH.api.Orchestra();
-            equal(model.setOrchestra(val), val);
-            equal(model.get('orchestra'), val);
+            equal(model.getInvoker(), model.get('invoker'));
         });
         
         //TODO methods

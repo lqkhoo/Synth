@@ -56,18 +56,20 @@ legend {
 }
 #logo .inner {
 	margin: auto;
-	padding: 0 1em;
+	padding: 0 2em;
 	height: 100%;
-	background:        -webkit-gradient(linear, left top, left bottom, color-stop(0%,hsl(240,33%,20%)), color-stop(45%,hsl(240,33%,20%)), color-stop(45%,hsla(240,100%,60%, 0.5)));
-	background: -webkit-linear-gradient(top, hsl(240,33%,20%) 0%, hsl(240,33%,20%) 45%, hsla(240,100%,60%, 0.5) 56%);
-	background:    -moz-linear-gradient(top, hsl(240,33%,20%) 0%, hsl(240,33%,20%) 45%, hsla(240,100%,60%, 0.5) 56%);
-	background:     -ms-linear-gradient(top, hsl(240,33%,20%) 0%, hsl(240,33%,20%) 45%, hsla(240,100%,60%, 0.5) 56%);
-	background:      -o-linear-gradient(top, hsl(240,33%,20%) 0%, hsl(240,33%,20%) 45%, hsla(240,100%,60%, 0.5) 56%);
-	background:   linear-gradient(to bottom, hsl(240,33%,20%) 0%, hsl(240,33%,20%) 45%, hsla(240,100%,60%, 0.5) 56%);
+	background:        -webkit-gradient(linear, left top, left bottom, color-stop(0%,hsl(240,33%,20%)), color-stop(50%,hsl(240,33%,20%)), color-stop(45%,hsla(240,100%,60%, 0.5)));
+	background: -webkit-linear-gradient(top, hsl(240,33%,20%) 0%, hsl(240,33%,20%) 50%, hsla(240,100%,60%, 0.5) 56%);
+	background:    -moz-linear-gradient(top, hsl(240,33%,20%) 0%, hsl(240,33%,20%) 50%, hsla(240,100%,60%, 0.5) 56%);
+	background:     -ms-linear-gradient(top, hsl(240,33%,20%) 0%, hsl(240,33%,20%) 50%, hsla(240,100%,60%, 0.5) 56%);
+	background:      -o-linear-gradient(top, hsl(240,33%,20%) 0%, hsl(240,33%,20%) 50%, hsla(240,100%,60%, 0.5) 56%);
+	background:   linear-gradient(to bottom, hsl(240,33%,20%) 0%, hsl(240,33%,20%) 50%, hsla(240,100%,60%, 0.5) 56%);
 	box-shadow: rgba(50,50,50,0.5) 0.1em 0.1em 0.1em inset, rgba(50,50,50,0.5) -0.1em -0.1em 0.1em inset;
 	background-color: #224;
 }
 #logo .title {
+	position: relative;
+	top: 0.05em;
 	font-size: 3.5em;
 	font-weight: bold;
 	color: #eee;
@@ -96,9 +98,9 @@ legend {
 #logo .subtitle {
 	font-size: 1.1em;
 	color: #ccc;
-	position: relative;
-	top: -1.7em;
-	left: -1.3em;
+	position: absolute;
+	top: 3.1em;
+	left: 2.7em;
 	text-shadow: rgba(50,50,50,0.5) 0.08em 0.08em 0.01em;
 }
 #logo .sub {
@@ -108,11 +110,11 @@ legend {
 	margin-right: -0.2em;
 }
 #logo .note {
-	position: relative;
+	position: absolute;
 	font-size: 2.9em;
 	line-height: 0;
-	top: -1.0em;
-	left: 1.2em;
+	top: 1.4em;
+	left: 3.75em;
 	color: hsl(341, 84%, 58%);
 	text-shadow: rgba(50,50,50,0.5) 0.1em 0.1em 0.01em;
 }
@@ -121,8 +123,9 @@ legend {
 	height: 0.01em;
 	width: 15em;
 	margin: auto;
-	position: relative;
-	top: -1.6em;
+	position: absolute;
+	left: 0.5em;
+	top: 3.6em;
 	background:        -webkit-gradient(linear, left top, right top, color-stop(0%,rgba(255,255,255,0)), color-stop(30%,rgba(255,255,255,1)), color-stop(70%,rgba(255,255,255,1)), color-stop(100%,rgba(255,255,255,0)));
 	background: -webkit-linear-gradient(left, rgba(255,255,255,0) 0%, rgba(255,255,255,1) 30%, rgba(255,255,255,1) 70%, rgba(255,255,255,0) 100%);
 	background:    -moz-linear-gradient(left, rgba(255,255,255,0) 0%, rgba(255,255,255,1) 30%, rgba(255,255,255,1) 70%, rgba(255,255,255,0) 100%);
@@ -211,7 +214,7 @@ legend {
 }
 
 #part-controls {
-	margin-top: 60px;
+	margin-top: 80px;
 	position: relative;
 	overflow: auto;
 }
@@ -262,7 +265,7 @@ legend {
 	position: fixed;
 	top: 100px;
 	width: 50px;
-	height: 60px;
+	height: 80px;
 	background-color: #eee;
 	border:1px solid #ccc;
 	cursor: pointer;
@@ -288,15 +291,14 @@ legend {
 	position: fixed;
 	top: 100px;
 	margin-left: 50px;
-	height: 60px;
+	height: 80px;
 	width: 1810px;
 	font-size: 0.8em;
 	border-bottom: 1px solid #ccc;
 	background-color: #eee;
-	
+	text-align: center;
 }
 #part-top > div {
-	padding-top: 10px;
 	width: 20px;
 	height: 100%;
 	border-right: 1px solid #ccc;
@@ -306,6 +308,11 @@ legend {
 #part-top .black-key {
 	background-color: #666;
 	color: #fff;
+}
+#part-top input[type="checkbox"] {
+	float: none;
+	margin-top: 5px;
+	margin-bottom: 10px;
 }
 
 .beat-control-block {

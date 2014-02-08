@@ -1,6 +1,6 @@
 <html>
 
-<div class="template" id="template-undo-redo">
+<div class="template" id="template-edit-controls">
 	<span class="btn-group">
 		<button id="button-undo" class="btn btn-default glyphicon glyphicon-arrow-left"></button>
 		<button id="button-redo" class="btn btn-default glyphicon glyphicon-arrow-right"></button>
@@ -168,11 +168,11 @@
 	<div>
 		<div class="instrument-control-block btn btn-default">
 			<div>
-				<input type="text" data-attr="name" class="form-control"></input> <span
-					data-attr="instrument-id"></span>
+				<input type="text" data-binding="name" class="form-control"></input> <span
+					data-binding="instrument-id"></span>
 			</div>
 			<div>
-				<span>Vol: </span><span data-attr="loudness"></span>
+				<span>Vol: </span><span data-binding="volume"></span>
 			</div>
 			<div style="font-size: 0.7em;">waveform | delete</div>
 		</div>

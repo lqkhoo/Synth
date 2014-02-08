@@ -17,8 +17,9 @@
 	<script type="text/javascript" src="js/music.js"></script>
 	<script type="text/javascript" src="js/timbre.min.js"></script>
 	<script type="text/javascript" src="js/synth.js"></script>
+	<script type="text/javascript" src="js/main.js"></script>
 	</head>
-	<body>
+	<body id="body">
 		<div id="site-top">
 			<div id="permanent-top">
 				<div id="logo">
@@ -42,21 +43,17 @@
 					</div>
 				</div>
 				<div id="view-controls">
+					<button id="button-toggle-playback" class="btn btn-default btn-xs">Playback</button>
+					<button id="button-toggle-instruments" class="btn btn-default btn-xs">Instruments</button>
+					<button id="button-toggle-edit" class="btn btn-default btn-xs">Edit</button>
 					<!-- TODO -->
 				</div>
 				<div id="key-buttons">
-					<div id="undo-redo">
-						<span class="btn-group">
-							<button id="button-undo" class="btn btn-default glyphicon glyphicon-arrow-left"></button>
-							<button id="button-redo" class="btn btn-default glyphicon glyphicon-arrow-right"></button>
-						</span>
-					</div>
 				</div>
 			</div>
 			<div id="upper-controls">
+				<div id="edit-controls"></div>
 				<div id="add-bar-controls"><!-- template-bar-controls --></div>
-				<div id="load-track-controls">track selector</div>
-				<div id="waveform-editor">waveform editor</div>
 			</div>
 		</div>
 		<div id="site-main">
