@@ -255,10 +255,10 @@ legend {
 	position: absolute;	/* IE needs absolute - relative won't do */
 	background-color: rgba(255,255,255,0.5);
 }
-.part-control-block-inner.active {
+.part-control-block-inner.selected {
 	z-index: 20;
 }
-.part-control-block-inner.inactive {
+.part-control-block-inner.unselected {
 	z-index: 5;
 }
 #part-anchor {
@@ -272,7 +272,7 @@ legend {
 }
 #part-left {
 	position: fixed;
-	top: 160px;
+	top: 175px;
 	width: 50px;
 	background-color: #EEE;
 }
@@ -339,7 +339,7 @@ legend {
 	position: absolute;
 }
 
-.part-control-block-inner.active .dot {
+.part-control-block-inner.selected .dot {
 	display: block;
 	background-color: #eee;
 }

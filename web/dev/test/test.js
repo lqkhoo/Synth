@@ -1,5 +1,5 @@
 var Tests = function($, _, Backbone, Timbre, MUSIC, MUSIC_Note, MUSIC_Interval) {
-    
+    "use strict";
     // utility functions
     
     function getNumOfAttributes(model) {
@@ -84,12 +84,10 @@ var Tests = function($, _, Backbone, Timbre, MUSIC, MUSIC_Note, MUSIC_Interval) 
         
         test('defaults', function() {
             var model = setup();
-            equal(getNumOfAttributes(model), 7);
+            equal(getNumOfAttributes(model), 5);
             equal(model.get('id'), null);
             equal(model.get('isPlayableArray'), null);
             equal(model.get('notes'), null);
-            equal(model.get('name'), null);
-            equal(model.get('octave'), null);
             equal(model.get('isPlayed'), true);
             equal(model.get('isSelected'), false);
         });
@@ -136,11 +134,6 @@ var Tests = function($, _, Backbone, Timbre, MUSIC, MUSIC_Note, MUSIC_Interval) 
             equal(model.getNotes(), model.getNoteCollection().models);
         });
         
-        test('getOctave()', function() {
-            var model = setup();
-            equal(model.getOctave(), model.get('ocatve'));
-        });
-        
         test('getIsPlayed()', function() {
             var model = setup();
             equal(model.getIsPlayed(), model.get('isPlayed'));
@@ -171,6 +164,8 @@ var Tests = function($, _, Backbone, Timbre, MUSIC, MUSIC_Note, MUSIC_Interval) 
     };
     
     //TODO - SoundGenerator
+    
+    //TODO - TimeUnit
     
     this.Instrument = function() {
         module('Instrument');
@@ -289,7 +284,7 @@ var Tests = function($, _, Backbone, Timbre, MUSIC, MUSIC_Note, MUSIC_Interval) 
         
         test('setIsSelected()', function() {
             var model = setup();
-            val = true;
+            var val = true;
             equal(model.setIsSelected(val), val);
             equal(model.get('isSelected'), val);
         });
