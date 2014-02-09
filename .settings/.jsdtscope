@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<classpath>
-	<classpathentry excluding="web/dev/js/Backbone.CollectionBinder.js|web/dev/js/Backbone.CollectionBinder.min.js|web/dev/js/Backbone.ModelBinder.js|web/dev/js/Backbone.ModelBinder.min.js|web/dev/js/backbone-min.js|web/dev/js/backbone.js|web/dev/js/bootstrap.js|web/dev/js/bootstrap.min.js|web/dev/js/jquery-2.0.3.js|web/dev/js/jquery-2.0.3.min.js|web/dev/js/music.js|web/dev/js/timbre.dev.js|web/dev/js/timbre.min.js|web/dev/js/underscore-min.js|web/dev/js/underscore.js" kind="src" path=""/>
-	<classpathentry kind="con" path="org.eclipse.wst.jsdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="output" path=""/>
-</classpath>
