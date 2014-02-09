@@ -1,3 +1,13 @@
+# project settings
+
+.classpath
+.project
+build
+
+
+
+# From gitignore repo
+
 *.pydevproject
 .metadata
 .gradle
@@ -10,9 +20,6 @@ tmp/
 local.properties
 .settings/
 .loadpath
-
-.classpath
-.project
 
 # External tool builders
 .externalToolBuilders/
