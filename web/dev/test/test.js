@@ -1,4 +1,4 @@
-var Tests = function($, Backbone, Timbre, MUSIC, MUSIC_Note, MUSIC_Interval) {
+var Tests = function($, _, Backbone, Timbre, MUSIC, MUSIC_Note, MUSIC_Interval) {
     
     // utility functions
     
@@ -355,6 +355,6 @@ var Tests = function($, Backbone, Timbre, MUSIC, MUSIC_Note, MUSIC_Interval) {
     
 };
 
-new Tests(jQuery, Backbone, T, MUSIC, Note, Interval).runAll();
+new Tests(jQuery, _, Backbone, T, MUSIC, Note, Interval).runAll();
 
 

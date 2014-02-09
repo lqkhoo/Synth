@@ -36,12 +36,12 @@ public class Copier {
 	private void copy(String dirPath) {
 		
 		File input = new File(dirPath);
-		if(! input.isDirectory() && ! isExcluded(dirPath)) {
-			System.out.println("Copying: " + input.getPath());
-			//TODO copy
-		} else {
-			for(File file : input.listFiles()) {
-				if(! isExcluded(file.getPath())) {
+		if(! isExcluded(dirPath)) {
+			if(! input.isDirectory()) {
+				System.out.println("Copying: " + input.getPath());
+				//TODO copy
+			} else {
+				for(File file : input.listFiles()) {
 					if (! file.isDirectory()) {
 						System.out.println("Copying: " + file.getPath());
 						//TODO copy refactor

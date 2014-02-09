@@ -497,7 +497,6 @@ var SYNTH = (function($, Backbone, Timbre, MUSIC, Note, Interval) {
         _componentTemplate: SYNTH.templateCache['template-part-control-array'],
         _modelBinder: undefined,
         _collectionBinder: undefined,
-        _beatCollectionBiner: undefined,
         initialize: function() {
             
             var converter = function(direction, value) {
