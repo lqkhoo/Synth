@@ -41,14 +41,14 @@
 		<div id="site-left"></div>
 		<div id="site-content-wrapper">
 			<div id="site-content">
-				<div id="part-controls">
+				<div id="grid">
 					<div id="grid-event-capture-layer-wrapper">
 						<div id="grid-event-capture-layer">
 							<!-- event capture layer -->
 							<div id="grid-event-capture-layer-columns"><!-- event capture layer columns --></div>
 						</div>
 					</div>
-					<div id="part-control-array"><!-- part control --></div>
+					<div id="grid-instruments"><!-- part control --></div>
 				</div>
 			</div>
 			<div id="part-top"></div>
@@ -58,7 +58,7 @@
 			</div>
 		</div>
 		<div id="site-right">
-			<div id="player-controls"><!-- template-player-controls --></div>
+			<div id="player-controls"><!-- template-playback-panel --></div>
 			<div id="instrument-controls-wrapper">
 				<div class="nav-header">Instruments</div>
 				<div id="instrument-controls">
@@ -77,30 +77,29 @@
 
 
 
+<div class="template" id="template-instrument-panel">
+	<div>
+		<div class="instrument-panel btn btn-default">
+			<div>
+				<input type="text" data-binding="name" class="form-control"></input> <span
+					data-binding="instrument-id"></span>
+			</div>
+			<div>
+				<span>Vol: </span><span data-binding="volume"></span>
+			</div>
+			<div style="font-size: 0.7em;">waveform | delete</div>
+		</div>
+	</div>
+</div>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div class="template" id="template-edit-controls">
+<div class="template" id="template-edit-panel">
 	<span class="btn-group">
 		<button id="button-undo" class="btn btn-default glyphicon glyphicon-arrow-left"></button>
 		<button id="button-redo" class="btn btn-default glyphicon glyphicon-arrow-right"></button>
 	</span>
 </div>
 
-<div class="template" id="template-player-controls">
+<div class="template" id="template-playback-panel">
 	<div class="nav-header">Playback</div>
 	<div id="playback-buttons-wrapper">
 		<span class="btn-group">
@@ -125,7 +124,7 @@
 
 
 
-<div class="template" id="template-bar-controls">
+<div class="template" id="template-bar-panel">
 	<div class="nav-header">Beats and bars</div>
 	<div>
 		<div>
@@ -155,6 +154,38 @@
 					class="btn btn-default btn-xs">Delete</button></span> <span>Selected
 				beat(s)</span>
 		</div>
+	</div>
+</div>
+
+
+
+<div class="template" id="template-grid-event-capture-layer-row">
+	<div class="event-layer-row"></div>
+</div>
+
+<div class="template" id="template-grid-instrument">
+	<div class="g-instrument">
+		<div class="g-instrument-inner"></div>
+	</div>
+</div>
+<div class="template" id="template-note">
+	<div>
+		<div class="dot"></div>
+	</div>
+</div>
+
+
+<div class="template" id="template-beat-time">
+	<div>
+		<div class="time"></div>
+	</div>
+</div>
+
+<div class="template" id="template-grid-pitch">
+	<div class="g-pitch">
+		<div class="g-pitch-in">
+		</div>
+
 	</div>
 </div>
 
@@ -250,51 +281,4 @@
 	<div data-pitch="87"></div>
 </div>
 
-
-<div class="template" id="template-grid-event-capture-layer-row">
-	<div class="event-layer-row"></div>
-</div>
-
-
-
-<div class="template" id="template-instrument-control-block">
-	<div>
-		<div class="instrument-control-block btn btn-default">
-			<div>
-				<input type="text" data-binding="name" class="form-control"></input> <span
-					data-binding="instrument-id"></span>
-			</div>
-			<div>
-				<span>Vol: </span><span data-binding="volume"></span>
-			</div>
-			<div style="font-size: 0.7em;">waveform | delete</div>
-		</div>
-	</div>
-</div>
-
-
-<div class="template" id="template-part-control-array">
-	<div class="part-control">
-		<div class="part-control-block-inner"></div>
-	</div>
-</div>
-<div class="template" id="template-dot">
-	<div>
-		<div class="dot"></div>
-	</div>
-</div>
-
-
-<div class="template" id="template-beat-time">
-	<div>
-		<div class="time"></div>
-	</div>
-</div>
-<div class="template" id="template-beat-control-array">
-	<div class="beat-control-block">
-		<div class="beat-control-block-inner">
-		</div>
-
-	</div>
-</div>
 </html>

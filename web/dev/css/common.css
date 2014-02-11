@@ -213,7 +213,7 @@ legend {
 	background-color: #fff;
 }
 
-#part-controls {
+#grid {
 	margin-top: 75px;
 	position: relative;
 	overflow: auto;
@@ -250,15 +250,16 @@ legend {
 	background-color: rgba(200,200,200,0.15); /* TODO change */
 }
 
-.part-control-block-inner {
+.part-control-inner {
 	display: inline-block;
 	position: absolute;	/* IE needs absolute - relative won't do */
+	width: 1760px;
 	background-color: rgba(255,255,255,0.5);
 }
-.part-control-block-inner.selected {
+.part-control-inner.selected {
 	z-index: 20;
 }
-.part-control-block-inner.unselected {
+.part-control-inner.unselected {
 	z-index: 5;
 }
 #part-anchor {
@@ -319,27 +320,24 @@ legend {
 	margin-bottom: 5px;
 }
 
-.beat-control-block {
+.g-pitch {
 	display: inline-block;
 }
-.beat-control-block-inner {
+.g-pitch-in {
 	display: inline-block;
-	height: 20px;
-	width: 1760px;
+	height: 100%;
+	width: 20px;
 	white-space: nowrap;
 }
-.beat-control-block-inner[data-isselected="true"] {
+.g-pitch-in[data-isselected="true"] {
 	background-color: rgba(200,200,255,0.5);
 }
-.beat-control-block-inner > div {
-}
-.beat-control-block-inner > div > div {
-	height: 20px;
+.g-pitch-in .dot {
 	width: 20px;
 	position: absolute;
 }
 
-.part-control-block-inner.selected .dot {
+.g-instrument-inner.selected .dot {
 	display: block;
 	background-color: #eee;
 }
@@ -401,17 +399,17 @@ legend {
 	width: 100%;
 	overflow: auto;
 }
-.instrument-control-block {
+.instrument-panel {
 	padding: 1em 1.5em;
 	width: 100%;
 	text-align: left;
 }
-.instrument-control-block > div {
+.instrument-panel > div {
 	float: left;
 	width: auto;
 	clear: both;
 }
-.instrument-control-block input[type="text"] {
+.instrument-panel input[type="text"] {
 	padding: 0.2em;
 	line-height: 1em;
 	height: 1.5em;
@@ -525,6 +523,7 @@ legend {
 /* This is quite costly when the browser re-renders, but this setting should be rarely touched once set.
    Eventually these should be baked into PNGs to skirt this whole issue
  */
+/*
 #part-controls[data-bpb="4"] .event-layer-row:nth-child(4n+1) { background-color: rgba(200,200,200,0.15); }
 #part-controls[data-bpb="5"] .event-layer-row:nth-child(5n+1) { background-color: rgba(200,200,200,0.15); }
 #part-controls[data-bpb="6"] .event-layer-row:nth-child(6n+1) { background-color: rgba(200,200,200,0.15); }
@@ -546,4 +545,5 @@ legend {
 #part-controls[data-bpb="22"] .event-layer-row:nth-child(22n+1) { background-color: rgba(200,200,200,0.15); }
 #part-controls[data-bpb="23"] .event-layer-row:nth-child(23n+1) { background-color: rgba(200,200,200,0.15); }
 #part-controls[data-bpb="24"] .event-layer-row:nth-child(24n+1) { background-color: rgba(200,200,200,0.15); }
+*/
 
