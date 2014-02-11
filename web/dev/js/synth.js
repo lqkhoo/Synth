@@ -160,7 +160,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             this.trigger('change:redoStack');
         }
     });
-     
+    
     // Declare | Models ---------------------------------------------------------------------------------------
     
     /**
@@ -204,7 +204,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
         defaults: {
             'id': null,
             'instrumentId': null,
-            'isPlayableArray': null,
+            'availabilityMask': null,
             'noteCollection': null,
             'isPlayed': true,
             'isSelected': false
@@ -227,19 +227,19 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             this.set('instrumentId', instrumentId);
             return instrumentId;
         },
-        getIsPlayableArray: function() {
-            var array = this.get('isPlayableArray');
+        getAvailabilityMask: function() {
+            var array = this.get('availabilityMask');
             return array;
         },
-        setIsPlayableArray: function(array) {
-            this.set('isPlayableArray', array);
+        _setAvailabilityMask: function(array) {
+            this.set('availabilityMask', array);
             return array;
         },
         getNoteCollection: function() {
             var noteCollection = this.get('noteCollection');
             return noteCollection;
         },
-        setNoteCollection: function(noteCollection) {
+        _setNoteCollection: function(noteCollection) {
             this.set('noteCollection', noteCollection);
             return noteCollection;
         },
@@ -265,8 +265,18 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
         },
         
         // methods
-        //TODO
+        /**
+         * Set availability mask values (start inclusive, end exclusive)
+         */ 
         setMaskValue: function(from, to, value) {
+            var i;
+            var mask = this.getAvailabilityMask();
+            for(i = from; i < to; i++) {
+                mask[i] = value;
+            }
+        },
+        getNote: function(startTime) {
+            return this.getNoteCollection().get(startTime);
         }
 
     });
@@ -287,18 +297,18 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             var pitches = new Pitches();
             var pitch;
             var notes;
-            var isPlayableArray;
+            var availabilityMask;
             
             var i, j;
             for(i = 0; i < 88; i++) {
                 notes = new Notes();
-                isPlayableArray = [];
+                availabilityMask = [];
                 for(j = 0; j < scoreLength; j++) {
-                    isPlayableArray.push(true);
+                    availabilityMask.push(true);
                 }
                 pitch = new Pitch({
                     'id': i,
-                    'isPlayableArray': isPlayableArray,
+                    'availabilityMask': availabilityMask,
                     'noteCollection': notes,
                     'isPlayed': true,
                     'instrumentId': instrumentId,
@@ -332,7 +342,8 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             'soundGenerator': null,
             'volume': 1,
             'isMuted': false,
-            'isSelected': false
+            'isSelected': false,
+            'displayedColor': 'rgb(238, 58, 115)'
         },
         
         getId: function() {
@@ -398,6 +409,15 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
         setIsSelected: function(isSelected) {
             this.set('isSelected', isSelected);
             return isSelected;
+        },
+        getDisplayedColor: function() {
+            var colorString = this.get('displayedColor');
+            return colorString;
+        },
+        setDisplayedColor: function(colorString) {
+            //TODO do error checking
+            this.set('displayedColor', colorString);
+            return colorString;
         }
     });
     
@@ -548,6 +568,9 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
         },
         
         // methods
+        getPitch: function(instrumentId, pitchId) {
+            return this.getInstrumentById(instrumentId).getPitchCollection().get(pitchId);
+        },
         getInstrumentById: function(id) {
             var instrument = this.getInstrumentCollection().get(id);
             return instrument;
@@ -586,8 +609,10 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             this.getInstrumentById(id).setIsSelected(true);
         },
         addNote: function(instrumentId, pitchId, startTime, value) {
-            this.getInstrumentById(instrumentId).getPitchCollection().get(pitchId).getNoteCollection().add(
-                    new Note({'id': startTime, 'value': value}));
+            var pitch = this.getPitch(instrumentId, pitchId);
+            var note = pitch.getNoteCollection();
+            note.add(new Note({'id': startTime, 'value': value}));
+            pitch.setMaskValue(startTime, value, false);
         },
         removeNote: function(instrumentId, pitchId, startTime) {
             
@@ -653,18 +678,28 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
         collectionBinder: null,
         
         initialize: function() {
-            
             function valueToHeight(direction, value) {
-                return 'height:' + (value * 20).toString() + 'px';
+                return 'height:' + (value * 20 - 3).toString() + 'px';  // value * 20 subtract 2px border 1px compensation
+            }
+            
+            function idToTop(direction, value) {
+                return 'top: ' + (value * 20).toString() + 'px';
             }
             
             var bindings = {
-                'id': {
-                    'selector': '.dot',
-                    'elAttribute': 'data-time'
-                },
+                'id': [
+                   {
+                        'selector': '.dot',
+                        'elAttribute': 'data-time'
+                   },
+                   {
+                       'selector': '.dot',
+                       'elAttribute': 'style',
+                       'converter': idToTop
+                   }
+                ],
                 'value': {
-                    'selector': '.dot',
+                    'selector': '.dot-in',
                     'elAttribute': 'style',
                     'converter': valueToHeight
                 }
@@ -710,7 +745,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
                     }
                 }
             }
-            
+                        
             var bindings = {
                 'id': [
                     {
@@ -755,6 +790,11 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
                 return 'unselected';
             };
             
+            function colorToBackground(direction, value) {
+                console.log(value);
+                return 'background-color: ' + value;
+            }
+            
             var bindings = {
                 'id': {
                     selector: '.g-instrument-inner',
@@ -764,6 +804,11 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
                     selector: '.g-instrument-inner',
                     elAttribute: 'class',
                     converter: converter
+                },
+                'displayedColor': {
+                    selector: '.g-instrument-inner',
+                    elAttribute: 'style',
+                    converter: colorToBackground
                 }
             };
             

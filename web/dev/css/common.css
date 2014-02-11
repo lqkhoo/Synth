@@ -230,7 +230,7 @@ legend {
 .event-layer-row {
 	height: 20px;
 	width: 1760px;
-	border-bottom: 1px solid #ccc; /* TODO change */
+	border-bottom: 1px solid rgba(100,100,100,0.15);
 	position: relative;
 	z-index: 50;
 }
@@ -243,7 +243,7 @@ legend {
 	position: absolute;
 	height: 100%;
 	width: 20px;
-	border-right: 1px solid #eee;
+	border-right: 1px solid rgba(100,100,100,0.15);
 	z-index: 51;
 }
 #grid-event-capture-layer-columns > div:hover {
@@ -322,24 +322,37 @@ legend {
 
 .g-pitch {
 	display: inline-block;
+	background-color: inherit;
 }
 .g-pitch-in {
 	display: inline-block;
 	height: 100%;
 	width: 20px;
 	white-space: nowrap;
+	background-color: inherit;
 }
+/*
 .g-pitch-in[data-isselected="true"] {
 	background-color: rgba(200,200,255,0.5);
 }
+*/
+.g-pitch-in div {
+	background-color: inherit;
+}
 .g-pitch-in .dot {
-	width: 20px;
+	width: 19px;
 	position: absolute;
+	display: inline-block;
+	box-shadow: rgba(0,0,0,0.3) 0px 0px 5px 3px inset;
+	border: 1px solid #fff;
+	border-radius: 5px;
+}
+.g-pitch-in .dot-in {
+	display: inline-block;
 }
 
 .g-instrument-inner.selected .dot {
 	display: block;
-	background-color: #eee;
 }
 
 /* Site right -------------------------------------------
