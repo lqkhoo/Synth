@@ -218,6 +218,14 @@ legend {
 	position: relative;
 	overflow: auto;
 }
+#grid-ui-helper {
+	position: absolute;
+	height: 0;
+	width: 0;
+}
+#grid-ui-helper > div {
+	position: absolute;
+}
 #grid-event-capture-layer-wrapper {
 	height: 0;
 }
@@ -227,14 +235,16 @@ legend {
 	position: relative;
 	/* z-index: 100; */
 }
-.event-layer-row {
+.event-layer-row > div {
 	height: 20px;
 	width: 1760px;
 	border-bottom: 1px solid rgba(100,100,100,0.15);
 	position: relative;
-	z-index: 50;
+	z-index: 51;
 }
-
+.event-layer-row:hover {
+	background-color: rgba(200,200,200,0.15);
+}
 .part-control {
 	height: 0;
 	display: inline-block;
@@ -244,12 +254,8 @@ legend {
 	height: 100%;
 	width: 20px;
 	border-right: 1px solid rgba(100,100,100,0.15);
-	z-index: 51;
+	z-index: 50;
 }
-#grid-event-capture-layer-columns > div:hover {
-	background-color: rgba(200,200,200,0.15); /* TODO change */
-}
-
 .part-control-inner {
 	display: inline-block;
 	position: absolute;	/* IE needs absolute - relative won't do */

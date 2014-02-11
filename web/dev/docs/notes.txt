@@ -6,8 +6,8 @@ Element											z-index
 #site-top										101	[MENU]
 #site-right										100	[MENU]
 
-#grid-event-capture-layer-columns > div			51
-.event-layer-row								50
+.event-layer-row								51
+#grid-event-capture-layer-columns > div			50
 
 
 #site-bottom									20	[MENU]
