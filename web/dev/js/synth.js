@@ -1583,7 +1583,7 @@ $(document).ready(function() {
     // Preconfigure orchestra
     SYNTH.app.controller.getOrchestra().addNewInstrument('instrument1');
     SYNTH.app.controller.getOrchestra().addNewInstrument('instrument2');
-    SYNTH.app.controller.getOrchestra().addNote(0, 1, 5, 5);
+    //SYNTH.app.controller.getOrchestra().addNote(0, 1, 5, 5);
     //SYNTH.app.controller.getOrchestra().removeNote(0, 1, 1);
     
     // UI ops

@@ -356,7 +356,9 @@ legend {
 .g-pitch-in .dot-in {
 	display: inline-block;
 }
-
+.g-instrument-inner {
+	width: 1760px;
+}
 .g-instrument-inner.selected .dot {
 	display: block;
 }
