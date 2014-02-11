@@ -1,14 +1,14 @@
 /**
  * @author Li Quan Khoo
  */
-var SYNTH = (function($, _, Backbone, Timbre, MUSIC, MUSIC_Note, MUSIC_Interval) {
+var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
     "use strict";
     // Require --------------------------------------------------------------------------------------
     if(! $) { throw 'jQuery not available.'; }
     if(! _) { throw 'Underscore.js not available'; }
     if(! Backbone) { throw 'Backbone.js not available.'; }
-    if(! Timbre) { throw 'Timbre.js not available.'; }
-    if(! MUSIC || ! MUSIC_Note || ! MUSIC_Interval) { throw 'MUSIC.js not available. '; }
+    if(! MUSIC || ! MUSIC_Note || ! MUSIC_Interval) { throw 'MUSIC.js not available.'; }
+    if(! MIDI) { throw 'MIDI.js not available.'; }
     
     // Establish | Template cache -------------------------------------------------------------------
     SYNTH.templateCache = {};
@@ -1027,7 +1027,7 @@ var SYNTH = (function($, _, Backbone, Timbre, MUSIC, MUSIC_Note, MUSIC_Interval)
     };
 });
 SYNTH.prototype = {};
-SYNTH = SYNTH(jQuery, _, Backbone, T, MUSIC, Note, Interval);
+SYNTH = SYNTH(jQuery, _, Backbone, MUSIC, Note, Interval, MIDI);
 
 
 // ================================================================================
@@ -1038,6 +1038,22 @@ SYNTH.app = {};
 
 // Op | Document.ready --------------------------------------------------------------------------------
 $(document).ready(function() {
+    
+    
+    MIDI.loadPlugin({
+        soundfontUrl: "soundfont/",
+        instrument: "acoustic_grand_piano",
+        callback: function() {
+            var delay = 0; // play one note every quarter second
+            var note = 50; // the MIDI note
+            var velocity = 127; // how hard the note hits
+            // play the note
+            MIDI.setVolume(0, 127);
+            MIDI.noteOn(0, note, velocity, delay);
+            MIDI.noteOff(0, note, delay + 0.75);
+        }
+    });
+    
     
     // Establish | Variables ---------------------------------------------------------------------------
     SYNTH.app.domCache = {};
