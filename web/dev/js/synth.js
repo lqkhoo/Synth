@@ -419,7 +419,6 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             return colorString;
         },
         setDisplayedColor: function(colorString) {
-            //TODO do error checking
             this.set('displayedColor', colorString);
             return colorString;
         },
@@ -495,7 +494,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             'nextInstrumentId': 0,
             'activeInstrumentId': null,
             'timeUnitCollection': null,
-            'scoreLength': 32
+            'scoreLength': 24
         },
         initialize: function() {
             var instrument = instrumentFactory.instrumentFromScratch(
@@ -591,7 +590,6 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             var initialCount = this.getInstrumentCollection().length;
             var instrument = instrumentFactory.instrumentFromScratch(
                     nextInstrumentId, soundCode, instrumentName, scoreLength);
-            
             this.getInstrumentCollection().add(instrument);
             if(initialCount === 0) {
                 this.setNewActiveInstrument(nextInstrumentId);
@@ -636,8 +634,28 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
                 pitch.setMaskValue(startTime, value, true);
             }
         },
+        
         setNoteValue: function(instrumentId, pitchId, startTime, newValue) {
-            
+            // be careful of this degenerate condition. This condition is checked for
+            // within the Controller class so this shouldn't happen. It's not undo-safe
+            if(newValue === 0) {
+                this.removeNote(instrumentId, pitchId, startTime);
+            }
+            var pitch = this.getPitch(instrumentId, pitchId);
+            var note = pitch.getNoteCollection().get(startTime);
+            var oldValue = note.getValue();
+            var availabilityMask = pitch.getAvailabilityMask();
+            var i;
+            note.setValue(newValue);
+            if(newValue < oldValue) {
+                for(i = startTime + oldValue; i >= startTime + newValue; i--) {
+                    availabilityMask[i] = true; // make available the new space
+                }
+            } else {
+                for(i = startTime + oldValue; i < startTime + newValue; i++) {
+                    availabilityMask[i] = false;    // mark space as unavailable
+                }
+            }
         }
     });
     
@@ -706,7 +724,6 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
         },
         
         invoke_addNote: function(instrumentId, pitchId, startTime, value) {
-            console.log(instrumentId);
             var orchestra = this.getOrchestra();
             var command = new Command({
                 scope: orchestra,
@@ -718,6 +735,36 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
                     func: orchestra.removeNote,
                     args: [instrumentId, pitchId, startTime]
                 }
+            });
+            this._invoke(command);
+        },
+        invoke_removeNote: function(instrumentId, pitchId, startTime, value) {
+            var orchestra = this.getOrchestra();
+            var command = new Command({
+                scope: orchestra,
+                exec: {
+                    func: orchestra.removeNote,
+                    args: [instrumentId, pitchId, startTime]
+                },
+                undo: {
+                    func: orchestra.addNote,
+                    args: [instrumentId, pitchId, startTime, value]
+                }
+            });
+            this._invoke(command);
+        },
+        invoke_editNoteValue: function(instrumentId, pitchId, time, oldValue, newValue) {
+            var orchestra = this.getOrchestra();
+            var command = new Command({
+               scope: orchestra,
+               exec: {
+                   func: orchestra.setNoteValue,
+                   args: [instrumentId, pitchId, time, newValue]
+               },
+               undo: {
+                   func: orchestra.setNoteValue,
+                   args: [instrumentId, pitchId, time, oldValue]
+               }
             });
             this._invoke(command);
         }
@@ -758,7 +805,6 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
                     'elAttribute': 'style',
                     'converter': valueToHeight
                 }
-            //TODO bind value
             };
             this.el = '.g-instrument-inner[data-id="' + this.model.getInstrumentId() + '"] .g-pitch-in[data-pitch="' + this.model.getId() +  '"]';
             this.collectionBinder = new Backbone.CollectionBinder(
@@ -916,21 +962,6 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             this.rowCollectionBinder.unbind();
             this.$el.empty();
             this.unbind();
-        },
-        
-        //event handlers
-        //TODO
-        _calcCoords: function() {
-            
-        },
-        _selectOnMouseMove: function() {
-            
-        },
-        _deSelectOnMouseMove: function() {
-            
-        },
-        _onMouseUp: function() {
-            
         }
         
     });
@@ -1036,7 +1067,8 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
      */
     var GridView = Backbone.View.extend({
         el: '#site-content-wrapper',
-        uiHelper: '#grid-ui-helper',
+        eventLayerEl: '#grid-event-capture-layer',
+        uiHelperEl: '#grid-ui-helper',
         model: null,
         template: null, // has no template
         
@@ -1078,97 +1110,198 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             var self = this;
             var time;
             var pitchId;
+            var orchestra;
             var activeInstrument;
             var activeInstrumentId;
+            var pitch;
             var isPitchAvailable;
+            var availabilityMask;
+            var note;
+            var noteStartTime;
+            var nextNoteStartTime;
+            var noteValue;
             if(event.offsetY) { pitchId = Math.floor(event.originalEvent.offsetX / 20); } // Chrome / Opera
             else { pitchId = Math.floor(event.originalEvent.layerX / 20); } // Firefox
             time = parseInt(event.target.getAttribute('data-time'));
             
-            
-            
             // Grab the active instrument
-            activeInstrument = this.model.getOrchestra().getActiveInstrument();
-            activeInstrumentId = activeInstrument.getId();
-            isPitchAvailable = activeInstrument.getPitch(pitchId).checkAvailability(time);
-            console.log(activeInstrument.getPitch(pitchId).getAvailabilityMask());
-            if(isPitchAvailable) {
-                console.log('pitch available');
-                this._newNote(activeInstrumentId, pitchId, time);
-                this.$el.delegate('#grid-event-capture-layer', 'mousemove', function(event) {
-                    self._previewNoteValue(event, activeInstrumentId, pitchId, time);
-                });
-                this.$el.delegate('#grid-event-capture-layer', 'mouseup', function(event) {
-                    self._finalizeNewNoteOnMouseUp();
-                });
-            } else {
-                console.log('pitch not available');
-                // check if it's the tail end of the occupying note. if it is...
-            }
             
-            //var isNowActive = this.model.getActiveInstrument().toggleNote(beat, pitch);
+            orchestra = this.model.getOrchestra();
+            activeInstrument = orchestra.getActiveInstrument();
+            activeInstrumentId = activeInstrument.getId();
+            pitch = activeInstrument.getPitch(pitchId);
+            isPitchAvailable = pitch.checkAvailability(time);
+            availabilityMask = pitch.getAvailabilityMask();
+            
+            // if clicked slot is open for new note,
+            if(isPitchAvailable) {
+                this._initUIHelperForNewNote(activeInstrumentId, pitchId, time);
+                this.$el.delegate(this.eventLayerEl, 'mousemove', function(event) {
+                    self._previewNewNoteValue(event, activeInstrumentId, pitchId, time);
+                });
+                this.$el.delegate(this.eventLayerEl, 'mouseup', function(event) {
+                    self._onMouseUpFinalizeNewNote(event, activeInstrumentId, pitchId, time);
+                });
+            // otherwise
+            } else {
+                // disable the delete behavior if we need to use the note top for other things
+                note = pitch.getNoteCollection().get(time);
+                if(note && note.getValue() !== 1) {
+                    noteValue = note.getValue();
+                    this.$el.delegate(this.eventLayerEl, 'mouseup', function(event) {
+                        self._onMouseUpSameSpotRemoveNote(event, activeInstrumentId, pitchId, time, noteValue);
+                    });
+                } else {
+                    
+                    // if it's tail end of note, let users change how long it is
+                    // Walk the availability mask backwards until we find an open spot
+                    for(noteStartTime = time; noteStartTime > -1; noteStartTime--) {
+                        if(availabilityMask[noteStartTime] === true) {
+                            noteStartTime += 1; // That's the start time of the note occupying the clicked spot
+                            break;
+                        }
+                    }
+                    
+                    note = pitch.getNoteCollection().get(noteStartTime);
+                    noteValue = note.getValue();
+                    
+                    for(nextNoteStartTime = noteStartTime + noteValue; nextNoteStartTime < orchestra.getScoreLength(); nextNoteStartTime++) {
+                        if(availabilityMask[nextNoteStartTime] === false) {
+                            break;  // That's the start time of the next note (if any)
+                        }
+                    }
+                    
+                    // E.g. note starts on beat 5, duration of 5 -- tail end is on beat 9
+                    if(noteStartTime + noteValue - 1 === time) {
+                        
+                        this._initUIHelperForExistingNote(activeInstrumentId, pitchId, time, noteStartTime, noteValue);
+                        this.$el.delegate(this.eventLayerEl, 'mousemove', function(event) {
+                            self._previewExistingNoteValue(event, activeInstrumentId, pitchId, time, noteStartTime, noteValue, nextNoteStartTime);
+                        });
+                        this.$el.delegate(this.eventLayerEl, 'mouseup', function(event) {
+                            self._onMouseUpFinalizeExistingNote(event, activeInstrumentId, pitchId, noteStartTime, noteValue);
+                        });
+                    } 
+                }
+            }
+            // else do nothing
         },
         
         // new note
-        _newNote: function(activeInstrumentId, pitchId, time) {
-            $(this.uiHelper).css({
+        _initUIHelperForNewNote: function(activeInstrumentId, pitchId, time, noteStartTime, noteValue) {
+            $(this.uiHelperEl).css({
                 'left': (pitchId * 20).toString() + 'px',
                 'top': (time * 20).toString() + 'px',
                 'width': '20px',
                 'height': '20px',
                 'background-color': '#aaa'
             });
-            $(this.uiHelper).attr({
-                'data-instrument-id': activeInstrumentId,
-                'data-pitch-id': pitchId,
-                'data-time': time,
+            $(this.uiHelperEl).attr({
                 'data-value': 1
             });
-            
         },
-        _previewNoteValue: function(event, activeInstrumentId, pitchId, time) {
+        _previewNewNoteValue: function(event, activeInstrumentId, pitchId, time) {
             
             var newTime = parseInt(event.target.getAttribute('data-time'));
-            $(this.uiHelper).css({
-                'height': (Math.max(20, (newTime - time) * 20)).toString() + 'px'
+            $(this.uiHelperEl).css({
+                'height': (Math.max(20, (newTime - time + 1) * 20)).toString() + 'px'
             });
-            $(this.uiHelper).attr({
-                'data-value': Math.max(1, (newTime - time))
+            $(this.uiHelperEl).attr({
+                'data-value': Math.max(1, (newTime - time + 1))
             });
         },
-        _finalizeNewNoteOnMouseUp: function() {
+        _onMouseUpFinalizeNewNote: function(event, activeInstrumentId, pitchId, startTime) {
             
-            var uiHelper = $(this.uiHelper);
-            var instrumentId;
-            var pitchId;
-            var startTime;
-            var value;
+            var uiHelperEl = $(this.uiHelperEl);
+            var value = parseInt(uiHelperEl.attr('data-value'));
             
-            instrumentId = parseInt(uiHelper.attr('data-instrument-id'));
-            pitchId = parseInt(uiHelper.attr('data-pitch-id'));
-            startTime = parseInt(uiHelper.attr('data-time'));
-            value = parseInt(uiHelper.attr('data-value'));
             if(SYNTH.app) {
-                SYNTH.app.controller.invoke_addNote(instrumentId, pitchId, startTime, value);
+                SYNTH.app.controller.invoke_addNote(activeInstrumentId, pitchId, startTime, value);
             }
-            this._resetUIHelper();
-            this.$el.undelegate('#grid-event-capture-layer', 'mousemove');
-            this.$el.undelegate('#grid-event-capture-layer', 'mouseup');
+            this._resetUIHelperEl();
+            this.$el.undelegate(this.eventLayerEl, 'mousemove');
+            this.$el.undelegate(this.eventLayerEl, 'mouseup');
         },
         
-        // existing note
-        _removeNote: function(event) {
+        // delete note
+        _onMouseUpSameSpotRemoveNote: function(event, activeInstrumentId, pitchId, time, value) {
             
-        },
-        _setNoteValue: function(event) {
+            // mouse coordinates when the event mouseup is fired. Only delete note
+            // if mouseup is fired on the same spot as note head
+            var newPitchId;
+            var newTime;
             
+            if(event.offsetY) { newPitchId = Math.floor(event.originalEvent.offsetX / 20); } // Chrome / Opera
+            else { newPitchId = Math.floor(event.originalEvent.layerX / 20); } // Firefox
+            newTime = parseInt(event.target.getAttribute('data-time'));
+            
+            if(newPitchId === pitchId && newTime === time && SYNTH.app) {
+                SYNTH.app.controller.invoke_removeNote(activeInstrumentId, pitchId, time, value);
+            }
+            
+            this.$el.undelegate(this.eventLayerEl, 'mouseup');
         },
         
-        _setUIHelper: function(cssObj) {
-            
+        // change existing note
+        _initUIHelperForExistingNote: function(activeInstrumentId, pitchId, time, noteStartTime, value) {
+            $(this.uiHelperEl).css({
+                'left': (pitchId * 20).toString() + 'px',
+                'top': (time * 20).toString() + 'px',
+                'width': '20px',
+                'height': '20px',
+                'background-color': '#aaa'
+            });
+            $(this.uiHelperEl).attr({
+                'data-value': value - 1
+            });
         },
-        _resetUIHelper: function() {
-            $(this.uiHelper).css({
+        _previewExistingNoteValue: function(event, activeInstrumentId, pitchId, time, noteStartTime, value, nextNoteStartTime) {
+            var newTime = parseInt(event.target.getAttribute('data-time'));
+            if(newTime === time) {
+                $(this.uiHelperEl).css({
+                    'top': (time * 20).toString() + 'px',
+                    'height':'20px'
+                });
+                $(this.uiHelperEl).attr({
+                    'data-value': value + newTime - time - 1
+                });
+            } else if(newTime > time) {
+                // if mouse released further down, it will add duration to the note
+                $(this.uiHelperEl).css({
+                    'top': (time * 20).toString() + 'px',
+                    'height': Math.min((nextNoteStartTime - time) * 20, (Math.max(1, (newTime - time + 1)) * 20)).toString() + 'px'
+                });
+                $(this.uiHelperEl).attr({
+                    'data-value': Math.min(nextNoteStartTime - noteStartTime, Math.max(1, value + newTime - time))
+                });
+            } else {
+                $(this.uiHelperEl).css({
+                    'top': (Math.max(noteStartTime, newTime) * 20).toString() + 'px',
+                    'height': (Math.min(value * 20, Math.max(20, (time - newTime + 1) * 20))).toString() + 'px'
+                });
+                $(this.uiHelperEl).attr({
+                    'data-value': Math.max(0, value + newTime - time - 1)    // value can go down to zero. If zero, delete note
+                });
+            }
+        },
+        _onMouseUpFinalizeExistingNote: function(event, activeInstrumentId, pitchId, noteStartTime, oldValue) {
+            var uiHelperEl = $(this.uiHelperEl);
+            
+            var newValue = parseInt(uiHelperEl.attr('data-value'));
+            
+            if(SYNTH.app) {
+                if(newValue === 0) {
+                    SYNTH.app.controller.invoke_removeNote(activeInstrumentId, pitchId, noteStartTime, oldValue);
+                } else {
+                    SYNTH.app.controller.invoke_editNoteValue(activeInstrumentId, pitchId, noteStartTime, oldValue, newValue);
+                }
+            }
+            this._resetUIHelperEl();
+            this.$el.undelegate(this.eventLayerEl, 'mousemove');
+            this.$el.undelegate(this.eventLayerEl, 'mouseup');
+        },
+        _resetUIHelperEl: function() {
+            $(this.uiHelperEl).css({
                 'height': '0px',
                 'width': '0px'
             });
@@ -1198,7 +1331,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
         }
         
     });
-        
+    
     // Control panels views ------------------------
     
     //TODO
