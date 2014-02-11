@@ -635,6 +635,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             }
         },
         
+        // For efficiency reasons this method does not do error checking
         setNoteValue: function(instrumentId, pitchId, startTime, newValue) {
             // be careful of this degenerate condition. This condition is checked for
             // within the Controller class so this shouldn't happen. It's not undo-safe
@@ -1104,6 +1105,8 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             'mousedown #grid-event-capture-layer': '_onGridClick'
         },
         // event handlers
+        _tempNoteStartTimeCache: null,
+        _tempNextNoteStartTimeCache: null,
         _onGridClick: function(event) {
             event.preventDefault();
             // Grab the coordinates clicked on, deduce the time and pitch
@@ -1135,9 +1138,17 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             
             // if clicked slot is open for new note,
             if(isPitchAvailable) {
+                
+                for(nextNoteStartTime = time; nextNoteStartTime < orchestra.getScoreLength(); nextNoteStartTime++) {
+                    if(availabilityMask[nextNoteStartTime] === false) {
+                        break;
+                    }
+                }
+                this._tempNextNoteStartTimeCache = nextNoteStartTime;
+                
                 this._initUIHelperForNewNote(activeInstrumentId, pitchId, time);
                 this.$el.delegate(this.eventLayerEl, 'mousemove', function(event) {
-                    self._previewNewNoteValue(event, activeInstrumentId, pitchId, time);
+                    self._previewNewNoteValue(event, activeInstrumentId, pitchId, time, nextNoteStartTime);
                 });
                 this.$el.delegate(this.eventLayerEl, 'mouseup', function(event) {
                     self._onMouseUpFinalizeNewNote(event, activeInstrumentId, pitchId, time);
@@ -1153,22 +1164,35 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
                     });
                 } else {
                     
-                    // if it's tail end of note, let users change how long it is
-                    // Walk the availability mask backwards until we find an open spot
-                    for(noteStartTime = time; noteStartTime > -1; noteStartTime--) {
-                        if(availabilityMask[noteStartTime] === true) {
-                            noteStartTime += 1; // That's the start time of the note occupying the clicked spot
-                            break;
+                    if(this._tempNoteStartTimeCache === null) {
+                        // if it's tail end of note, let users change how long it is
+                        // Walk the availability mask backwards until we find an open spot
+                        for(noteStartTime = time; noteStartTime > -1; noteStartTime--) {
+                            if(noteStartTime === 0) {
+                                break;
+                            }
+                            if(availabilityMask[noteStartTime] === true) {
+                                noteStartTime += 1; // That's the start time of the note occupying the clicked spot
+                                break;
+                            }
+                            this._tempNoteStartTimeCache = noteStartTime;
                         }
+                    } else {
+                        noteStartTime = this._tempNoteStartTimeCache;
                     }
-                    
+
                     note = pitch.getNoteCollection().get(noteStartTime);
                     noteValue = note.getValue();
                     
-                    for(nextNoteStartTime = noteStartTime + noteValue; nextNoteStartTime < orchestra.getScoreLength(); nextNoteStartTime++) {
-                        if(availabilityMask[nextNoteStartTime] === false) {
-                            break;  // That's the start time of the next note (if any)
+                    if(this._tempNextNoteStartTimeCache === null) {
+                        for(nextNoteStartTime = noteStartTime + noteValue; nextNoteStartTime < orchestra.getScoreLength(); nextNoteStartTime++) {
+                            if(availabilityMask[nextNoteStartTime] === false) {
+                                break;  // That's the start time of the next note (if any)
+                            }
+                            this._tempNextNoteStartTimeCache = nextNoteStartTime;
                         }
+                    } else {
+                        nextNoteStartTime = this._tempNextNoteStartTimeCache;
                     }
                     
                     // E.g. note starts on beat 5, duration of 5 -- tail end is on beat 9
@@ -1200,14 +1224,14 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
                 'data-value': 1
             });
         },
-        _previewNewNoteValue: function(event, activeInstrumentId, pitchId, time) {
+        _previewNewNoteValue: function(event, activeInstrumentId, pitchId, time, nextNoteStartTime) {
             
             var newTime = parseInt(event.target.getAttribute('data-time'));
             $(this.uiHelperEl).css({
-                'height': (Math.max(20, (newTime - time + 1) * 20)).toString() + 'px'
+                'height': Math.min((nextNoteStartTime - time) * 20, (Math.max(20, (newTime - time + 1) * 20))).toString() + 'px'
             });
             $(this.uiHelperEl).attr({
-                'data-value': Math.max(1, (newTime - time + 1))
+                'data-value': Math.min(nextNoteStartTime - time, Math.max(1, (newTime - time + 1)))
             });
         },
         _onMouseUpFinalizeNewNote: function(event, activeInstrumentId, pitchId, startTime) {
@@ -1219,6 +1243,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
                 SYNTH.app.controller.invoke_addNote(activeInstrumentId, pitchId, startTime, value);
             }
             this._resetUIHelperEl();
+            this._resetNoteStartTimeCaches();
             this.$el.undelegate(this.eventLayerEl, 'mousemove');
             this.$el.undelegate(this.eventLayerEl, 'mouseup');
         },
@@ -1256,6 +1281,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             });
         },
         _previewExistingNoteValue: function(event, activeInstrumentId, pitchId, time, noteStartTime, value, nextNoteStartTime) {
+            console.log('preview');
             var newTime = parseInt(event.target.getAttribute('data-time'));
             if(newTime === time) {
                 $(this.uiHelperEl).css({
@@ -1297,8 +1323,13 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
                 }
             }
             this._resetUIHelperEl();
+            this._resetNoteStartTimeCaches();
             this.$el.undelegate(this.eventLayerEl, 'mousemove');
             this.$el.undelegate(this.eventLayerEl, 'mouseup');
+        },
+        _resetNoteStartTimeCaches: function() {
+            this._tempNoteStartTimeCache = null;
+            this._tempNextNoteStartTimeCache = null;
         },
         _resetUIHelperEl: function() {
             $(this.uiHelperEl).css({
