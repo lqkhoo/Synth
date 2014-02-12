@@ -242,6 +242,9 @@ legend {
 	position: relative;
 	z-index: 51;
 }
+.event-layer-row > div[data-isselected="true"] {
+	background-color: rgba(200,200,255,0.5);
+}
 .event-layer-row:hover {
 	background-color: rgba(200,200,200,0.15);
 }
@@ -288,11 +291,13 @@ legend {
 	background-color: #eee;
 	border-bottom: 1px solid #ccc;
 	border-right: 1px solid #ccc;
-	padding-right: 5px;
 	color: #666;
 	font-size: 0.8em;
 	text-align: right;
 	cursor: pointer;
+}
+#part-left-lower .time {
+	margin-right: 5px;
 }
 #part-top {
 	position: fixed;
@@ -337,11 +342,6 @@ legend {
 	white-space: nowrap;
 	background-color: inherit;
 }
-/*
-.g-pitch-in[data-isselected="true"] {
-	background-color: rgba(200,200,255,0.5);
-}
-*/
 .g-pitch-in div {
 	background-color: inherit;
 }
