@@ -6,7 +6,7 @@
          url("../fonts/vibrocen.svg") format("svg");
 }
 
-/* html, body { overflow: hidden; } */
+ html, body { overflow: hidden; }
 
 legend {
 	font-size: 1em;
@@ -198,6 +198,7 @@ legend {
 }
 #instrument-list {
 	overflow: auto;
+	padding: 0;
 }
 #add-instrument-controls {
 	position: absolute;
@@ -218,7 +219,7 @@ legend {
 	vertical-align: middle;
 }
 #add-instrument-controls .plus {
-	font-size: 250%;
+	font-size: 200%;
 	color:#0f0;
 }
 #add-instrument-controls .minus {
@@ -453,6 +454,9 @@ legend {
 #instrument-controls {
 	width: 100%;
 }
+.instrument-panel-outer {
+	list-style: none;
+}
 .instrument-panel {
 	padding: 1em 1.5em;
 	width: 100%;
@@ -462,6 +466,7 @@ legend {
 	float: left;
 	width: auto;
 	clear: both;
+	width: 190px;
 }
 .instrument-panel input[type="text"] {
 	padding: 0.2em;
@@ -493,13 +498,18 @@ legend {
 	border-radius: 5px;
 	cursor: pointer;
 }
-
 .instrument-panel .color-picker-facade input {
 	opacity: 0;
 	position: relative;
 	height: 0;
 	width: 0;
 	z-index: -100;
+}
+.instrument-panel [data-binding="is-muted"] {
+	float: right;
+}
+.instrument-panel .volume-control {
+	padding-top: 3px;
 }
 
 #site-bottom {

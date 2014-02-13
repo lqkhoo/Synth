@@ -477,6 +477,9 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
         },
         getAllPitches: function() {
             return this.getPitchCollection().models;
+        },
+        toggleIsMuted: function() {
+            this.setIsMuted(! this.getIsMuted());
         }
     });
     
@@ -789,11 +792,14 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
         getAllInstruments: function() {
             return this.getInstrumentCollection().models;
         },
-        /** Adds a new pre-constructed instrument into the collection */
-        addInstrument: function(instrument, instrumentId) {
+        /** Adds a new pre-constructed instrument into the collection
+         *  if isUndo set to true, this will set the added instrument as the
+         *  currently selected instrument, as per the undo action
+         */
+        addInstrument: function(instrument, instrumentId, isUndo) {
             var initialCount = this.getInstrumentCollection().length;
             this.getInstrumentCollection().add(instrument);
-            if(initialCount === 0) {
+            if(initialCount === 0 || isUndo) {
                 this.setNewActiveInstrument(instrumentId);
             }
             if(SYNTH.app.topView) {
@@ -806,7 +812,8 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
         addNewDefaultInstrument: function() {
             var nextInstrumentId = this.getNextInstrumentId();
             var instrument = instrumentFactory.getNewDefaultInstrument(this, nextInstrumentId);
-            return this.addInstrument(instrument, nextInstrumentId);
+            this.addInstrument(instrument, nextInstrumentId);
+            return instrument;
         },
         /** Returns a newly constructed default instrument */ 
         makeNewDefaultInstrument: function() {
@@ -815,7 +822,17 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             return instrument;
         },
         removeInstrumentById: function(instrumentId) {
-            return this.getInstrumentCollection().remove(instrumentId);
+            var instrumentCollection = this.getInstrumentCollection();
+            var instrument = instrumentCollection.get(instrumentId);
+            var isInstrumentSelected = instrument.getIsSelected();
+            
+            instrumentCollection.remove(instrumentId);
+            if(isInstrumentSelected) {
+                if(instrumentCollection.models.length !== 0) {
+                    this.setNewActiveInstrument(instrumentCollection.models[0].getId());
+                }
+            }
+            return instrument;
         },
         getActiveInstrument: function() {
             return this.getInstrumentById(this.getActiveInstrumentId());
@@ -823,7 +840,9 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
         /** Set new active instrument */
         setNewActiveInstrument: function(id) {
             if(this.get('activeInstrumentId') !== null) {
-                this.getInstrumentById(this.getActiveInstrumentId()).setIsSelected(false);
+                if(this.getInstrumentById(this.getActiveInstrumentId())) {
+                    this.getInstrumentById(this.getActiveInstrumentId()).setIsSelected(false);
+                }
             }
             this._setActiveInstrumentId(id);
             this.getInstrumentById(id).setIsSelected(true);
@@ -989,8 +1008,9 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             });
             this._invoke(command);
         },
-        invoke_removeInstrument: function(instrumentId) {
+        invoke_removeSelectedInstrument: function() {
             var orchestra = this.getOrchestra();
+            var instrumentId = orchestra.getActiveInstrumentId();
             var instrument = orchestra.getInstrumentById(instrumentId);
             var command = new Command({
                 scope: orchestra,
@@ -1000,7 +1020,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
                 },
                 undo: {
                     func: orchestra.addInstrument,
-                    args: [instrument, instrumentId]
+                    args: [instrument, instrumentId, true]
                 }
             });
             this._invoke(command);
@@ -1652,6 +1672,11 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
                 return 'background-color:' + value + ';';
             }
             
+            function boolToMuteButtonConverter(direction, value) {
+                if(value) { return 'btn-warning glyphicon glyphicon-volume-off'; }
+                return 'btn-default glyphicon glyphicon-volume-up';
+            }
+            
             var bindings = {
                 'name': {
                     selector: '[data-binding="name"]'
@@ -1665,6 +1690,11 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
                     selector: '.instrument-panel',
                     elAttribute: 'class',
                     converter: boolToButtonConverter
+                },
+                'isMuted': {
+                    selector: '[data-binding="is-muted"]',
+                    elAttribute: 'class',
+                    converter: boolToMuteButtonConverter
                 },
                 'displayedColor': [
                     {
@@ -1720,16 +1750,22 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
         //events 
         events: {
             'click .instrument-panel': '_setAsActiveInstrument',
-            'click *': '_stopPropagation',
-            'click .color-picker-facade': '_clickColorPicker'
+            'click [data-binding="is-muted"]': '_muteInstrument',
+            'click .color-picker-facade': '_clickColorPicker',
+            'click input[type="color"]': '_stopPropagation'
         },
         _clickColorPicker: function(event) {
-            console.log(event);
-            
             $(event.currentTarget).find('input[type="color"]').click();
         },
+        _muteInstrument: function(event) {
+            var instrumentId = parseInt($(event.currentTarget).parents('.instrument-panel').attr('data-id'));
+            if(SYNTH.app) {
+                SYNTH.app.controller.getOrchestra().getInstrumentById(instrumentId).toggleIsMuted();
+            }
+        },
         _setAsActiveInstrument: function(event) {
-            this.model.getOrchestra().setNewActiveInstrument(parseInt($(event.target).attr('data-id')));
+            var instrumentId = parseInt(event.currentTarget.getAttribute('data-id'));
+            this.model.getOrchestra().setNewActiveInstrument(instrumentId);
         },
         _stopPropagation: function(event) {
             event.stopPropagation(event);
@@ -1778,10 +1814,14 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
         
         //event handlers
         events: {
-            'click #button-add-instrument': '_addDefaultInstrument'
+            'click #button-add-instrument': '_addDefaultInstrument',
+            'click #button-remove-selected-instrument': '_removeSelectedInstrument'
         },
         _addDefaultInstrument: function(event) {
             this.model.invoke_addDefaultInstrument();
+        },
+        _removeSelectedInstrument: function(event) {
+            this.model.invoke_removeSelectedInstrument();
         }
     });
     
@@ -2075,6 +2115,11 @@ $(document).ready(function() {
         
         resizeUI();
         $(window).resize(resizeUI);
+        
+        $('#instrument-list').sortable({
+            scroll: false,
+            axis: 'y',
+        }); // jQueryUI
         
         $('#site-bottom').click(function() {
             $(this).toggleClass('expanded');
