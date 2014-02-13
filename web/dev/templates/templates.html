@@ -23,18 +23,21 @@
 					<span class="note">&#9834;</span>
 				</div>
 			</div>
-			<div id="view-controls">
-				<button id="button-toggle-playback" class="btn btn-default btn-xs">Playback</button>
-				<button id="button-toggle-instruments" class="btn btn-default btn-xs">Instruments</button>
-				<button id="button-toggle-edit" class="btn btn-default btn-xs">Edit</button>
-				<!-- TODO -->
+			<div id="view-panel-controls">
+				<ul>
+					<li><button id="button-toggle-edit-panel" class="btn btn-default btn-xs">Edit</button></li>
+					<li><button id="button-toggle-view-panel" class="btn btn-default btn-xs">View</button></li>
+					<li><button id="button-unused" class="btn btn-default btn-xs" disabled="disabled">-</button></li>
+					<li><button id="button-unused2" class="btn btn-default btn-xs" disabled="disabled">-</button></li>
+				</ul>
 			</div>
 			<div id="key-buttons">
 			</div>
 		</div>
 		<div id="upper-controls">
-			<div id="edit-controls"></div>
-			<div id="add-bar-controls"><!-- template-bar-controls --></div>
+			<div id="edit-controls"><!-- template-edit-panel --></div>
+			<div id="view-controls"><!-- template-view-panel --></div>
+			<div id="bar-controls"><!-- template-bar-panel --></div>
 		</div>
 	</div>
 	<div id="site-main">
@@ -71,24 +74,34 @@
 			</div>
 		</div>
 	</div>
-	<div id="site-bottom">
-	</div>
+	<div id="site-bottom"></div>
 </div>
 
 
 
+<div class="template" id="template-add-instrument-panel">
+	<div class="nav-header">
+		<button id="button-add-instrument" class="btn btn-default btn-xs">Add&nbsp;<span class="plus">+</span></button>
+		<button id="button-remove-selected-instrument" class="btn btn-default btn-xs">Remove selected&nbsp;<span class="minus">-</span></button>
+	</div>
+</div>
 
 <div class="template" id="template-instrument-panel">
 	<div>
 		<div class="instrument-panel btn btn-default">
 			<div>
-				<input type="text" data-binding="name" class="form-control"></input> <span
-					data-binding="instrument-id"></span>
+				<div class="color-picker-facade">
+					<input type="color" data-binding="background-color"></input>
+				</div>
+				<input type="text" data-binding="name" class="form-control"></input>
 			</div>
 			<div>
-				<span>Vol: </span><span data-binding="volume"></span>
+				<select class="instrument-select form-control"></select>
 			</div>
-			<div style="font-size: 0.7em;">waveform | delete</div>
+			<div>
+				<span>Volume: </span><span data-binding="volume"></span>
+				<span><button class="btn btn-default btn-xs glyphicon glyphicon-volume-up"></button></span>
+			</div>
 		</div>
 	</div>
 </div>
@@ -159,6 +172,7 @@
 </div>
 
 
+<!-- Grid templates -->
 
 <div class="template" id="template-grid-event-capture-layer-row">
 	<div class="event-layer-row">

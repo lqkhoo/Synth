@@ -146,6 +146,14 @@ legend {
 	border-right: 1px solid #fff;
 	height: 100%;
 }
+#view-panel-controls ul {
+	list-style: none;
+	padding: 0;
+	padding-top: 5px;
+}
+#view-panel-controls button {
+	width: 80px;
+}
 
 #waveform-editor {
 	width: 200px;
@@ -188,9 +196,36 @@ legend {
 	padding: 5px 0;
 	width: 70%;
 }
+#instrument-list {
+	overflow: auto;
+}
 #add-instrument-controls {
-	width: 200px;
-	float: left;
+	position: absolute;
+	bottom: 0;
+	right: 0;
+	width: 100%;
+}
+#add-instrument-controls > div {
+	height: 30px !important;
+	display: inline-block;
+}
+#add-instrument-controls button {
+	display: inline-block;
+}
+#add-instrument-controls .plus,
+#add-instrument-controls .minus {
+	line-height: 0;
+	vertical-align: middle;
+}
+#add-instrument-controls .plus {
+	font-size: 250%;
+	color:#0f0;
+}
+#add-instrument-controls .minus {
+	font-size: 300%;
+	position: relative;
+	top: -3px;
+	color: #f00;
 }
 
 
@@ -214,7 +249,7 @@ legend {
 }
 
 #grid {
-	margin-top: 75px;
+	margin-top: 60px;
 	position: relative;
 	overflow: auto;
 }
@@ -275,14 +310,14 @@ legend {
 	position: fixed;
 	top: 100px;
 	width: 50px;
-	height: 75px;
+	height: 60px;
 	background-color: #eee;
 	border:1px solid #ccc;
 	cursor: pointer;
 }
 #part-left {
 	position: fixed;
-	top: 175px;
+	top: 160px;
 	width: 50px;
 	background-color: #EEE;
 }
@@ -303,7 +338,7 @@ legend {
 	position: fixed;
 	top: 100px;
 	margin-left: 50px;
-	height: 75px;
+	height: 60px;
 	width: 1810px;
 	font-size: 0.8em;
 	border-bottom: 1px solid #ccc;
@@ -319,16 +354,12 @@ legend {
 	text-align: center;
 }
 #part-top > div> div:first-child {
+	margin-top: 10px;
 	background-color: transparent;
 }
 #part-top .black-key {
 	background-color: #666;
 	color: #fff;
-}
-#part-top input[type="checkbox"] {
-	float: none;
-	margin-top: 5px;
-	margin-bottom: 5px;
 }
 
 .g-pitch {
@@ -361,6 +392,9 @@ legend {
 }
 .g-instrument-inner.selected .dot {
 	display: block;
+}
+.g-instrument-inner.unselected {
+	opacity: 0.5;
 }
 
 /* Site right -------------------------------------------
@@ -418,7 +452,6 @@ legend {
 }
 #instrument-controls {
 	width: 100%;
-	overflow: auto;
 }
 .instrument-panel {
 	padding: 1em 1.5em;
@@ -434,8 +467,39 @@ legend {
 	padding: 0.2em;
 	line-height: 1em;
 	height: 1.5em;
-	width: 80%;
+	width: 165px;
 	display: inline-block;
+}
+.instrument-panel select {
+	padding: 0;
+	height: 2em;
+	width: 190px;
+	font-size: 0.8em;
+	margin-top: 0.5em;
+}
+.instrument-panel select > optgroup,
+.instrument-panel select > option {
+	font-size: 1.2em;
+}
+.instrument-panel .color-picker-facade {
+	height: 20px;
+	width: 20px;
+	display: inline-block;
+	position: relative;
+	top: -5px;
+	margin-bottom: -5px;
+	box-shadow: rgba(0,0,0,0.3) 0px 0px 5px 3px inset;
+	border: 1px solid #fff;
+	border-radius: 5px;
+	cursor: pointer;
+}
+
+.instrument-panel .color-picker-facade input {
+	opacity: 0;
+	position: relative;
+	height: 0;
+	width: 0;
+	z-index: -100;
 }
 
 #site-bottom {
