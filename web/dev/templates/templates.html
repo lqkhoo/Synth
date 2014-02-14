@@ -80,7 +80,7 @@
 
 
 <div class="template" id="template-add-instrument-panel">
-	<div class="nav-header">
+	<div class="nav-footer">
 		<button id="button-add-instrument" class="btn btn-default btn-xs">Add&nbsp;<span class="plus">+</span></button>
 		<button id="button-remove-selected-instrument" class="btn btn-default btn-xs">Remove selected&nbsp;<span class="minus">-</span></button>
 	</div>
@@ -99,12 +99,20 @@
 				<select class="instrument-select form-control"></select>
 			</div>
 			<div class="volume-control">
-				<span>Volume: </span><span data-binding="volume"></span>
+				<span>Vol</span>
+				<input type="range" data-binding="volume" min="0" max="1000"></input>
+				<input type="number" data-binding="volume-val" class="form-control" min="0" max="1000"></input>
 				<button data-binding="is-muted" class="btn btn-default btn-xs glyphicon glyphicon-volume-up"></button>
 			</div>
+			<div class="sustain-velocity">
+				<span>Sustain</span>
+				<input type="checkbox" data-binding="sustain-on-off"></input>
+				<input type="number" min="0" max="9999" data-binding="sustain-duration" class="form-control"></input>
+				<span>ms</span>
+			</div>
 		</div>
-	</div>
-</li>
+	</li>
+</div>
 
 <div class="template" id="template-edit-panel">
 	<span class="btn-group">
