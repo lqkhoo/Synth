@@ -700,6 +700,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
                     }
                 }
             }
+            MIDI.Player.stop();
             
         },
         pause: function() {

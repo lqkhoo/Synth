@@ -1,4 +1,9 @@
 /*
+ * Modified from original for SynthJS - do not create a new AudioContext if one already exists
+ * There is a hardware limit of 4 contexts
+ */
+
+/*
 	--------------------------------------------
 	MIDI.Plugin : 0.3.2 : 2013/01/26
 	--------------------------------------------
@@ -256,7 +261,10 @@ if (window.AudioContext || window.webkitAudioContext) (function () {
 	root.connect = function (conf) {
 		setPlugin(root);
 		//
-		MIDI.Player.ctx = ctx = new AudioContext();
+		if(! ctx) {
+		    MIDI.Player.ctx = ctx = new AudioContext();
+		}
+		
 		///
 		var urlList = [];
 		var keyToNote = MIDI.keyToNote;
