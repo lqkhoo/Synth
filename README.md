@@ -1,5 +1,5 @@
 Synth
 =====
-Experimental synthesizer with Timbre.js
+Experimental synthesizer with MIDI.js
 
 Dev diary: http://lqkhoo.com/wiki/index.php/Dev:SynthJS
