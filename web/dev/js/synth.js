@@ -10,6 +10,8 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
     if(! MUSIC || ! MUSIC_Note || ! MUSIC_Interval) { throw 'MUSIC.js not available.'; }
     if(! MIDI) { throw 'MIDI.js not available.'; }
     
+    
+    
     SYNTH.soundfontUrl = '../soundfont/';
     
     // Op | Establish template cache -------------------------------------------------------------------
@@ -105,6 +107,9 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
      *     }
      * });
      */
+    /** An object encapsulating a function and its logical reverse.
+     *  Used for the undo/redo stack
+     */
     function Command(args) {
         var self = this;
         this._scope = args.scope;
@@ -120,6 +125,32 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
         };
     };
     
+    /** Queue for managing window events */
+    function EventQueue() {
+        var queue = [];
+        
+        this.enqueue = function(event) {
+            return this.queue.push(eventId);
+        };
+        /** Call this when the event has already been executed to tidy up the queue */
+        this.dequeue = function() {
+            return this.queue.shift();
+        };
+        /** Call this if the event has not yet fired and you want to cancel execution  */
+        this.dequeueEarly = function() {
+            var timeoutId = this.queue.shift();
+            window.clearTimeout(timeoutId);
+            return timeoutId; 
+        },
+        /** Call this to empty the queue and cancel all events scheduled to be fired */
+        this.emptyQueue = function() {
+            while(queue.length != 0) {
+                this.dequeueEarly();
+            }
+        };
+    }
+    
+    /** An object which executes a Command object */
     var Invoker = Backbone.Model.extend({
         defaults: {            
             'undoStack': [],
@@ -574,32 +605,44 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
     var Player = Backbone.Model.extend({
         defaults: {
             'currentTime': 0,
+            'eventQueue': new EventQueue(),
             'isPlaying': false,
             'isLooping': false,
             'orchestra': null,
             'controller': null,
-            'playerObject': null,
             'isPlayerReady': false,
             'soundFontsLoaded': {},
-            'loadingSoundFonts': []
+            'loadingSoundFonts': [],
         },
         getCurrentTime: function() {
             return this.get('currentTime');
         },
+        setCurrentTime: function(newTime) {
+            this.set('currentTime', newTime);
+            return newTime;
+        },
+        getEventQueue: function() {
+            return this.get('eventQueue');
+        },
         getIsPlaying: function() {
             return this.get('isPlaying');
         },
+        _setIsPlaying: function(isPlaying) {
+            this.set('isPlaying', isPlaying);
+            return isPlaying;
+        },
         getIsLooping: function() {
             return this.get('isLooping');
+        },
+        setIsLooping: function(isLooping) {
+            this.set('isLooping', isLooping);
+            return isLooping;
         },
         getOrchestra: function() {
             return this.get('orchestra');
         },
         getController: function() {
             return this.get('controller');
-        },
-        getPlayerObject: function() {
-            return this.get('playerObject');
         },
         getIsPlayerReady: function() {
             return this.get('isPlayerReady');
@@ -615,6 +658,9 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             return this.get('loadingSoundFonts');
         },
         // methods
+        incrementCurrentTime: function() {
+            return this.setCurrentTime(this.getCurrentTime() + 1);
+        },
         /** Returns an array of soundfont instrument ids (strings) */
         getSoundFontInstruments: function() {
             var orchestra = this.getOrchestra();
@@ -663,6 +709,11 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             var channelId;
             var noteOnDelay;
             var noteOffDelay;
+            
+            var timeoutFunc;
+            
+            this._setIsPlaying(true);
+            
             if(MIDI.programChange) {
                 for(instrumentId in instruments) {
                     MIDI.programChange(parseInt(instrumentId), instruments[instrumentId].getSoundFontId());
@@ -686,32 +737,65 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
                                 midiNoteCode = MIDI.pianoKeyOffset + parseInt(pitchId);
                                 noteOnDelay = time * squaresPerSecond;
                                 channelId = parseInt(instrumentId);
-                                MIDI.noteOn(channelId, midiNoteCode, volume, noteOnDelay);
-                                if(isSustainOn) {
-                                    sustainDuration = instrument.getSustainDuration() / 1000;
-                                    MIDI.noteOff(channelId, midiNoteCode, noteOnDelay + sustainDuration);
-                                } else {
-                                    noteOffDelay = (time + note.getValue()) * squaresPerSecond;
-                                    MIDI.noteOff(channelId, midiNoteCode, noteOffDelay);
-                                }
                                 
+                                // timeout play function
+                                timeoutFunc = function(scope) {
+                                    MIDI.noteOn(channelId, midiNoteCode, volume, 0);
+                                    if(isSustainOn) {
+                                        sustainDuration = instrument.getSustainDuration() / 1000;
+                                        MIDI.noteOff(channelId, midiNoteCode, sustainDuration);
+                                    } else {
+                                        noteOffDelay = note.getValue() * squaresPerSecond;
+                                        MIDI.noteOff(channelId, midiNoteCode, noteOffDelay);
+                                    }
+                                    
+                                    console.log(scope);
+                                    
+                                    scope.incrementCurrentTime();
+                                    //TODO loop behavior
+                                    scope.getEventQueue().dequeue();
+                                };
+                                
+                                
+                                this.getEventQueue().enqueue(
+                                        window.setTimeout(timeoutFunc, noteOnDelay, this)
+                                );
                             }
                         }
                     }
                 }
             }
-            MIDI.Player.stop();
             
         },
         pause: function() {
-            
+            this._setIsPlaying(false)
+            this.getEventQueue().emptyQueue();
         },
-        rewindToBeginning: function() {
-            
+        togglePlayPause: function() {
+            if(this.getIsPlaying()) {
+                this.pause();
+            } else {
+                this.play();
+            }
+        },
+        /** Moves the play head to a new time */
+        setPlayHead: function(newTime) {
+            this.getEventQueue().emptyQueue();
+            this.setCurrentTime(newTime);
+            if(this.getIsPlaying()) {
+                this.play();
+            }
+        },
+        rewindToStart: function() {
+            this.setCurrentTime(0);
         },
         forwardToEnd: function() {
-            
+            this.setCurrentTime(this.getOrchestra().getScoreLength() - 1);
         },
+        toggleIsLooping: function() {
+            this.setIsLooping(! this.getIsLooping());
+        },
+        // sound font methods
         getIsSoundFontLoaded: function(number) {
             if(this.getSoundFontsLoaded()[number]) {
                 return true;
@@ -749,7 +833,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
                         console.log('callback');
                         self.markSoundFontAsLoaded(number);
                     }
-                });    
+                });
             }
             
         },
@@ -1046,16 +1130,20 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             'viewController': new ViewController()
         },
         initialize: function() {
-            var orchestra = new Orchestra({
+            var orchestra;
+            var player;
+            
+            orchestra = new Orchestra({
                 controller: this
             });
             this._setOrchestra(orchestra);
             
-            this._setPlayer(new Player({
+            player = new Player({
                 orchestra: orchestra,
-                controller: this,
-                playerObject: MIDI.Player
-            }));
+                controller: this
+            });
+            
+            this._setPlayer(player);
         },
         getOrchestra: function() {
             return this.get('orchestra');
@@ -1800,28 +1888,104 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
         model: null,
         template: SYNTH.templateCache['template-playback-panel'],
         modelBinder: null,
+        orchestraModelBinder: null,
         initialize: function() {
             this.$el.html(this.template);
             this.modelBinder = new Backbone.ModelBinder();
+            this.orchestraModelBinder = new Backbone.ModelBinder();
             this.render();
         },
         render: function() {
-            var bindings = {
+            
+            function boolToActiveClassConverter(direction, value) {
+                if(value) {
+                    return 'active';
+                }
+                return '';
+            }
+            
+            function boolToPlayButtonConverter(direction, value) {
+                if(value) {
+                    return 'glyphicon glyphicon-pause';
+                }
+                return 'glyphicon glyphicon-play';
+            }
+            
+            function inputBarConverter(direction, value) {
+                if(direction === 'ViewToModel') {
+                    return parseInt(value) - 1;
+                } else {
+                    return value + 1;
+                }
                 
             };
+            
+            var bindings = {
+                'isLooping': {
+                    selector: '#button-loop',
+                    elAttribute: 'class',
+                    converter: boolToActiveClassConverter
+                },
+                'isPlaying': {
+                    selector: '#button-play-pause',
+                    elAttribute: 'class',
+                    converter: boolToPlayButtonConverter
+                },
+                'currentTime': [
+                    {
+                        selector: '#input-playback-bar',
+                        converter: inputBarConverter
+                    },
+                    {
+                        selector: '[data-attr="current-time"]',
+                        converter: inputBarConverter
+                    }
+                ]
+            };
+            
+            var orchestraBindings = {
+                'scoreLength':[
+                   {
+                       selector: '#score-length'
+                   },
+                   {
+                       selector: '#input-playback-bar',
+                       elAttribute: 'max'
+                   }
+                ]
+            };
+            
+            this.modelBinder.bind(this.model.getPlayer(), this.el, bindings);
+            this.orchestraModelBinder.bind(this.model.getOrchestra(), this.el, orchestraBindings);
+            
+            return this;
         },
         close: function() {
             this.$el.empty();
-            this.unbind();
+            this.modelBinder.unbind();
+            this.orchestraModelBinder.unbind();
         },
         events: {
-            'click #button-play-pause': '_play'
+            'click #button-play-pause': '_togglePlayPause',
+            'click #button-to-beginning': '_rewindToBeginning',
+            'click #button-to-end': '_forwardToEnd',
+            'click #button-loop': '_toggleIsLooping'
         },
-        _play: function() {
-            this.model.getPlayer().play();
+        _togglePlayPause: function() {
+            if(SYNTH.app) {
+                SYNTH.app.controller.getPlayer().togglePlayPause();
+            }
         },
-        _pause: function() {
-            
+        _rewindToBeginning: function() {
+            this.model.getPlayer().rewindToStart();
+        },
+        _forwardToEnd: function() {
+            this.model.getPlayer().forwardToEnd();
+        },
+        _toggleIsLooping: function() {
+            if(SYNTH.app) {
+                SYNTH.app.controller.getPlayer().toggleIsLooping();
+            }
         }
     });
     
@@ -2287,10 +2451,7 @@ $(document).ready(function() {
      });
      */
      
-     
-
-    console.log(MIDI.noteToKey);
-    console.log(MIDI.GeneralMIDI);
+    //console.log(MIDI.noteToKey);
     
     
     
@@ -2306,17 +2467,12 @@ $(document).ready(function() {
     // Preconfigure orchestra
     SYNTH.app.controller.getOrchestra().addNewDefaultInstrument();
     
-    
-    SYNTH.app.controller.getPlayer().play();
-    
-    
-    
     // UI ops
     (function() {
         
         function resizeUI() {
             var windowHeight = $(window).height() - 100 - 25;    // 100px #site-top 25px #site-bottom
-            var partHeight = windowHeight - 60; // 75px static top frequency row
+            var partHeight = windowHeight - 60; // 60px static top frequency row
             var instrumentControlHeight = windowHeight - 100 - 25 - 20 - 25;   // ditto above - 20px instrument .nav-menu -25px add instrument
             $('#site-main').attr({'style': 'height: ' + windowHeight + 'px;'});
             $('#grid').attr({'style': 'height: ' + partHeight + 'px;'});
@@ -2341,7 +2497,7 @@ $(document).ready(function() {
     SYNTH.app.domCache.left = $('#part-left');
     $('#grid').scroll(function() {
         SYNTH.app.domCache.top.attr({'style': 'left: ' + (- this.scrollLeft) + 'px'});
-        SYNTH.app.domCache.left.attr({'style': 'top: ' + (- this.scrollTop + 175) + 'px'});
+        SYNTH.app.domCache.left.attr({'style': 'top: ' + (- this.scrollTop + 160) + 'px'});
     });
     
 });
