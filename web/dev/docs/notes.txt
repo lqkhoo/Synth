@@ -6,14 +6,14 @@ Element											z-index
 #site-top										101	[MENU]
 #site-right										100	[MENU]
 
-.event-layer-row								51
+.event-layer-row > div							51
 #grid-event-capture-layer-columns > div			50
 
 
 #site-bottom									20	[MENU]
 
-.part-control-block-inner.active				20
-.part-control-block-inner.inactive				5
+#grid .g-instrument-inner.selected				20
+#grid .g-instrument-inner.unselected			5
 
 
 Get frequency from note

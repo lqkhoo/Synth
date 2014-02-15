@@ -27,17 +27,23 @@
 				<ul>
 					<li><button id="button-toggle-edit-panel" class="btn btn-default btn-xs">Edit</button></li>
 					<li><button id="button-toggle-view-panel" class="btn btn-default btn-xs">View</button></li>
-					<li><button id="button-unused" class="btn btn-default btn-xs" disabled="disabled">-</button></li>
-					<li><button id="button-unused2" class="btn btn-default btn-xs" disabled="disabled">-</button></li>
+					<li><button id="button-toggle-import-export-panel" class="btn btn-default btn-xs" disabled="disabled">Import/Export</button></li>
+					<li><button id="button-toggle-tween-panel" class="btn btn-default btn-xs" disabled="disabled">Tween</button></li>
 				</ul>
 			</div>
 			<div id="key-buttons">
+				<span class="btn-group">
+					<button id="button-undo" class="btn btn-default glyphicon glyphicon-arrow-left"></button>
+					<button id="button-redo" class="btn btn-default glyphicon glyphicon-arrow-right"></button>
+				</span>
 			</div>
 		</div>
 		<div id="upper-controls">
-			<div id="edit-controls"><!-- template-edit-panel --></div>
-			<div id="view-controls"><!-- template-view-panel --></div>
-			<div id="bar-controls"><!-- template-bar-panel --></div>
+			<div id="upper-controls-inner">
+				<div id="edit-controls"><!-- template-edit-panel --></div>
+				<div id="view-controls"><!-- template-view-panel --></div>
+				<div id="import-export-controls"><!-- TODO --></div>
+			</div>
 		</div>
 	</div>
 	<div id="site-main">
@@ -86,7 +92,7 @@
 	</div>
 </div>
 
-<div class="template" id="template-instrument-panel">
+<ul class="template" id="template-instrument-panel">
 	<li class="instrument-panel-outer">
 		<div class="instrument-panel btn btn-default">
 			<div>
@@ -112,13 +118,49 @@
 			</div>
 		</div>
 	</li>
-</div>
+</ul>
 
 <div class="template" id="template-edit-panel">
-	<span class="btn-group">
-		<button id="button-undo" class="btn btn-default glyphicon glyphicon-arrow-left"></button>
-		<button id="button-redo" class="btn btn-default glyphicon glyphicon-arrow-right"></button>
-	</span>
+	<div>
+		<div class="nav-header">Grid - Selection</div>
+		<div>
+			<span class="click-mode">Click mode</span>
+			<span class="btn-group">
+				<button class="btn btn-default btn-xs" disabled="disabled">Edit</button>
+				<button class="btn btn-default btn-xs" disabled="disabled">Select</button>
+			</span>
+		</div>
+		<div>
+			<span class="instrument-context">Instrument context</span>
+			<span class="btn-group">
+				<button class="btn btn-default btn-xs" disabled="disabled">Active</button>
+				<button class="btn btn-default btn-xs" disabled="disabled">All</button>
+			</span>
+		</div>
+		<div>
+			<span class="btn-group">
+				<button class="btn btn-default btn-xs" disabled="disabled">Copy</button>
+				<button class="btn btn-default btn-xs" disabled="disabled">Cut</button>
+				<button class="btn btn-default btn-xs" disabled="disabled">Clear</button>
+				<button class="btn btn-default btn-xs" disabled="disabled">Paste</button>
+			</span>			
+		</div>
+	</div>
+	<div>
+		<div class="nav-header">Grid - Time blocks</div>
+		<div>
+			<span class="btn-group">
+				<button id="button-append-beats" class="btn btn-default btn-xs">Append</button>
+				<button id="button-insert-beats" class="btn btn-default btn-xs">Insert</button>
+			</span>
+			<input id="beats-per-addition" min="1" max="200" type="number" class="form-control"></input>
+			<span>block(s)</span>
+		</div>
+		<div>
+			<button id="button-delete-beats" class="btn btn-default btn-xs">Delete</button>
+			<span>selected block(s)</span>
+		</div>
+	</div>	
 </div>
 
 <div class="template" id="template-playback-panel">
@@ -141,40 +183,6 @@
 		<span>(</span>
 		<span data-attr="current-time"></span>
 		<span>)</span>
-	</div>
-</div>
-
-
-<div class="template" id="template-bar-panel">
-	<div class="nav-header">Beats and bars</div>
-	<div>
-		<div>
-			<div id="beats-per-bar-title">
-				<span>Beats per bar</span> (<span id="beats-per-bar-display"></span>)
-			</div>
-			<div id="beats-per-bar-container">
-				<span>4</span> <input id="beats-per-bar-input" type="range" min="4"
-					max="24"></input> <span>24</span>
-
-			</div>
-		</div>
-	</div>
-	<div>
-		<div>
-			<span><button id="button-add-bars"
-					class="btn btn-default btn-xs">Add</button></span> <span><input
-				id="bars-per-addition" type="text" class="form-control"></input></span> <span>bar(s)</span>
-		</div>
-		<div>
-			<span><button id="button-add-beats"
-					class="btn btn-default btn-xs">Add</button></span> <input
-				id="beats-per-addition" type="text" class="form-control"></input> <span>beat(s)</span>
-		</div>
-		<div>
-			<span><button id="button-delete-beats"
-					class="btn btn-default btn-xs">Delete</button></span> <span>Selected
-				beat(s)</span>
-		</div>
 	</div>
 </div>
 
@@ -213,97 +221,6 @@
 		</div>
 
 	</div>
-</div>
-
-<div class="template" id="template-grid-event-capture-layer-column">
-	<div data-pitch="0"></div>
-	<div data-pitch="1"></div>
-	<div data-pitch="2"></div>
-	<div data-pitch="3"></div>
-	<div data-pitch="4"></div>
-	<div data-pitch="5"></div>
-	<div data-pitch="6"></div>
-	<div data-pitch="7"></div>
-	<div data-pitch="8"></div>
-	<div data-pitch="9"></div>
-	<div data-pitch="10"></div>
-	<div data-pitch="11"></div>
-	<div data-pitch="12"></div>
-	<div data-pitch="13"></div>
-	<div data-pitch="14"></div>
-	<div data-pitch="15"></div>
-	<div data-pitch="16"></div>
-	<div data-pitch="17"></div>
-	<div data-pitch="18"></div>
-	<div data-pitch="19"></div>
-	<div data-pitch="20"></div>
-	<div data-pitch="21"></div>
-	<div data-pitch="22"></div>
-	<div data-pitch="23"></div>
-	<div data-pitch="24"></div>
-	<div data-pitch="25"></div>
-	<div data-pitch="26"></div>
-	<div data-pitch="27"></div>
-	<div data-pitch="28"></div>
-	<div data-pitch="29"></div>
-	<div data-pitch="30"></div>
-	<div data-pitch="31"></div>
-	<div data-pitch="32"></div>
-	<div data-pitch="33"></div>
-	<div data-pitch="34"></div>
-	<div data-pitch="35"></div>
-	<div data-pitch="36"></div>
-	<div data-pitch="37"></div>
-	<div data-pitch="38"></div>
-	<div data-pitch="39"></div>
-	<div data-pitch="40"></div>
-	<div data-pitch="41"></div>
-	<div data-pitch="42"></div>
-	<div data-pitch="43"></div>
-	<div data-pitch="44"></div>
-	<div data-pitch="45"></div>
-	<div data-pitch="46"></div>
-	<div data-pitch="47"></div>
-	<div data-pitch="48"></div>
-	<div data-pitch="49"></div>
-	<div data-pitch="50"></div>
-	<div data-pitch="51"></div>
-	<div data-pitch="52"></div>
-	<div data-pitch="53"></div>
-	<div data-pitch="54"></div>
-	<div data-pitch="55"></div>
-	<div data-pitch="56"></div>
-	<div data-pitch="57"></div>
-	<div data-pitch="58"></div>
-	<div data-pitch="59"></div>
-	<div data-pitch="60"></div>
-	<div data-pitch="61"></div>
-	<div data-pitch="62"></div>
-	<div data-pitch="63"></div>
-	<div data-pitch="64"></div>
-	<div data-pitch="65"></div>
-	<div data-pitch="66"></div>
-	<div data-pitch="67"></div>
-	<div data-pitch="68"></div>
-	<div data-pitch="69"></div>
-	<div data-pitch="70"></div>
-	<div data-pitch="71"></div>
-	<div data-pitch="72"></div>
-	<div data-pitch="73"></div>
-	<div data-pitch="74"></div>
-	<div data-pitch="75"></div>
-	<div data-pitch="76"></div>
-	<div data-pitch="77"></div>
-	<div data-pitch="78"></div>
-	<div data-pitch="79"></div>
-	<div data-pitch="80"></div>
-	<div data-pitch="81"></div>
-	<div data-pitch="82"></div>
-	<div data-pitch="83"></div>
-	<div data-pitch="84"></div>
-	<div data-pitch="85"></div>
-	<div data-pitch="86"></div>
-	<div data-pitch="87"></div>
 </div>
 
 </html>

@@ -18,7 +18,7 @@ legend {
 #site-top {
 	background-color: #eee;
 	border: 1px solid #aaa;
-	height: 100px;
+	height: 110px;
 	position: relative;
 	z-index: 101;
 	box-shadow: rgba(50,50,50,0.5) 0 2px 5px;
@@ -27,8 +27,10 @@ legend {
 .nav-header,
 .nav-footer {
 	padding: 3px 1.5em;
+	margin: 0 !important;
 	width: 100% !important;
 	height: 20px !important;
+	text-align: left !important;
 	border-bottom: 1px solid #fff;
 	box-shadow: #464646 0 2px 4px inset;
 	color: #fff;
@@ -140,15 +142,19 @@ legend {
 
 #upper-controls {
 	width: 100%;
-	min-width: 1000px;
+	height: 100%;
+}
+#upper-controls-inner {
+	margin-left: 450px;
 	height: 100%;
 }
 
-#upper-controls > div {
-	float: right;
-	border-left: 1px solid #ccc;
-	border-right: 1px solid #fff;
+#upper-controls-inner > div {
 	height: 100%;
+	border-left: 1px solid #ccc;
+	border-right: 1px solid #ccc;
+	display:inline-block;
+	float: left;
 }
 #view-panel-controls ul {
 	list-style: none;
@@ -156,50 +162,49 @@ legend {
 	padding-top: 5px;
 }
 #view-panel-controls button {
-	width: 80px;
+	width: 90px;
 }
 
-#waveform-editor {
-	width: 200px;
+#edit-controls {
+	
 }
-#load-track-controls {
-	width: 200px;
-}
-
-#add-bar-controls {
-	width: 350px;
-}
-#add-bar-controls > div {
-	width: 50%;
+#edit-controls > div {
 	height: 100%;
 	float: left;
-	padding: 5px;
 }
-#add-bar-controls span {
-	color: #666;
+#edit-controls > div > div {
+	margin: auto;
+	margin: 5px 10px 0 5px;
+	text-align: center;
+}
+#edit-controls input[type="number"] {
+	width: 50px;
+	display: inline-block;
+	height: 1.7em;
+	padding: 0;
+	padding-left: 3px;
+	padding-right: 3px;
+	vertical-align: middle;
+}
+#edit-controls button {
+	width: 60px;
+}
+#edit-controls button.short {
+	width: 45px;
+}
+#edit-controls span {
 	font-size: 0.9em;
 }
-#add-bar-controls input[type="text"] {
-	padding: 0.2em;
-	line-height: 1em;
-	height: 1.5em;
-	width: 30px;
-	display: inline-block;
+#edit-controls #button-delete-beats {
+	margin-left: 57px;
 }
-#beats-per-bar-title {
-	margin-left: 15px;
+#edit-controls .click-mode {
+	margin-left: 48px;
 }
-#beats-per-bar-container > span {
-	display: block;
-	float: left;
-	padding: 5px;
+#edit-controls .instrument-context {
+	margin-left: 6px;
 }
-#beats-per-bar-input {
-	display: block;
-	float: left;
-	padding: 5px 0;
-	width: 70%;
-}
+
 #instrument-list {
 	overflow: auto;
 	padding: 0;
@@ -299,6 +304,7 @@ legend {
 	border-right: 1px solid rgba(100,100,100,0.15);
 	z-index: 50;
 }
+
 .part-control-inner {
 	display: inline-block;
 	position: absolute;	/* IE needs absolute - relative won't do */
@@ -313,7 +319,7 @@ legend {
 }
 #part-anchor {
 	position: fixed;
-	top: 100px;
+	top: 110px;
 	width: 50px;
 	height: 60px;
 	background-color: #eee;
@@ -322,7 +328,7 @@ legend {
 }
 #part-left {
 	position: fixed;
-	top: 160px;
+	top: 170px;
 	width: 50px;
 	background-color: #EEE;
 }
@@ -341,7 +347,7 @@ legend {
 }
 #part-top {
 	position: fixed;
-	top: 100px;
+	top: 110px;
 	margin-left: 50px;
 	height: 60px;
 	width: 1810px;
@@ -462,15 +468,15 @@ legend {
 	list-style: none;
 }
 .instrument-panel {
-	padding: 1em 1.5em;
+	padding: 1em 0;
 	width: 100%;
 	text-align: left;
 }
 .instrument-panel > div {
-	float: left;
 	width: auto;
 	clear: both;
-	width: 190px;
+	width: 100%;
+	text-align: center;
 }
 .instrument-panel input[type="text"] {
 	padding: 0.2em;
@@ -480,6 +486,7 @@ legend {
 	display: inline-block;
 }
 .instrument-panel select {
+	display: inline-block;
 	padding: 0;
 	height: 2em;
 	width: 190px;
@@ -533,12 +540,14 @@ legend {
 	font-size: 0.9em;
 	padding-top: 2px;
 }
-.instrument-panel .sustain-velocity span {
+.instrument-panel .sustain-velocity span:first-child {
+	position: relative;
+	left: -8px;
 }
 .instrument-panel .sustain-velocity input[type="checkbox"] {
 	position: relative;
 	top: 4px;
-	margin-left: 47px;
+	margin-left: 40px;
 }
 
 .instrument-panel [data-binding="is-muted"] {
