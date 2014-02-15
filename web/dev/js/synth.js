@@ -129,16 +129,16 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
     function EventQueue() {
         var queue = [];
         
-        this.enqueue = function(event) {
-            return this.queue.push(eventId);
+        this.enqueue = function(eventId) {
+            return queue.push(eventId);
         };
         /** Call this when the event has already been executed to tidy up the queue */
         this.dequeue = function() {
-            return this.queue.shift();
+            return queue.shift();
         };
         /** Call this if the event has not yet fired and you want to cancel execution  */
         this.dequeueEarly = function() {
-            var timeoutId = this.queue.shift();
+            var timeoutId = queue.shift();
             window.clearTimeout(timeoutId);
             return timeoutId; 
         },
@@ -685,15 +685,12 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             }
             return array;
         },
-        play: function() {
-            this.playFromTime(this.getCurrentTime());
-        },
-        playFromTime: function(startTime) {
-            var time;
-            var orchestra = this.getOrchestra();
-            var squaresPerSecond = orchestra.getPlaySpeed() / 1000;
+        /** Plays notes starting at the given time
+         *  This is a private helper method to playFromTime etc. and does not actually 
+         *  set up all the states properly by itself
+         */
+        _playTime: function(time, orchestra, instruments, squaresPerSecond) {
             
-            var instruments = orchestra.getAllInstruments();
             var instrumentId = null;
             var instrument;
             var volume;
@@ -707,18 +704,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             var note;
             var midiNoteCode;
             var channelId;
-            var noteOnDelay;
             var noteOffDelay;
-            
-            var timeoutFunc;
-            
-            this._setIsPlaying(true);
-            
-            if(MIDI.programChange) {
-                for(instrumentId in instruments) {
-                    MIDI.programChange(parseInt(instrumentId), instruments[instrumentId].getSoundFontId());
-                }
-            }
             
             for(instrumentId in instruments) {
                 instrument = instruments[instrumentId];
@@ -728,44 +714,91 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
                     isSustainOn = instrument.getIsSustainOn();
                     pitches = instrument.getAllPitches();
                     
-                    for(time = startTime; time < orchestra.getScoreLength(); time++) {
-                        
-                        for(pitchId in pitches) {
-                            pitch = pitches[pitchId];
-                            note = pitch.getNoteStartingAt(time);
-                            if(note) {
-                                midiNoteCode = MIDI.pianoKeyOffset + parseInt(pitchId);
-                                noteOnDelay = time * squaresPerSecond;
-                                channelId = parseInt(instrumentId);
-                                
-                                // timeout play function
-                                timeoutFunc = function(scope) {
-                                    MIDI.noteOn(channelId, midiNoteCode, volume, 0);
-                                    if(isSustainOn) {
-                                        sustainDuration = instrument.getSustainDuration() / 1000;
-                                        MIDI.noteOff(channelId, midiNoteCode, sustainDuration);
-                                    } else {
-                                        noteOffDelay = note.getValue() * squaresPerSecond;
-                                        MIDI.noteOff(channelId, midiNoteCode, noteOffDelay);
-                                    }
-                                    
-                                    console.log(scope);
-                                    
-                                    scope.incrementCurrentTime();
-                                    //TODO loop behavior
-                                    scope.getEventQueue().dequeue();
-                                };
-                                
-                                
-                                this.getEventQueue().enqueue(
-                                        window.setTimeout(timeoutFunc, noteOnDelay, this)
-                                );
+                    for(pitchId in pitches) {
+                        pitch = pitches[pitchId];
+                        note = pitch.getNoteStartingAt(time);
+                        if(note) {
+                            midiNoteCode = MIDI.pianoKeyOffset + parseInt(pitchId);
+                            channelId = parseInt(instrumentId);
+                            
+                            MIDI.noteOn(channelId, midiNoteCode, volume, 0);
+                            if(isSustainOn) {
+                                sustainDuration = instrument.getSustainDuration() / 1000;
+                                MIDI.noteOff(channelId, midiNoteCode, sustainDuration);
+                            } else {
+                                noteOffDelay = note.getValue() * squaresPerSecond;
+                                MIDI.noteOff(channelId, midiNoteCode, noteOffDelay);
                             }
                         }
                     }
                 }
             }
+        },
+        /** Helper function for play behavior - detects whether looping is on, if it is,
+         *  this stops the player at the square of grid, otherwise sets time to beginning
+         *  and plays through the piece again.
+         */
+        _loopOrStop: function() {
+            console.log('fooo');
+            if(this.getIsLooping()) {
+                this.playFromTime(0);
+            } else {
+                this.pause();
+            }
+        },
+        play: function() {
+            this.playFromTime(this.getCurrentTime());
+        },
+        /** This is the key method that plays music back */
+        playFromTime: function(startTime) {
+            var self = this;
             
+            var time;
+            var orchestra = this.getOrchestra();
+            var squaresPerSecond = orchestra.getPlaySpeed() / 1000;
+            var instruments = orchestra.getAllInstruments();
+            var instrumentId = null;
+            
+            var delay;  // delay before playing the note
+            var isLastNote;
+            this._setIsPlaying(true);
+            
+            // establish channels
+            if(MIDI.programChange) {
+                for(instrumentId in instruments) {
+                    MIDI.programChange(parseInt(instrumentId), instruments[instrumentId].getSoundFontId());
+                }
+            }
+            
+            for(time = startTime; time < orchestra.getScoreLength(); time++) {
+                
+                if(time === orchestra.getScoreLength() - 1) {
+                    isLastNote = true;
+                } else {
+                    isLastNote = false;
+                }
+                
+                (function(time, isLastNote) {
+                    var timeoutId;
+                    
+                    delay = (time - startTime) * squaresPerSecond * 1000;
+                    timeoutId = window.setTimeout(function() {
+                        self.setCurrentTime(time);
+                        self._playTime(time, orchestra, instruments, squaresPerSecond);
+                        self.getEventQueue().dequeue();
+                    }, delay, time);
+                    
+                    self.getEventQueue().enqueue(timeoutId);
+                    
+                    if(isLastNote) {
+                        timeoutId = window.setTimeout(function() {
+                            self._loopOrStop();
+                        }, (time - startTime + 1) * squaresPerSecond * 1000);
+                    }
+                    
+                }(time, isLastNote));
+
+            }
         },
         pause: function() {
             this._setIsPlaying(false)
