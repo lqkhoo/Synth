@@ -739,13 +739,13 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
          *  and plays through the piece again.
          */
         _loopOrStop: function() {
-            console.log('fooo');
             if(this.getIsLooping()) {
                 this.playFromTime(0);
             } else {
                 this.pause();
             }
         },
+        /** Plays from current time */
         play: function() {
             this.playFromTime(this.getCurrentTime());
         },
@@ -793,8 +793,11 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
                     if(isLastNote) {
                         timeoutId = window.setTimeout(function() {
                             self._loopOrStop();
+                            self.getEventQueue().dequeue();
                         }, (time - startTime + 1) * squaresPerSecond * 1000);
                     }
+                    
+                    self.getEventQueue().enqueue(timeoutId);
                     
                 }(time, isLastNote));
 
