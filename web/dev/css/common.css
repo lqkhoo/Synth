@@ -147,6 +147,7 @@ legend {
 #upper-controls-inner {
 	margin-left: 450px;
 	height: 100%;
+	overflow: hidden;
 }
 
 #upper-controls-inner > div {
@@ -166,7 +167,7 @@ legend {
 }
 
 #edit-controls {
-	
+	min-width: 500px;
 }
 #edit-controls > div {
 	height: 100%;
@@ -195,7 +196,7 @@ legend {
 #edit-controls span {
 	font-size: 0.9em;
 }
-#edit-controls #button-delete-beats {
+#edit-controls #button-delete-time-blocks {
 	margin-left: 57px;
 }
 #edit-controls .click-mode {
@@ -203,6 +204,10 @@ legend {
 }
 #edit-controls .instrument-context {
 	margin-left: 6px;
+}
+
+#edit-controls #button-clear-all {
+	width: 95px;
 }
 
 #instrument-list {

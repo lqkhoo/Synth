@@ -1010,7 +1010,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             return this.get('scoreLength');
         },
         _setScoreLength: function(newScoreLength) {
-            this.set('scoreLength', newScoreLEngth);
+            this.set('scoreLength', newScoreLength);
             return newScoreLength;
         },
         getPlaySpeed: function() {
@@ -1020,7 +1020,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             this.set('playSpeed', playSpeed);
             return playSpeed;
         },
-         
+        
         // methods
         getPitch: function(instrumentId, pitchId) {
             return this.getInstrumentById(instrumentId).getPitchCollection().get(pitchId);
@@ -1115,8 +1115,49 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
         setTimeUnitSelection: function(time, isSelected) {
             this.getTimeUnit(time).setIsSelected(isSelected);
             return isSelected;
+        },
+        appendTimeUnits: function(numberOfUnits) {
+            var startTime = this.getScoreLength();
+            var endTime = startTime + numberOfUnits; // non-inclusive
+            var timeUnitCollection = this.getTimeUnitCollection();
+            
+            var i;
+            for(i = startTime; i < endTime; i++) {
+                timeUnitCollection.add(new TimeUnit({id: i}));
+            }
+            
+            this._setScoreLength(endTime);
+            
+        },
+        // logical reverse of above for undo only
+        unappendTimeUnits: function(numberOfUnits) {
+            var endTime = this.getScoreLength(); // non-inclusive
+            var startTime = endTime - numberOfUnits;
+            var timeUnitCollection = this.getTimeUnitCollection();
+            
+            var i;
+            for(i = startTime; i < endTime; i++) {
+                timeUnitCollection.remove(i);
+            }
+            
+            this._setScoreLength(startTime);
         }
     });
+    
+    /** A model whose attributes describe a selection context on the grid */
+    var SelectionContext = Backbone.Model.extend({
+        defaults: {
+            'hasSelection': false,
+            'context': null,
+            'timeUnitFrom': null,
+            'timeUnitTo': null,
+            'pitchFrom': null,
+            'pitchTo': null,
+            'noteStartTime': null
+        }
+    });
+    
+    // Controllers --------------------------------------------
     
     /** Model of user-controllable Views' states */
     var ViewController = Backbone.Model.extend({
@@ -1129,6 +1170,74 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
         },
         toggleViewPanelVisibility: function() {
             this.set('isViewPanelVisible', ! this.get('isViewPanelVisible'));
+        }
+    });
+    
+    /** Model of application behavior that doesn't belong in any of the core models */
+    var AppBehaviorController = Backbone.Model.extend({
+        defaults: {
+            'CLICK_MODE_EDIT': 'edit',
+            'CLICK_MODE_SELECT': 'select',
+            'CONTEXT_ACTIVE': 'active',
+            'CONTEXT_ALL': 'all',
+            'clickMode': null,
+            'selectionContext': null,
+            'timeBlocksPerAdd': 1,
+            'majorGridSize': 16,
+            'minorGridSize': 4
+        },
+        initialize: function() {
+            this.setClickModeToEdit();
+            this.setSelectionContextToActive();
+        },
+        getClickMode: function() {
+            return this.get('clickMode');
+        },
+        _setClickMode: function(mode) {
+            this.set('clickMode', mode);
+            return mode;
+        },
+        getSelectionContext: function() {
+            return this.get('selectionContext');
+        },
+        _setSelectionContext: function(context) {
+            this.set('selectionContext', context);
+            return context;
+        },
+        getTimeBlocksPerAdd: function() {
+            return this.get('timeBlocksPerAdd');
+        },
+        setTimeBlocksPerAdd: function(blocks) {
+            this.set('timeBlocksPerAdd', blocks);
+            return blocks;
+        },
+        getMajorGridSize: function() {
+            return this.get('majorGridSize');
+        },
+        setMajorGridSize: function(newSize) {
+            this.set('majorGridSize', newSize);
+            return newSize;
+        },
+        getMinorGridSize: function() {
+            return this.get('minorGridSize');
+        },
+        setMinorGridSize: function(newSize) {
+            this.set('minorGridSize', newSize);
+            return newSize;
+        },
+        
+        // methods
+        setClickModeToEdit: function() {
+            return this._setClickMode(this.get('CLICK_MODE_EDIT'));
+        },
+        setClickModeToSelect: function() {
+            return this._setClickMode(this.get('CLICK_MODE_SELECT'));
+        },
+        setSelectionContextToActive: function() {
+            return this._setSelectionContext(this.get('CONTEXT_ACTIVE'));
+        },
+        setSelectionContextToAll: function() {
+            return this._setSelectionContext(this.get('CONTEXT_ALL'));
         }
     });
     
@@ -1145,7 +1254,9 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             'orchestra': new Orchestra(),
             'player': null,
             'invoker': new Invoker(),
-            'viewController': new ViewController()
+            'viewController': new ViewController(),
+            'appBehaviorController': new AppBehaviorController(),
+            'selectionContext': new SelectionContext()
         },
         initialize: function() {
             var orchestra;
@@ -1183,6 +1294,12 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
         getViewController: function() {
             return this.get('viewController');
         },
+        getAppBehaviorController: function() {
+            return this.get('appBehaviorController');
+        },
+        getSelectionContext: function() {
+            return this.get('selectionContext');
+        },
         // invocations
         
         /*
@@ -1206,11 +1323,10 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
         invoke_undo: function() {
             this.getInvoker().undo();
         },
-        
         invoke_redo: function() {
             this.getInvoker().redo();
         },
-        
+        // note operations
         invoke_addNote: function(instrumentId, pitchId, startTime, value) {
             var orchestra = this.getOrchestra();
             var command = new Command({
@@ -1256,6 +1372,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             });
             this._invoke(command);
         },
+        // instrument operations
         invoke_addDefaultInstrument: function() {
             var orchestra = this.getOrchestra();
             var defaultInstrument = orchestra.makeNewDefaultInstrument();
@@ -1289,6 +1406,28 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
                 }
             });
             this._invoke(command);
+        },
+        // time block operations
+        invoke_appendTimeBlocks: function(numberOfBlocks) {
+            var orchestra = this.getOrchestra();
+            var command = new Command({
+                scope: orchestra,
+                exec: {
+                    func: orchestra.appendTimeUnits,
+                    args: [numberOfBlocks],
+                },
+                undo: {
+                    func: orchestra.unappendTimeUnits,
+                    args: [numberOfBlocks]
+                }
+            });
+            this._invoke(command);
+        },
+        invoke_insertTimeBlocks: function() {
+            
+        },
+        invoke_deleteTimeBlocks: function() {
+            
         }
     });
     
@@ -1688,7 +1827,8 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
         },
         
         events: {
-            'mousedown #grid-event-capture-layer': '_onGridClick'
+            'mousedown #grid-event-capture-layer': '_onGridClick',
+            'mouseup #grid': '_foo'
         },
         // event handlers
         _onGridClick: function(event) {
@@ -1710,7 +1850,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             if(event.offsetY) { pitchId = Math.floor(event.originalEvent.offsetX / 20); } // Chrome / Opera
             else { pitchId = Math.floor(event.originalEvent.layerX / 20); } // Firefox
             time = parseInt(event.target.getAttribute('data-time'));
-                        
+            
             orchestra = this.model.getOrchestra();
             activeInstrument = orchestra.getActiveInstrument();
             activeInstrumentId = activeInstrument.getId();
@@ -1720,6 +1860,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             // if clicked slot is open for new note,
             if(isPitchAvailable) {            
                 latestWindow = pitch.getLatestWindow(time);
+                this._undelegateAllEvents();
                 this._initUIHelperForNewNote(activeInstrumentId, pitchId, time);
                 this.$el.delegate(this.eventLayerEl, 'mousemove', function(event) {
                     self._previewNewNoteValue(event, activeInstrumentId, pitchId, time, latestWindow);
@@ -1735,9 +1876,10 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
                     note = pitch.getNoteCollection().get(time);
                     if(note && note.getValue() !== 1) {
                         noteValue = note.getValue();
+                        this._undelegateAllEvents();
                         this.$el.delegate(this.eventLayerEl, 'mouseup', function(event) {
                             self._onMouseUpSameSpotRemoveNote(event, activeInstrumentId, pitchId, time, noteValue);
-                        });     
+                        });
                     }
                 }
                 
@@ -1749,6 +1891,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
                     noteValue = note.getValue();
                     latestWindow = pitch.getLatestWindow(time);                
                     
+                    this._undelegateAllEvents();
                     this._initUIHelperForExistingNote(activeInstrumentId, pitchId, time, noteStartTime, noteValue);
                     this.$el.delegate(this.eventLayerEl, 'mousemove', function(event) {
                         self._previewExistingNoteValue(event, activeInstrumentId, pitchId, time, noteStartTime, noteValue, latestWindow);
@@ -1788,21 +1931,19 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             });
         },
         _onMouseUpFinalizeNewNote: function(event, activeInstrumentId, pitchId, startTime) {
-            
+            console.log('finalize new');
             var uiHelperEl = $(this.uiHelperEl);
             var value = parseInt(uiHelperEl.attr('data-value'));
             
             if(SYNTH.app) {
                 SYNTH.app.controller.invoke_addNote(activeInstrumentId, pitchId, startTime, value);
             }
-            this._resetUIHelperEl();
-            this.$el.undelegate(this.eventLayerEl, 'mousemove');
-            this.$el.undelegate(this.eventLayerEl, 'mouseup');
+            this._undelegateAllEvents();
         },
         
         // delete note
         _onMouseUpSameSpotRemoveNote: function(event, activeInstrumentId, pitchId, time, value) {
-            
+            console.log('same spot remove');
             // mouse coordinates when the event mouseup is fired. Only delete note
             // if mouseup is fired on the same spot as note head
             var newPitchId;
@@ -1815,8 +1956,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             if(newPitchId === pitchId && newTime === time && SYNTH.app) {
                 SYNTH.app.controller.invoke_removeNote(activeInstrumentId, pitchId, time, value);
             }
-            
-            this.$el.undelegate(this.eventLayerEl, 'mouseup');
+            this._undelegateAllEvents();
         },
         
         // change existing note
@@ -1862,6 +2002,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             }
         },
         _onMouseUpFinalizeExistingNote: function(event, activeInstrumentId, pitchId, noteStartTime, oldValue) {
+            console.log('finalize existing');
             var uiHelperEl = $(this.uiHelperEl);
             
             var newValue = parseInt(uiHelperEl.attr('data-value'));
@@ -1873,15 +2014,18 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
                     SYNTH.app.controller.invoke_editNoteValue(activeInstrumentId, pitchId, noteStartTime, oldValue, newValue);
                 }
             }
-            this._resetUIHelperEl();
-            this.$el.undelegate(this.eventLayerEl, 'mousemove');
-            this.$el.undelegate(this.eventLayerEl, 'mouseup');
+            this._undelegateAllEvents();
         },
         _resetUIHelperEl: function() {
             $(this.uiHelperEl).css({
                 'height': '0px',
                 'width': '0px'
             });
+        },
+        _undelegateAllEvents: function() {
+            this._resetUIHelperEl();
+            this.$el.undelegate(this.eventLayerEl, 'mousemove');
+            this.$el.undelegate(this.eventLayerEl, 'mouseup');
         },
         
         // methods
@@ -2227,22 +2371,48 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
     var EditControlPanelView = Backbone.View.extend({
         el: '#edit-controls',
         model: null,
-        invokerModelBinder: null,
+        modelBinder: null,
         template: SYNTH.templateCache['template-edit-panel'],
         initialize: function() {
             this.$el.html(this.template);
-            this.invokerModelBinder = new Backbone.ModelBinder();
+            this.modelBinder = new Backbone.ModelBinder();
             this.render();
         },
         render: function() {
+            
+            function strToIntConverter(direction, value) {
+                return parseInt(value);
+            }
+            
+            var bindings = {
+                'timeBlocksPerAdd': {
+                    selector: '#time-blocks-per-add',
+                    converter: strToIntConverter
+                }
+            };
+            
+            this.modelBinder.bind(this.model.getAppBehaviorController(), this.el, bindings);
             return this;
         },
         close: function() {
-            
         },
         
         // events
         events: {
+            'click #button-append-time-blocks': '_appendTimeBlocks',
+            'click #button-insert-time-blocks': '_insertTimeBlocks',
+            'click #button-delete-time-blocks': '_deleteTimeBlocks'
+        },
+        
+        _appendTimeBlocks: function() {
+            var numOfBlocks = this.model.getAppBehaviorController().getTimeBlocksPerAdd();    
+            this.model.invoke_appendTimeBlocks(numOfBlocks);
+        },
+        _insertTimeBlocks: function() {
+            console.log('insert');
+        },
+        _deleteTimeBlocks: function() {
+            console.log('delete');
         }
     });
     

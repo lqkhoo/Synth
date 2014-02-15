@@ -122,7 +122,7 @@
 
 <div class="template" id="template-edit-panel">
 	<div>
-		<div class="nav-header">Grid - Selection</div>
+		<div class="nav-header">Grid - General</div>
 		<div>
 			<span class="click-mode">Click mode</span>
 			<span class="btn-group">
@@ -147,18 +147,25 @@
 		</div>
 	</div>
 	<div>
-		<div class="nav-header">Grid - Time blocks</div>
+		<div class="nav-header">Grid</div>
 		<div>
+			<span>Selection</span>
 			<span class="btn-group">
-				<button id="button-append-beats" class="btn btn-default btn-xs">Append</button>
-				<button id="button-insert-beats" class="btn btn-default btn-xs">Insert</button>
+				<button id="button-select-all" class="btn btn-default btn-xs">Select all</button>
+				<button id="button-clear-all" class="btn btn-default btn-xs">Clear selection</button>
 			</span>
-			<input id="beats-per-addition" min="1" max="200" type="number" class="form-control"></input>
-			<span>block(s)</span>
 		</div>
 		<div>
-			<button id="button-delete-beats" class="btn btn-default btn-xs">Delete</button>
-			<span>selected block(s)</span>
+			<span class="btn-group">
+				<button id="button-append-time-blocks" class="btn btn-default btn-xs">Append</button>
+				<button id="button-insert-time-blocks" class="btn btn-default btn-xs">Insert</button>
+			</span>
+			<input id="time-blocks-per-add" min="1" max="200" type="number" class="form-control"></input>
+			<span>row(s)</span>
+		</div>
+		<div>
+			<button id="button-delete-time-blocks" class="btn btn-default btn-xs">Delete</button>
+			<span>selected row(s)</span>
 		</div>
 	</div>	
 </div>
