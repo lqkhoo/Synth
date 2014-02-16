@@ -305,6 +305,7 @@ legend {
 #grid-event-capture-layer-columns > div {
 	position: absolute;
 	height: 100%;
+	top: 0;
 	width: 20px;
 	border-right: 1px solid rgba(100,100,100,0.15);
 	z-index: 50;

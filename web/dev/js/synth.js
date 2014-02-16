@@ -194,6 +194,188 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
         }
     });
     
+    /** An object holding information about how to modify the grid in
+     *  a series of steps, and how to exactly reverse it
+     */
+    function CompoundGridModificationBlueprint(controller) {
+        
+        var self = this;
+        
+        this._steps = [];
+        
+        this.addOp_setScoreLength = function(oldScoreLength, newScoreLength) {
+            self._steps.push({
+                op: 'scorelength-change',
+                oldScoreLength: oldScoreLength,
+                newScoreLength: newScoreLength
+            });
+        };
+        this._setScoreLength = {};
+        this._setScoreLength.exec = function(step) {
+            controller.getOrchestra().setScoreLength(step.newScoreLength);
+        };
+        this._setScoreLength.undo = function(step) {
+            controller.getOrchestra().setScoreLength(step.oldScoreLength);
+        };
+        
+        this.addOp_deleteRow = function(time) {
+            self._steps.push({
+                op: 'row-delete',
+                time: time
+            });
+        };
+        this._deleteRow = {};
+        this._deleteRow.exec = function(step) {
+            controller.getOrchestra().getTimeUnitCollection().remove(step.time);
+        };
+        this._deleteRow.undo = function(step) {
+            controller.getOrchestra().getTimeUnitCollection().add(new TimeUnit({id: step.time}));
+        };
+        
+        
+        this.addOp_moveRow = function(oldTime, newTime) {
+            self._steps.push({
+                op: 'row-move',
+                oldTime: oldTime,
+                newTime: newTime
+            });
+        };
+        this._moveRow = {};
+        this._moveRow.exec = function(step) {
+            controller.getOrchestra().getTimeUnitCollection().get(step.oldTime).setId(step.newTime);
+        };
+        this._moveRow.undo = function(step) {
+            controller.getOrchestra().getTimeUnitCollection().get(step.newTime).setId(step.oldTime);
+        };
+        
+        
+        this.addOp_deleteNote = function(instrumentId, pitchId, note) {
+            self._steps.push({
+                op: 'note-delete',
+                instrumentId: instrumentId,
+                pitchId: pitchId,
+                note: note.clone()
+            });
+        };
+        this._deleteNote = {};
+        this._deleteNote.exec = function(step) {
+            controller.getOrchestra().getInstrumentById(step.instrumentId)
+                    .getPitch(step.pitchId).getNoteCollection().remove(step.note.getTime());
+        };
+        this._deleteNote.undo = function(step) {
+            controller.getOrchestra().getInstrumentById(step.instrumentId)
+            .getPitch(step.pitchId).getNoteCollection().add(step.note);
+        };
+        
+        
+        this.addOp_changeNoteValue = function(instrumentId, pitchId, startTime, oldValue, newValue) {
+            self._steps.push({
+                op: 'note-change-value',
+                instrumentId: instrumentId,
+                pitchId: pitchId,
+                startTime: startTime,
+                oldValue: oldValue,
+                newValue: newValue
+            });
+        };
+        this._changeNoteValue = {};
+        this._changeNoteValue.exec = function(step) {
+            controller.getOrchestra().getInstrumentById(step.instrumentId)
+                .getPitch(step.pitchId).getNoteCollection().get(step.startTime).setValue(step.newValue);
+        };
+        this._changeNoteValue.undo = function(step) {
+            controller.getOrchestra().getInstrumentById(step.instrumentId)
+            .getPitch(step.pitchId).getNoteCollection().get(step.startTime).setValue(step.oldValue);
+        };
+        
+        
+        this.addOp_decrementNoteValue = function(instrumentId, pitchId, startTime) {
+            self._steps.push({
+                op: 'note-decrement-value',
+                instrumentId: instrumentId,
+                pitchId: pitchId,
+                startTime: startTime
+            });
+        };
+        this._decrementNoteValue = {};
+        this._decrementNoteValue.exec = function(step) {
+            var note = controller.getOrchestra().getInstrumentById(step.instrumentId)
+            .getPitch(step.pitchId).getNoteCollection().get(step.startTime);
+            note.setValue(note.getValue() - 1);
+        };
+        this._decrementNoteValue.undo = function(step) {
+            var note = controller.getOrchestra().getInstrumentById(step.instrumentId)
+            .getPitch(step.pitchId).getNoteCollection().get(step.startTime);
+            note.setValue(note.getValue() + 1);
+        };
+        
+        
+        this.addOp_changeNoteStartTime = function(instrumentId, pitchId, oldStartTime, newStartTime) {
+            self._steps.push({
+                op: 'note-change-starttime',
+                instrumentId: instrumentId,
+                pitchId: pitchId,
+                oldStartTime: oldStartTime,
+                newStartTime: newStartTime
+            });
+        };
+        this._changeNoteStartTime = {};
+        this._changeNoteStartTime.exec = function(step) {
+            controller.getOrchestra().getInstrumentById(step.instrumentId)
+                .getPitch(step.pitchId).getNoteCollection().get(step.oldStartTime).setTime(step.newStartTime);
+        };
+        this._changeNoteStartTime.undo = function(step) {
+            controller.getOrchestra().getInstrumentById(step.instrumentId)
+                .getPitch(step.pitchId).getNoteCollection().get(step.newStartTime).setTime(step.oldStartTime);
+        };
+        
+        this._exec = function(execMode, step) {
+            switch(step.op) {
+            case 'scorelength-change':
+                self._setScoreLength[execMode](step);
+                break;
+            case 'row-delete':
+                self._deleteRow[execMode](step);
+                break;
+            case 'row-move':
+                self._moveRow[execMode](step);
+                break;
+            case 'note-delete':
+                self._deleteNote[execMode](step);
+                break;
+            case 'note-change-value':
+                self._changeNoteValue[execMode](step);
+                break;
+            case 'note-decrement-value':
+                self._decrementNoteValue[execMode](step);
+                break;
+            case 'note-change-starttime':
+                self._changeNoteStartTime[execMode](step);
+                break;
+            default:
+                break;
+            }
+        };
+        
+        this.exec = function() {
+            var step;
+            var i;
+            for(i = 0; i < self._steps.length; i++) {
+                step = self._steps[i];
+                self._exec('exec', step);
+            }
+        };
+        
+        this.undo = function() {
+            var step;
+            var i;
+            for(i = self._steps.length - 1; i >= 0; i--) {
+                step = self._steps[i];
+                self._exec('undo', step);
+            }
+        };
+    }
+    
     // Declare | Models ---------------------------------------------------------------------------------------
     
     /** A note. The id is when it's played. If ornaments are to be added later, it should be here */
@@ -427,7 +609,6 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
         getLatestWindow: function(time) {
             var note = this.getNoteAfterThisTime(time);
             if(note) {
-                console.log(note.getTime() - 1);
                 return note.getTime() - 1;
             }
             return this.getInstrument().getOrchestra().getScoreLength() - 1;
@@ -648,6 +829,10 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
        },
        getId: function() {
            return this.get('id');
+       },
+       setId: function(newId) {
+           this.set('id', newId);
+           return newId;
        },
        getIsSelected: function() {
            return this.get('isSelected');
@@ -1099,7 +1284,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
         getScoreLength: function() {
             return this.get('scoreLength');
         },
-        _setScoreLength: function(newScoreLength) {
+        setScoreLength: function(newScoreLength) {
             this.set('scoreLength', newScoreLength);
             return newScoreLength;
         },
@@ -1123,19 +1308,23 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             return this.getInstrumentById(instrumentId).getPitchCollection().get(pitchId);
         },
         
-        //TODO
         // clone / restore methods
         cloneInstrument: function(id) {
             return this.getInstrumentById(id).clone();
         },
         cloneInstrumentCollection: function() {
-            return this.getInstrumentCollection().clone();
+            return _.cloneDeep(this.getInstrumentCollection());
+            //return $.extend(true, {}, this.getInstrumentCollection());
+            //return new Instruments(this.getInstrumentCollection().toJSON());
         },
-        restoreInstrument: function(instrument) {
+        //TODO
+        restoreInstrument: function() {
             
         },
-        restoreInstrumentCollection: function() {
-            
+        restoreAllInstruments: function(newCollection) {
+            console.log(newCollection);
+            var newModels = newCollection.models;
+            this.getInstrumentCollection().set(newModels);
         },
         
         // instrument methods
@@ -1246,7 +1435,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
                 timeUnitCollection.add(new TimeUnit({id: i}));
             }
             
-            this._setScoreLength(endTime);
+            this.setScoreLength(endTime);
             
         },
         // for undo only - logical reverse of appendTimeUnits()
@@ -1260,13 +1449,103 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
                 timeUnitCollection.remove(i);
             }
             
-            this._setScoreLength(startTime);
+            this.setScoreLength(startTime);
         },
         
-        deleteSelectedTimeUnits: function(timeArray) {
+        // blueprint methods
+        getBlueprint_deleteSelectedTimeUnits: function() {
             
+            var blueprint = new CompoundGridModificationBlueprint(this.getController());
+            
+            var instruments = this.getInstrumentCollection().models;
             var selectedTimeUnits = this.getTimeUnitCollection().where({'isSelected': true});
             
+            var timeUnitIndex = 0;  // current position in selected time unit array
+            var timeUnitsRemoved = 0;   // how many rows removed so far
+            
+            var time;
+            var instrumentIndex;
+            var pitchCollection;
+            var pitchId;
+            var pitch;
+            var note;
+            var noteTime;
+            
+            var i;
+            var isGoingToBeDeleted;
+            
+            function shiftRow(time) {
+                // If no rows deleted thus far there's no need to do anything
+                if(timeUnitsRemoved === 0) {
+                    return;
+                }
+                
+                // move notes - this does not affect sorting order
+                for(instrumentIndex = 0; instrumentIndex < instruments.length; instrumentIndex++) {
+                    pitchCollection = instruments[instrumentIndex].getPitchCollection();
+                    
+                    for(pitchId = 0; pitchId < pitchCollection.length; pitchId++) {
+                        note = pitchCollection.get(pitchId).getNoteCollection().get(time);
+                        if(note !== undefined) {
+                            blueprint.addOp_changeNoteStartTime(instruments[instrumentIndex].getId(), pitchId, note.getTime(), note.getTime() - timeUnitsRemoved);
+                        }
+                    }
+                }
+                
+                // shift time units - this does not affect sorting order
+                blueprint.addOp_moveRow(time, time - timeUnitsRemoved);
+            }
+            
+            function deleteRow(time) {
+                // Delete row
+                for(instrumentIndex = 0; instrumentIndex < instruments.length; instrumentIndex++) {
+                    pitchCollection = instruments[instrumentIndex].getPitchCollection();
+                    
+                    for(pitchId = 0; pitchId < pitchCollection.length; pitchId++) {
+                        pitch = pitchCollection.get(pitchId);
+                        note = pitch.getOccupyingNote(time);
+                        if(note !== undefined) {
+                            noteTime = note.getTime();
+                            if(noteTime === time) {
+                                blueprint.addOp_deleteNote(instruments[instrumentIndex].getId(), pitchId, note);
+                            } else {
+                                
+                                isGoingToBeDeleted = false;
+                                
+                                for(i = 0; i < selectedTimeUnits.length; i++) {
+                                    if(noteTime === selectedTimeUnits[i].getId()) {
+                                        isGoingToBeDeleted = true;
+                                    }
+                                }
+                                if(! isGoingToBeDeleted) {
+                                    blueprint.addOp_decrementNoteValue(instruments[instrumentIndex].getId(), pitchId, noteTime);
+                                }
+                            }
+                        }
+                    }
+                }
+                blueprint.addOp_deleteRow(time);
+                //timeUnitCollection.remove(time);
+            }
+            
+            for(time = 0; time < this.getScoreLength(); time++) {
+                // If we have processed all the rows that needs deleting
+                if(timeUnitIndex === selectedTimeUnits.length) {
+                    shiftRow(time);
+                } else {
+                    // A row but not one that needs deleting
+                    if(time !== selectedTimeUnits[timeUnitIndex].getId()) {
+                        shiftRow(time);
+                    } else {
+                        deleteRow(time);
+                        timeUnitsRemoved += 1;
+                        timeUnitIndex += 1;
+                    }
+                }
+            }
+            blueprint.addOp_setScoreLength(this.getScoreLength(), this.getScoreLength() - timeUnitsRemoved);
+            
+            return blueprint;
         }
     });
     
@@ -1622,19 +1901,20 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
         },
         invoke_deleteSelectedTimeBlocks: function() {
             var orchestra = this.getOrchestra();
+            var blueprint = orchestra.getBlueprint_deleteSelectedTimeUnits();
+            console.log(blueprint);
             var command = new Command({
-                scope: orchestra,
+                scope: this,
                 exec: {
-                    
+                    func: blueprint.exec,
+                    args: []
                 },
                 undo: {
-                    
+                    func: blueprint.undo,
+                    args: []
                 }
             });
             this._invoke(command);
-        },
-        invoke_restoreState: function() {
-            
         }
     });
     
@@ -1829,7 +2109,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
                         
             this.rowCollectionBinder = new Backbone.CollectionBinder(
                     new Backbone.CollectionBinder.ElManagerFactory(this.rowTemplate, bindings)
-                    );
+                    ,{autoSort: true});
             initializeColumns(); // render columns
             this.render();
         },
@@ -1883,7 +2163,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             
             this.collectionBinder = new Backbone.CollectionBinder(
                 new Backbone.CollectionBinder.ElManagerFactory(this.collectionTemplate, bindings)
-            );
+            , {autoSort: true});
             
             this.render();
         },
@@ -2532,7 +2812,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
         collectionTemplate: SYNTH.templateCache['template-instrument-panel'],
         instrumentCollectionBinder: null,
         initialize: function() {
-                        
+            
             function viewCreator(model) {
                 return new InstrumentView({model: model});
             }
@@ -2540,7 +2820,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             $(this.addInstrumentEl).html(this.template);
             this.collectionBinder = new Backbone.CollectionBinder(
                     new Backbone.CollectionBinder.ViewManagerFactory(viewCreator)
-                    );
+                    ,{autoSort: true});
             
             this.render();
         },
@@ -2611,7 +2891,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             console.log('insert');
         },
         _deleteTimeBlocks: function() {
-            console.log('delete');
+            this.model.invoke_deleteSelectedTimeBlocks();
         }
     });
     
