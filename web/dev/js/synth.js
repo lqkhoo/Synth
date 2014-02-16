@@ -14,7 +14,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
     
     // Op | Establish template cache -------------------------------------------------------------------
     SYNTH.templateCache = {};
-    function cacheTemplates(cacheObject, templateUrl, templateSelector) {
+    function _cacheTemplates(cacheObject, templateUrl, templateSelector) {
         if(! cacheObject) {
             cacheObject = {};
         }
@@ -36,10 +36,10 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             }
         });
     }
-    cacheTemplates(SYNTH.templateCache, 'templates/templates.html', '.template');
+    _cacheTemplates(SYNTH.templateCache, 'templates/templates.html', '.template');
     
     // Op | Define frequency table
-    function generateFrequencyTable() {
+    function _generateFrequencyTable() {
         var tones = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'A', 'Bb', 'B'];
         var octaves = ['1', '2', '3', '4', '5', '6', '7', '8'];
         
@@ -64,12 +64,14 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             }
         }());
     };
-    generateFrequencyTable();
+    _generateFrequencyTable();
     
     // Op | Augment Music.js library scale definition with chromatic scale
-    MUSIC.scales['chromatic'] = MUSIC.scales['chromatic'] || ['minor second', 'major second', 'minor third', 'major third', 'fourth', 'augmented fourth', 'fifth', 'minor sixth', 'major sixth', 'minor seventh', 'major seventh'];
+    // MUSIC.scales['chromatic'] = MUSIC.scales['chromatic'] || ['minor second', 'major second', 'minor third', 'major third', 'fourth', 'augmented fourth', 'fifth', 'minor sixth', 'major sixth', 'minor seventh', 'major seventh'];
+    
     
     // Declare | Sound definitions ----------------------------------------------------------------------------
+    /*
     function makeTimbre(soundCode, frequencyArray, loudness, attack, decay, sustain, release) {
         
         switch(soundCode) {
@@ -88,6 +90,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             return;
         }
     }
+    */
     
     // Declare | Command class ----------------------------------------------------------------------
     
@@ -219,7 +222,8 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
     
     /** Collection of Note objects */
     var Notes = Backbone.Collection.extend({
-        model: Note
+        model: Note,
+        comparator: 'id'
     });
         
     /** An object handling a particular frequency */
@@ -279,16 +283,36 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
         },
         /** Given a time, gets the note occupying it */
         getOccupyingNote: function(time) {
-            var i;
+            var noteCollection = this.getNoteCollection();
+            var collectionLength = noteCollection.length;
+            
+            var midIndex;
             var note;
-            for(i = time; i >= 0; i--) {
-                note = this.getNoteCollection().get(i);
-                if(note !== undefined) {
-                    // found a note. If note's value is longer than/eq to what we've traversed
-                    // this note must be occupying the given time
-                    if(note.getValue() >= time - i + 1) {
-                        return note;
-                    } else break;
+            var noteTime;
+            var noteValue;
+            
+            // degenerate conditions
+            if(collectionLength === 0) {
+                return undefined;
+            }
+
+            // otherwise perform iterative bin search
+            var firstIndex = 0;
+            var lastIndex = this.getNoteCollection().length - 1;
+            
+            while(lastIndex >= firstIndex) {
+                midIndex = Math.ceil((firstIndex + lastIndex) / 2);
+                note = noteCollection.at(midIndex);
+                noteTime = note.getTime();
+                noteValue = note.getValue();
+                
+                // If note starts before or at target time, and ends after given time
+                if(noteTime <= time && noteTime + noteValue - 1 >= time) {
+                    return note;
+                } else if(noteTime < time) {
+                    firstIndex = midIndex + 1;
+                } else {
+                    lastIndex = midIndex - 1;
                 }
             }
             return undefined;
@@ -305,35 +329,91 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
          *  If there is no note, return undefined
          */
         getNoteBeforeThisTime: function(time) {
-            var i;
-            var note;
             var noteCollection = this.getNoteCollection();
-            var occupyingNote = this.getOccupyingNote(time);
-            if(occupyingNote) {
-                i = occupyingNote.getTime();
-            } else {
-                i = time;
+            
+            var note;
+            var nextNote;
+            var firstIndex;
+            var lastIndex;
+            var midIndex;
+            
+            // degenerate condition
+            if(noteCollection.length === 0) {
+                return undefined;
             }
-            for(i; i >= 0; i--) {
-                note = noteCollection.get(i);
-                if(note !== undefined) {
-                    return note; 
+            
+            // We want the first note, walking backwards. Binary search
+            firstIndex = 0;
+            lastIndex = noteCollection.length - 1;
+            
+            while(lastIndex >= firstIndex) {
+                
+                midIndex = Math.ceil((firstIndex + lastIndex) / 2);
+                note = noteCollection.at(midIndex);
+                
+                if(midIndex === lastIndex) {
+                    nextNote = undefined;
+                } else {
+                    nextNote = noteCollection.at(midIndex + 1); 
+                }                    
+                
+                // If current note ends before given time, and either:
+                // there is no next note, or that the next note ends on or after the given time
+                if(note.getTime() + note.getValue() - 1 < time
+                        && (nextNote === undefined || nextNote.getTime() + nextNote.getValue() - 1 >= time )) {
+                    return note;
+                } else if(note.getTime() < time) {
+                    firstIndex = midIndex + 1;
+                } else {
+                    lastIndex = midIndex - 1;
                 }
             }
             return undefined;
+            
         },
         /** Given a time, gets the note after it, whether the time is occupied by a note or not */
         getNoteAfterThisTime: function(time) {
-            var i;
             var note;
             var noteCollection = this.getNoteCollection();
-            for(i = time + 1; i < this.getInstrument().getOrchestra().getScoreLength(); i++) {
-                note = noteCollection.get(i);
-                if(note !== undefined) {
+            
+            var prevNote;
+            var firstIndex;
+            var lastIndex;
+            var midIndex;
+            
+            // degenerate condition
+            if(noteCollection.length === 0) {
+                return undefined;
+            }
+            
+            // We want the first note, walking forwards. Binary search
+            firstIndex = 0;
+            lastIndex = noteCollection.length - 1;
+            
+            while(lastIndex >= firstIndex) {
+                
+                midIndex = Math.ceil((firstIndex + lastIndex) / 2);
+                note = noteCollection.at(midIndex);
+                
+                if(midIndex === firstIndex) {
+                    prevNote = undefined;
+                } else {
+                    prevNote = noteCollection.at(midIndex - 1); 
+                }                    
+                
+                // If current note ends after given time, and either:
+                // there is no previous note, or that the previous one ends on or before the given time
+                if(note.getTime() + note.getValue() - 1 > time
+                        && (prevNote === undefined || prevNote.getTime() + prevNote.getValue() - 1 <= time )) {
                     return note;
+                } else if(note.getTime() < time) {
+                    firstIndex = midIndex + 1;
+                } else {
+                    lastIndex = midIndex - 1;
                 }
             }
             return undefined;
+
         },
         /** Gets earliest start time in the current time window */
         getEarliestWindow: function(time) {
@@ -347,6 +427,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
         getLatestWindow: function(time) {
             var note = this.getNoteAfterThisTime(time);
             if(note) {
+                console.log(note.getTime() - 1);
                 return note.getTime() - 1;
             }
             return this.getInstrument().getOrchestra().getScoreLength() - 1;
@@ -374,7 +455,8 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
     
     /** Collection of Pitch objects */
     var Pitches = Backbone.Collection.extend({
-        model: Pitch
+        model: Pitch,
+        comparator: 'id'
     });
     
     /** Static | Factory for Pitch and Pitches */
@@ -521,7 +603,8 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
     
     /** A collection of Instruments */
     var Instruments = Backbone.Collection.extend({
-        model: Instrument
+        model: Instrument,
+        comparator: 'id'
     });
     
     /** Static | Factory for Instruments */
@@ -577,7 +660,8 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
     
     /** A collection of time units */
     var TimeUnits = Backbone.Collection.extend({
-        model: TimeUnit
+        model: TimeUnit,
+        comparator: 'id'
     });
         
     /** Object responsible for playing the orchestra */
@@ -926,7 +1010,13 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             'activeInstrumentId': null,
             'timeUnitCollection': null,
             'scoreLength': 24,
-            'playSpeed': 300
+            'playSpeed': 300,
+            // values below are used for performance optimizations
+            
+            // This value stores the historically longest note created. This is used to scan
+            // If this note is deleted then
+            // this value may exceed the current longest note value
+            'longestNoteValue': 0
         },
         initialize: function() {
             var instrument;
@@ -1020,11 +1110,35 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             this.set('playSpeed', playSpeed);
             return playSpeed;
         },
+        getLongestNoteValue: function() {
+            return this.get('longestNoteValue');
+        },
+        setLongestNoteValue: function(newValue) {
+            this.set('longestNoteValue', newValue);
+            return newValue;
+        },
         
         // methods
         getPitch: function(instrumentId, pitchId) {
             return this.getInstrumentById(instrumentId).getPitchCollection().get(pitchId);
         },
+        
+        //TODO
+        // clone / restore methods
+        cloneInstrument: function(id) {
+            return this.getInstrumentById(id).clone();
+        },
+        cloneInstrumentCollection: function() {
+            return this.getInstrumentCollection().clone();
+        },
+        restoreInstrument: function(instrument) {
+            
+        },
+        restoreInstrumentCollection: function() {
+            
+        },
+        
+        // instrument methods
         getInstrumentById: function(id) {
             var instrument = this.getInstrumentCollection().get(id);
             return instrument;
@@ -1059,6 +1173,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             var instrument = instrumentFactory.getNewDefaultInstrument(this, nextInstrumentId);
             return instrument;
         },
+        /** Removes instrument of given id if it exists */
         removeInstrumentById: function(instrumentId) {
             var instrumentCollection = this.getInstrumentCollection();
             var instrument = instrumentCollection.get(instrumentId);
@@ -1072,6 +1187,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             }
             return instrument;
         },
+        /** Returns currently selected instrument */
         getActiveInstrument: function() {
             return this.getInstrumentById(this.getActiveInstrumentId());
         },
@@ -1085,6 +1201,8 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             this._setActiveInstrumentId(id);
             this.getInstrumentById(id).setIsSelected(true);
         },
+                
+        // note methods
         addNote: function(instrumentId, pitchId, startTime, value) {
             var pitch = this.getPitch(instrumentId, pitchId);
             var note = pitch.getNoteCollection();
@@ -1109,6 +1227,8 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             var note = pitch.getNoteCollection().get(startTime);
             note.setValue(newValue);
         },
+        
+        // time unit methods
         getTimeUnit: function(time) {
             return this.getTimeUnitCollection().get(time);
         },
@@ -1129,7 +1249,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             this._setScoreLength(endTime);
             
         },
-        // logical reverse of above for undo only
+        // for undo only - logical reverse of appendTimeUnits()
         unappendTimeUnits: function(numberOfUnits) {
             var endTime = this.getScoreLength(); // non-inclusive
             var startTime = endTime - numberOfUnits;
@@ -1141,22 +1261,110 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             }
             
             this._setScoreLength(startTime);
+        },
+        
+        deleteSelectedTimeUnits: function(timeArray) {
+            
+            var selectedTimeUnits = this.getTimeUnitCollection().where({'isSelected': true});
+            
         }
     });
     
-    /** A model whose attributes describe a selection context on the grid */
-    var SelectionContext = Backbone.Model.extend({
-        defaults: {
-            'hasSelection': false,
-            'context': null,
-            'timeUnitFrom': null,
-            'timeUnitTo': null,
-            'pitchFrom': null,
-            'pitchTo': null,
-            'noteStartTime': null
-        }
-    });
-    
+    /*
+    function GridSelectionContext() {
+        
+        var self = this;
+        
+        this.CONTEXT_DEPTH_ACTIVE = 'active';
+        this.CONTEXT_DEPTH_ALL = 'all';
+        this.CONTEXT_TYPE_TIME_UNIT = 'time-unit';
+        this.CONTEXT_TYPE_PITCH = 'pitch';
+        this.CONTEXT_TYPE_RECT = 'rect';
+        this.CONTEXT_TYPE_NOTE = 'note';
+        
+        this._isSelected = false;
+        this._contextType = null;
+        this._contextDepth = null;
+        this._timeUnitFrom = null;
+        this._timeUnitTo = null;
+        this._pitchFrom = null;
+        this._pitchTo = null;
+        this._noteStartTime = null;
+        
+        this.getIsSelected = function() {
+            return this._isSelected;
+        };
+        this.setIsSelected = function(bool) {
+            this._isSelected = bool;
+            return bool;
+        };
+        this.getContextType = function() {
+            return self._contextType();
+        };
+        this.setContextType = function(type) {
+            this._contextType = type;
+            return type;
+        };
+        this.getContextDepth = function() {
+            return self._contextDepth();
+        };
+        this.setContextDepth = function(depth) {
+            this._contextDepth = depth;
+            return depth;
+        };
+        this.getTimeUnitFrom = function() {
+            return this._timeUnitFrom;
+        };
+        this.setTimeUnitFrom = function(time) {
+            this._timeUnitFrom = time;
+            return time;
+        };
+        this.getTimeUnitTo = function() {
+            return this._timeUnitTo;
+        };
+        this.setTimeUnitTo = function(time) {
+            this._timeUnitTo = time;
+            return time;
+        };
+        this.getPitchFrom = function() {
+            return this._pitchFrom;
+        };
+        this.setPitchFrom = function(pitch) {
+            this._pitchFrom = pitch;
+            return pitch;
+        };
+        this.getPitchTo = function() {
+            return this._pitchTo;
+        };
+        this.setPitchTo = function(pitch) {
+            this._pitchTo = pitch;
+            return pitch;
+        };  
+        this.getNoteStartTime = function() {
+            return this._noteStartTime;
+        };
+        this.setNoteStartTime = function(time) {
+            this._noteStartTime = time;
+            return time;
+        };
+        
+        //TODO all
+        this.timeUnitContext = function(timeUnitFrom, timeUnitTo) {
+            
+        };
+        this.pitchContext = function(pitchFrom, pitchTo) {
+            
+        };
+        this.rectContext = function(pitchFrom, timeUnitFrom, pitchTo, timeUnitTo) {
+            
+        };
+        this.noteContext = function(pitchFrom, noteStartTime) {
+            
+        };
+        
+    };
+    */
+        
     // Controllers --------------------------------------------
     
     /** Model of user-controllable Views' states */
@@ -1178,17 +1386,13 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
         defaults: {
             'CLICK_MODE_EDIT': 'edit',
             'CLICK_MODE_SELECT': 'select',
-            'CONTEXT_ACTIVE': 'active',
-            'CONTEXT_ALL': 'all',
-            'clickMode': null,
-            'selectionContext': null,
+            'gridClickMode': null,
             'timeBlocksPerAdd': 1,
             'majorGridSize': 16,
             'minorGridSize': 4
         },
         initialize: function() {
             this.setClickModeToEdit();
-            this.setSelectionContextToActive();
         },
         getClickMode: function() {
             return this.get('clickMode');
@@ -1196,13 +1400,6 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
         _setClickMode: function(mode) {
             this.set('clickMode', mode);
             return mode;
-        },
-        getSelectionContext: function() {
-            return this.get('selectionContext');
-        },
-        _setSelectionContext: function(context) {
-            this.set('selectionContext', context);
-            return context;
         },
         getTimeBlocksPerAdd: function() {
             return this.get('timeBlocksPerAdd');
@@ -1226,19 +1423,20 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             return newSize;
         },
         
-        // methods
+        //
+        
+        
         setClickModeToEdit: function() {
-            return this._setClickMode(this.get('CLICK_MODE_EDIT'));
+            var mode = this.get('CLICK_MODE_EDIT');
+            this._setClickMode(mode);
+            return mode;
         },
         setClickModeToSelect: function() {
-            return this._setClickMode(this.get('CLICK_MODE_SELECT'));
-        },
-        setSelectionContextToActive: function() {
-            return this._setSelectionContext(this.get('CONTEXT_ACTIVE'));
-        },
-        setSelectionContextToAll: function() {
-            return this._setSelectionContext(this.get('CONTEXT_ALL'));
+            var mode = this.get('CLICK_MODE_SELECT');
+            this._setClickMode(mode);
+            return mode;
         }
+        
     });
     
     /**
@@ -1255,8 +1453,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             'player': null,
             'invoker': new Invoker(),
             'viewController': new ViewController(),
-            'appBehaviorController': new AppBehaviorController(),
-            'selectionContext': new SelectionContext()
+            'appBehaviorController': new AppBehaviorController()
         },
         initialize: function() {
             var orchestra;
@@ -1296,9 +1493,6 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
         },
         getAppBehaviorController: function() {
             return this.get('appBehaviorController');
-        },
-        getSelectionContext: function() {
-            return this.get('selectionContext');
         },
         // invocations
         
@@ -1426,7 +1620,20 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
         invoke_insertTimeBlocks: function() {
             
         },
-        invoke_deleteTimeBlocks: function() {
+        invoke_deleteSelectedTimeBlocks: function() {
+            var orchestra = this.getOrchestra();
+            var command = new Command({
+                scope: orchestra,
+                exec: {
+                    
+                },
+                undo: {
+                    
+                }
+            });
+            this._invoke(command);
+        },
+        invoke_restoreState: function() {
             
         }
     });
@@ -1931,19 +2138,15 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             });
         },
         _onMouseUpFinalizeNewNote: function(event, activeInstrumentId, pitchId, startTime) {
-            console.log('finalize new');
             var uiHelperEl = $(this.uiHelperEl);
             var value = parseInt(uiHelperEl.attr('data-value'));
             
-            if(SYNTH.app) {
-                SYNTH.app.controller.invoke_addNote(activeInstrumentId, pitchId, startTime, value);
-            }
+            this.model.invoke_addNote(activeInstrumentId, pitchId, startTime, value);
             this._undelegateAllEvents();
         },
         
         // delete note
         _onMouseUpSameSpotRemoveNote: function(event, activeInstrumentId, pitchId, time, value) {
-            console.log('same spot remove');
             // mouse coordinates when the event mouseup is fired. Only delete note
             // if mouseup is fired on the same spot as note head
             var newPitchId;
@@ -1953,8 +2156,8 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             else { newPitchId = Math.floor(event.originalEvent.layerX / 20); } // Firefox
             newTime = parseInt(event.target.getAttribute('data-time'));
             
-            if(newPitchId === pitchId && newTime === time && SYNTH.app) {
-                SYNTH.app.controller.invoke_removeNote(activeInstrumentId, pitchId, time, value);
+            if(newPitchId === pitchId && newTime === time) {
+                this.model.invoke_removeNote(activeInstrumentId, pitchId, time, value);
             }
             this._undelegateAllEvents();
         },
@@ -2002,17 +2205,13 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             }
         },
         _onMouseUpFinalizeExistingNote: function(event, activeInstrumentId, pitchId, noteStartTime, oldValue) {
-            console.log('finalize existing');
             var uiHelperEl = $(this.uiHelperEl);
             
             var newValue = parseInt(uiHelperEl.attr('data-value'));
-            
-            if(SYNTH.app) {
-                if(newValue === 0) {
-                    SYNTH.app.controller.invoke_removeNote(activeInstrumentId, pitchId, noteStartTime, oldValue);
-                } else {
-                    SYNTH.app.controller.invoke_editNoteValue(activeInstrumentId, pitchId, noteStartTime, oldValue, newValue);
-                }
+            if(newValue === 0) {
+                this.model.invoke_removeNote(activeInstrumentId, pitchId, noteStartTime, oldValue);
+            } else {
+                this.model.invoke_editNoteValue(activeInstrumentId, pitchId, noteStartTime, oldValue, newValue);
             }
             this._undelegateAllEvents();
         },
