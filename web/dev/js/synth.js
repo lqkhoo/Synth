@@ -1300,26 +1300,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
         getPitch: function(instrumentId, pitchId) {
             return this.getInstrumentById(instrumentId).getPitchCollection().get(pitchId);
         },
-        
-        // clone / restore methods
-        cloneInstrument: function(id) {
-            return this.getInstrumentById(id).clone();
-        },
-        cloneInstrumentCollection: function() {
-            return _.cloneDeep(this.getInstrumentCollection());
-            //return $.extend(true, {}, this.getInstrumentCollection());
-            //return new Instruments(this.getInstrumentCollection().toJSON());
-        },
-        //TODO
-        restoreInstrument: function() {
-            
-        },
-        restoreAllInstruments: function(newCollection) {
-            console.log(newCollection);
-            var newModels = newCollection.models;
-            this.getInstrumentCollection().set(newModels);
-        },
-        
+                
         // instrument methods
         getInstrumentById: function(id) {
             var instrument = this.getInstrumentCollection().get(id);
@@ -1604,8 +1585,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
                 }
             }
             
-            blueprint.addOp_setScoreLength(this.getScoreLength(), this.getScoreLength() + unitsPerInsert * (selectedTimeUnits.length - 1));
-            console.log(blueprint);
+            blueprint.addOp_setScoreLength(this.getScoreLength(), this.getScoreLength() + unitsPerInsert * selectedTimeUnits.length);
             return blueprint;
         }
     });
@@ -1762,9 +1742,6 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             this.set('minorGridSize', newSize);
             return newSize;
         },
-        
-        //
-        
         
         setClickModeToEdit: function() {
             var mode = this.get('CLICK_MODE_EDIT');
@@ -3182,50 +3159,6 @@ SYNTH.app = {
 
 // Op | Document.ready --------------------------------------------------------------------------------
 $(document).ready(function() {
-    
-    /*
-    MIDI.loadPlugin({
-        soundfontUrl: "../soundfont/",
-        instrument: "acoustic_grand_piano",
-        callback: function() {
-            var delay = 0; // play one note every quarter second
-            var note = 50; // the MIDI note
-            var velocity = 127; // how hard the note hits
-            // play the note
-            MIDI.setVolume(0, 127);
-            MIDI.noteOn(0, note, velocity, delay);
-            MIDI.noteOff(0, note, delay + 0.75);
-        }
-    });
-    */
-    
-    /*
-     MIDI.loadPlugin({
-         soundfontUrl: "../soundfont/",
-         instruments: [ "acoustic_grand_piano", "celesta"],
-         callback: function() {
-             
-             MIDI.programChange(0, 0);
-             MIDI.programChange(1, 8);
-             for (var n = 0; n < 100; n ++) {
-                 var delay = n / 4; // play one note every quarter second
-                 var note = MIDI.pianoKeyOffset + n; // the MIDI note
-                 var velocity = 127; // how hard the note hits
-                 // play the note
-                 //MIDI.noteOn(0, note, velocity, n / 3);
-                 //MIDI.chordOn(0, [MIDI.pianoKeyOffset + n, MIDI.pianoKeyOffset + n + 5], 127, n/3);
-                 //MIDI.noteOff(0, MIDI.pianoKeyOffset + n, n/3 + 0.1);
-                 // play the some note 3-steps up
-                 MIDI.noteOn(1, note + 3, velocity, delay);
-             }
-             
-         }
-     });
-     */
-     
-    //console.log(MIDI.noteToKey);
-    
-    
     
     // Establish | Variables ---------------------------------------------------------------------------
     SYNTH.app.domCache = {};
