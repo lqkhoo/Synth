@@ -65,33 +65,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
         }());
     };
     _generateFrequencyTable();
-    
-    // Op | Augment Music.js library scale definition with chromatic scale
-    // MUSIC.scales['chromatic'] = MUSIC.scales['chromatic'] || ['minor second', 'major second', 'minor third', 'major third', 'fourth', 'augmented fourth', 'fifth', 'minor sixth', 'major sixth', 'minor seventh', 'major seventh'];
-    
-    
-    // Declare | Sound definitions ----------------------------------------------------------------------------
-    /*
-    function makeTimbre(soundCode, frequencyArray, loudness, attack, decay, sustain, release) {
         
-        switch(soundCode) {
-        case 'synthPiano':
-            var i;
-            var oscArray = [];
-            
-            for(i = 0; i < frequencyArray.length; i++) {
-                oscArray.push(Timbre('sin', {freq: frequencyArray[i], mul: loudness}));
-            }
-            var env = Timbre('perc', {r: release}, oscArray).bang();
-            return env;
-            
-        default:
-            // do nothing
-            return;
-        }
-    }
-    */
-    
     // Declare | Command class ----------------------------------------------------------------------
     
     /*
@@ -203,6 +177,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
         
         this._steps = [];
         
+        // Set score length
         this.addOp_setScoreLength = function(oldScoreLength, newScoreLength) {
             self._steps.push({
                 op: 'scorelength-change',
@@ -218,6 +193,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             controller.getOrchestra().setScoreLength(step.oldScoreLength);
         };
         
+        // Delete row
         this.addOp_deleteRow = function(time) {
             self._steps.push({
                 op: 'row-delete',
@@ -232,7 +208,21 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             controller.getOrchestra().getTimeUnitCollection().add(new TimeUnit({id: step.time}));
         };
         
+        this.addOp_addRow = function(time) {
+            self._steps.push({
+                op: 'row-add',
+                time: time
+            });
+        };
+        this._addRow = {};
+        this._addRow.exec = function(step) {
+            controller.getOrchestra().getTimeUnitCollection().add(new TimeUnit({id: step.time}));
+        };
+        this._addRow.undo = function(step) {
+            controller.getOrchestra().getTimeUnitCollection().remove(step.time);
+        };
         
+        // Move row
         this.addOp_moveRow = function(oldTime, newTime) {
             self._steps.push({
                 op: 'row-move',
@@ -248,7 +238,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             controller.getOrchestra().getTimeUnitCollection().get(step.newTime).setId(step.oldTime);
         };
         
-        
+        // Delete note
         this.addOp_deleteNote = function(instrumentId, pitchId, note) {
             self._steps.push({
                 op: 'note-delete',
@@ -267,7 +257,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             .getPitch(step.pitchId).getNoteCollection().add(step.note);
         };
         
-        
+        // Change note value
         this.addOp_changeNoteValue = function(instrumentId, pitchId, startTime, oldValue, newValue) {
             self._steps.push({
                 op: 'note-change-value',
@@ -288,7 +278,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             .getPitch(step.pitchId).getNoteCollection().get(step.startTime).setValue(step.oldValue);
         };
         
-        
+        // Decrement note value
         this.addOp_decrementNoteValue = function(instrumentId, pitchId, startTime) {
             self._steps.push({
                 op: 'note-decrement-value',
@@ -309,7 +299,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             note.setValue(note.getValue() + 1);
         };
         
-        
+        // Change note start time
         this.addOp_changeNoteStartTime = function(instrumentId, pitchId, oldStartTime, newStartTime) {
             self._steps.push({
                 op: 'note-change-starttime',
@@ -336,6 +326,9 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
                 break;
             case 'row-delete':
                 self._deleteRow[execMode](step);
+                break;
+            case 'row-add':
+                self._addRow[execMode](step);
                 break;
             case 'row-move':
                 self._moveRow[execMode](step);
@@ -1452,7 +1445,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             this.setScoreLength(startTime);
         },
         
-        // blueprint methods
+        // blueprint-only methods
         getBlueprint_deleteSelectedTimeUnits: function() {
             
             var blueprint = new CompoundGridModificationBlueprint(this.getController());
@@ -1496,6 +1489,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
                 blueprint.addOp_moveRow(time, time - timeUnitsRemoved);
             }
             
+
             function deleteRow(time) {
                 // Delete row
                 for(instrumentIndex = 0; instrumentIndex < instruments.length; instrumentIndex++) {
@@ -1545,6 +1539,73 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             }
             blueprint.addOp_setScoreLength(this.getScoreLength(), this.getScoreLength() - timeUnitsRemoved);
             
+            return blueprint;
+        },
+        
+        getBlueprint_insertTimeUnits: function() {
+            var blueprint = new CompoundGridModificationBlueprint(this.getController());
+            
+            var instruments = this.getInstrumentCollection().models;
+            var selectedTimeUnits = this.getTimeUnitCollection().where({'isSelected': true});
+            
+            var timeUnitIndex = selectedTimeUnits.length - 1;  // current position in selected time unit array
+            
+            var unitsPerInsert = this.getController().getAppBehaviorController().getTimeBlocksPerAdd();
+            var shiftDistance;
+            
+            var time;
+            var instrumentIndex;
+            var pitchCollection;
+            var pitchId;
+            var note;
+            
+            function shiftRow(time, distance) {
+                // move notes - this does not affect sorting order
+                for(instrumentIndex = 0; instrumentIndex < instruments.length; instrumentIndex++) {
+                    pitchCollection = instruments[instrumentIndex].getPitchCollection();
+                    
+                    for(pitchId = 0; pitchId < pitchCollection.length; pitchId++) {
+                        note = pitchCollection.get(pitchId).getNoteCollection().get(time);
+                        if(note !== undefined) {
+                            blueprint.addOp_changeNoteStartTime(instruments[instrumentIndex].getId(), pitchId, note.getTime(), note.getTime() + distance);
+                        }
+                    }
+                }
+                
+                // shift time units - this does not affect sorting order
+                blueprint.addOp_moveRow(time, time + distance);
+            }
+            
+            // insert rows at post-shift position
+            function insertRows(time) {
+                var i;
+                for(i = 0; i < unitsPerInsert; i++) {
+                    blueprint.addOp_addRow(time + i);
+                }
+            }
+            
+            for(time = this.getScoreLength() - 1; time >= 0; time--) {
+                
+                // If we have processed all the rows that needs inserting
+                if(timeUnitIndex === -1) {
+                    break;
+                } else {
+                    // A row but not one that needs deleting
+                    if(time !== selectedTimeUnits[timeUnitIndex].getId()) {
+                        shiftDistance = unitsPerInsert * (timeUnitIndex + 1);
+                        shiftRow(time, shiftDistance);
+                    } else {
+                        shiftDistance = unitsPerInsert * (timeUnitIndex + 1);
+                        shiftRow(time, shiftDistance);
+                        shiftDistance = unitsPerInsert * timeUnitIndex;
+                        insertRows(time + shiftDistance);
+                        timeUnitIndex -= 1;
+                    }
+                }
+            }
+            
+            blueprint.addOp_setScoreLength(this.getScoreLength(), this.getScoreLength() + unitsPerInsert * (selectedTimeUnits.length - 1));
+            console.log(blueprint);
             return blueprint;
         }
     });
@@ -1897,12 +1958,24 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             this._invoke(command);
         },
         invoke_insertTimeBlocks: function() {
-            
+            var orchestra = this.getOrchestra();
+            var blueprint = orchestra.getBlueprint_insertTimeUnits();
+            var command = new Command({
+                scope: this,
+                exec: {
+                    func: blueprint.exec,
+                    args: []
+                },
+                undo: {
+                    func: blueprint.undo,
+                    args: []
+                }
+            });
+            this._invoke(command);
         },
         invoke_deleteSelectedTimeBlocks: function() {
             var orchestra = this.getOrchestra();
             var blueprint = orchestra.getBlueprint_deleteSelectedTimeUnits();
-            console.log(blueprint);
             var command = new Command({
                 scope: this,
                 exec: {
@@ -2888,7 +2961,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             this.model.invoke_appendTimeBlocks(numOfBlocks);
         },
         _insertTimeBlocks: function() {
-            console.log('insert');
+            this.model.invoke_insertTimeBlocks();
         },
         _deleteTimeBlocks: function() {
             this.model.invoke_deleteSelectedTimeBlocks();
