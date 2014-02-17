@@ -35,7 +35,7 @@ legend {
 	box-shadow: #464646 0 2px 4px inset;
 	color: #fff;
 	background-color: #666;
-	font-size: 0.8em;
+	font-size: 0.8em !important;
 }
 .nav-footer {
 	padding: 3px;
@@ -164,6 +164,9 @@ legend {
 }
 #view-panel-controls button {
 	width: 90px;
+}
+#view-panel-controls .btn-group button {
+	width: 45px;
 }
 
 #edit-controls {
@@ -427,29 +430,17 @@ legend {
 	box-shadow: rgba(50, 50, 50, 0.5) -2px 0 5px;
 }
 #player-controls {
-	height: 120px;
+	height: 140px;
 }
 #player-controls .btn-group {
 	margin: auto;
 }
-#playback-buttons-wrapper {
-	margin: 1em 0 0.5em 1.5em;
+#player-controls .btn-group button {
+	width: 47px;
 }
-#playback-buttons-wrapper .btn {
-	float: none !important;
-}
-#input-playback-bar-wrapper {
-	padding: 0.5em 1em;
-	overflow: hidden;
-}
-#button-play-pause {
-	border-radius: 10px;
-}
-#button-to-beginning {
-	margin-right: -0.3em;
-}
-#button-to-end {
-	margin-left: -0.35em;
+#player-controls > div {
+	margin: 1em;
+	font-size: 0.9em;
 }
 #input-playback-bar-wrapper > span {
 	display: block;
@@ -461,12 +452,31 @@ legend {
 #input-playback-bar {
 	display: block;
 	float: left;
-	width: 60%;
+	width: 90px;
+	margin-left: 15px;
 }
 #instrument-controls-wrapper {
 	float: left;
 	width: 100%;
 }
+#player-controls input[type="number"] {
+	width: 50px;
+	display: inline-block;
+	height: 2em;
+	padding: 0;
+	padding-left: 3px;
+	padding-right: 3px;
+	font-size: 0.9em;
+	vertical-align: middle;
+	margin-left: 5px;
+}
+#player-controls .speed {
+	position: relative;
+	top: -5px;
+	font-size: 0.9em;
+	left: 2px;
+}
+
 #instrument-controls {
 	width: 100%;
 }

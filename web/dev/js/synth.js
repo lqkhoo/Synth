@@ -371,8 +371,37 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
     
     // Declare | Models ---------------------------------------------------------------------------------------
     
+    /**
+     * Top level model for mixins / augments etc.
+     * 
+     */
+    var SynthBaseModel = Backbone.Model.extend({
+        /* Override default Backbone.js toJSON
+         * 
+         * Method provides support for transient attributes which would not be serialized
+         * These are usually properties which would result in circular references or are
+         *   otherwise not needed in the JSON output.
+         *   
+         * Specify transient attribute as transientAttrs: { ... } within the model. Actual
+         *   value within transientAttrs is ignored at this time
+         */
+        toJSON: function() {
+            var attrs;
+            if(! this.transientAttrs) {
+                return _.clone(this.attributes);
+            }
+            attrs = {};
+            for(var attr in this.attributes) {
+                if(this.attributes.hasOwnProperty(attr) && ! this.transientAttrs.hasOwnProperty(attr)) {
+                    attrs[attr] = this.attributes[attr];
+                }
+            }
+            return _.clone(attrs);
+        }
+    });
+    
     /** A note. The id is when it's played. If ornaments are to be added later, it should be here */
-    var Note = Backbone.Model.extend({
+    var Note = SynthBaseModel.extend({
         defaults: {
             'id': null,
             'value': 1
@@ -402,12 +431,15 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
     });
         
     /** An object handling a particular frequency */
-    var Pitch = Backbone.Model.extend({
+    var Pitch = SynthBaseModel.extend({
         defaults: {
             'id': null,
             'instrument': null,
             'noteCollection': null,
-            'isPlayed': true,
+            'isSelected': false
+        },
+        transientAttrs: {
+            'instrument': null,
             'isSelected': false
         },
         
@@ -436,13 +468,6 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
         getNotes: function() {
             var notes = this.getNoteCollection().models;
             return notes;
-        },
-        getIsPlayed: function() {
-            return this.get('isPlayed');
-        },
-        setIsPlayed: function(isPlayed) {
-            this.set('isPlayed', isPlayed);
-            return isPlayed;
         },
         getIsSelected: function() {
             return this.get('isSelected');
@@ -647,7 +672,6 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
                 pitch = new Pitch({
                     'id': i,
                     'noteCollection': notes,
-                    'isPlayed': true,
                     'instrument': instrument,
                     //TODO potential bug if currently pitches are selected for some other instrument
                     //Need to deselect when adding new instrument
@@ -659,14 +683,9 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             return pitches;
         }
     };
-    
-    /** Object responsible for generating sound */
-    var SoundGenerator = Backbone.Model.extend({
         
-    });
-    
     /** An instrument */
-    var Instrument = Backbone.Model.extend({
+    var Instrument = SynthBaseModel.extend({
         defaults: {
             'id': null,
             'name': 'New instrument',
@@ -679,6 +698,9 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             'isMuted': false,
             'isSelected': false,
             'displayedColor': '#EE3A73'
+        },
+        transientAttrs: {
+            'orchestra': null
         },
         
         getId: function() {
@@ -815,7 +837,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
      * An object representing a time unit (one row on the grid)
      * Used mostly for backbone and view binding purposes
      */
-    var TimeUnit = Backbone.Model.extend({
+    var TimeUnit = SynthBaseModel.extend({
        defaults: {
            'id': null,
            'isSelected': null
@@ -843,7 +865,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
     });
         
     /** Object responsible for playing the orchestra */
-    var Player = Backbone.Model.extend({
+    var Player = SynthBaseModel.extend({
         defaults: {
             'currentTime': 0,
             'eventQueue': new EventQueue(),
@@ -854,6 +876,10 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             'isPlayerReady': false,
             'soundFontsLoaded': {},
             'loadingSoundFonts': [],
+        },
+        transientAttrs: {
+            'orchestra': null,
+            'controller': null,
         },
         getCurrentTime: function() {
             return this.get('currentTime');
@@ -1138,7 +1164,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
     });
     
     /** The model providing access to soundfont data */
-    var SoundFontLibrary = Backbone.Model.extend({
+    var SoundFontLibrary = SynthBaseModel.extend({
         defaults: {
             'soundFonts': {}, // this should be a hash object
         },
@@ -1178,7 +1204,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
     });
     
     /** The orchestra */
-    var Orchestra = Backbone.Model.extend({
+    var Orchestra = SynthBaseModel.extend({
         defaults: {
             'controller': null,
             'soundFontLibrary': null,
@@ -1195,6 +1221,12 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             // If this note is deleted then
             // this value may exceed the current longest note value
             'longestNoteValue': 0
+        },
+        transientAttrs: {
+            'controller': null,
+            'soundFontLibrary': null,
+            'dummyInstrument': null,
+            'timeUnitCollection': null
         },
         initialize: function() {
             var instrument;
@@ -1688,7 +1720,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
     // Controllers --------------------------------------------
     
     /** Model of user-controllable Views' states */
-    var ViewController = Backbone.Model.extend({
+    var ViewController = SynthBaseModel.extend({
         defaults: {
             'isEditPanelVisible': true,
             'isViewPanelVisible': true
@@ -1702,7 +1734,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
     });
     
     /** Model of application behavior that doesn't belong in any of the core models */
-    var AppBehaviorController = Backbone.Model.extend({
+    var AppBehaviorController = SynthBaseModel.extend({
         defaults: {
             'CLICK_MODE_EDIT': 'edit',
             'CLICK_MODE_SELECT': 'select',
@@ -1763,15 +1795,23 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
      * redo / undo stack are called invocations, and are prefixed with 
      * 'invoke_'
      */
-    var Controller = Backbone.Model.extend({
+    var Controller = SynthBaseModel.extend({
         defaults: {
             // 'mode': 'synth' / 'game',
+            'version': null,
             'orchestra': new Orchestra(),
             'player': null,
             'invoker': new Invoker(),
             'viewController': new ViewController(),
             'appBehaviorController': new AppBehaviorController()
         },
+        transientAttrs: {
+            'player': null,
+            'invoker': null,
+            'viewController': null,
+            'appBehaviorController': null
+        },
+        
         initialize: function() {
             var orchestra;
             var player;
@@ -2620,6 +2660,14 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
                 
             };
             
+            function playSpeedConverter(direction, value) {
+                if(direction === 'ViewToModel') {
+                    return parseInt(value);
+                } else {
+                    return value;
+                }
+            }
+            
             var bindings = {
                 'isLooping': {
                     selector: '#button-loop',
@@ -2646,13 +2694,14 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             var orchestraBindings = {
                 'scoreLength':[
                    {
-                       selector: '#score-length'
-                   },
-                   {
                        selector: '#input-playback-bar',
                        elAttribute: 'max'
                    }
-                ]
+                ],
+                'playSpeed': {
+                    selector: '[data-attr="current-speed"]',
+                    converter: playSpeedConverter
+                }
             };
             
             this.modelBinder.bind(this.model.getPlayer(), this.el, bindings);
@@ -2945,6 +2994,23 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
         }
     });
     
+    var SaveLoadPanelView = Backbone.View.extend({
+        el: '#modals',
+        loadPanelTemplate: SYNTH.templateCache['template-load-panel'],
+        savePanelTemplate: SYNTH.templateCache['template-save-panel'],
+        initialize: function() {
+            this.$el.append(this.loadPanelTemplate);
+            this.$el.append(this.savePanelTemplate);
+            this.render();
+        },
+        render: function() {
+            return this;
+        },
+        close: function() {
+            this.$el.html('');
+        }
+    });
+    
     var ViewControllerView = Backbone.View.extend({
         el: '#body',
         menuModelBinder: null,
@@ -3090,6 +3156,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
         _viewControllerView: null,
         _keyButtonsView: null,
         _editControlPanelView: null,
+        _saveLoadControlPanelView: null,
         _playerControlPanelView: null,
         _instrumentControlPanelView: null,
         _gridView: null,
@@ -3099,6 +3166,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             this._viewControllerView = new ViewControllerView({model: this.model});
             this._keyButtonsView = new KeyButtonsView({model: this.model});
             this._editControlPanelView = new EditControlPanelView({model: this.model});
+            this._saveLoadControlPanelView = new SaveLoadPanelView({model: this.model});
             this._playerControlPanelView = new PlayerControlPanelView({model: this.model});
             this._instrumentControlPanelView = new InstrumentControlPanelView({model: this.model});
             this._gridView = new GridView({model: this.model});
@@ -3107,6 +3175,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             this._viewControllerView.close();
             this._keyButtonsView.close();
             this._editControlPanelView.close();
+            this._saveLoadControlPanelView.close();
             this._playerControlPanelView.close();
             this._instrumentControlPanelView.close();
             this._gridView.close();
@@ -3134,7 +3203,6 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
         Notes: Notes,
         Pitch: Pitch,
         Pitches: Pitches,
-        SoundGenerator: SoundGenerator,
         Instrument: Instrument,
         Instruments: Instruments,
         Orchestra: Orchestra,
@@ -3160,11 +3228,13 @@ SYNTH.app = {
 // Op | Document.ready --------------------------------------------------------------------------------
 $(document).ready(function() {
     
+    SYNTH.app.version = '0.1';
+    
     // Establish | Variables ---------------------------------------------------------------------------
     SYNTH.app.domCache = {};
     
     // Op | Initialize models -----------------------------------------------------------------------------
-    SYNTH.app.controller = new SYNTH.Controller();
+    SYNTH.app.controller = new SYNTH.Controller({version: SYNTH.app.version});
     
     // Initialize top level views
     SYNTH.app.topView = new SYNTH.TopLevelView({model: SYNTH.app.controller});
@@ -3195,7 +3265,12 @@ $(document).ready(function() {
         $('#site-bottom').click(function() {
             $(this).toggleClass('expanded');
         });
+        
     }());
+    
+    //var foo = SYNTH.app.controller;
+    //console.log(foo);
+    //console.log(JSON.stringify(foo));
     
     // Scroll syncing
     SYNTH.app.domCache.top = $('#part-top');

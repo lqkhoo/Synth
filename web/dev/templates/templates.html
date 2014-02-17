@@ -1,6 +1,9 @@
 <html>
 
 <div class="template" id="template-base">
+	<div id="modals">
+		<!-- modal widgets go here -->
+	</div>
 	<div id="site-top">
 		<div id="permanent-top">
 			<div id="logo">
@@ -27,7 +30,12 @@
 				<ul>
 					<li><button id="button-toggle-edit-panel" class="btn btn-default btn-xs">Edit</button></li>
 					<li><button id="button-toggle-view-panel" class="btn btn-default btn-xs">View</button></li>
-					<li><button id="button-toggle-import-export-panel" class="btn btn-default btn-xs" disabled="disabled">Import/Export</button></li>
+					<li>
+						<span class="btn-group">
+							<button id="button-toggle-load-panel" class="btn btn-default btn-xs" data-toggle="modal" data-target="#load-panel">Load</button>
+							<button id="button-toggle-save-panel" class="btn btn-default btn-xs" data-toggle="modal" data-target="#save-panel">Save</button>
+						</span>
+					</li>
 					<li><button id="button-toggle-tween-panel" class="btn btn-default btn-xs" disabled="disabled">Tween</button></li>
 				</ul>
 			</div>
@@ -83,7 +91,7 @@
 	<div id="site-bottom"></div>
 </div>
 
-
+<!-- panel templates -->
 
 <div class="template" id="template-add-instrument-panel">
 	<div class="nav-footer">
@@ -176,20 +184,87 @@
 		<span class="btn-group">
 			<button id="button-to-beginning"
 				class="btn btn-default glyphicon glyphicon-fast-backward"></button>
-			<button id="button-play-pause" type="button" class="btn btn-default btn-lg"></button>
+			<button id="button-play-pause" type="button" class="btn btn-default"></button>
 			<button id="button-to-end"
 				class="btn btn-default glyphicon glyphicon-fast-forward"></button>
-		</span> <span>
+		</span>
+		<span>
 			<button id="button-loop" class="btn btn-default glyphicon glyphicon-repeat"></button>
 		</span> 
 	</div>
 
 	<div id="input-playback-bar-wrapper" class="nav-panel">
-		<span>1</span> <input id="input-playback-bar" type="range" min="1"></input>
-		<span id="score-length"></span>
-		<span>(</span>
-		<span data-attr="current-time"></span>
-		<span>)</span>
+		<span>Seek</span>
+		<input id="input-playback-bar" type="range" min="1"></input>
+		<input type="number" data-attr="current-time" class="form-control"></input>
+	</div>
+	
+	<div class="speed">
+		<span>Speed</span>
+		<input type="number" data-attr="current-speed" class="form-control"></input>
+		<span>ms</span>
+	</div>
+</div>
+
+<div class="template" id="template-load-panel">
+	<div class="modal fade" id="load-panel" tabindex="-1">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal">&times;</button>
+					<h4 class="modal-title">Load data</h4>
+				</div>
+				<div class="modal-body">
+				
+					<ul class="nav nav-tabs">
+						<li><a href="#tab-body-modal-load-samples" data-toggle="tab">Samples</a></li>
+						<li><a href="#tab-body-modal-load-localstorage" data-toggle="tab">From HTML5 local storage</a></li>
+						<li><a href="#tab-body-modal-load-fromfile" data-toggle="tab">From file</a></li>
+						<li><a href="#tab-body-modal-load-fromjson" data-toggle="tab">From raw JSON</a></li>
+					</ul>
+					
+					<div class="tab-content">
+						<div class="tab-pane" id="tab-body-modal-load-samples">...</div>
+						<div class="tab-pane" id="tab-body-modal-load-localstorage">...</div>
+						<div class="tab-pane" id="tab-body-modal-load-fromfile">...</div>
+						<div class="tab-pane" id="tab-body-modal-load-fromjson">...</div>
+					</div>
+					
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div class="template" id="template-save-panel">
+	<div class="modal fade" id="save-panel" tabindex="-1">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal">&times;</button>
+					<h4 class="modal-title">Save data</h4>
+				</div>
+				<div class="modal-body">
+				
+					<ul class="nav nav-tabs">
+						<li><a href="#tab-body-modal-save-localstorage" data-toggle="tab">To HTML5 local storage</a></li>
+						<li><a href="#tab-body-modal-save-tofile" data-toggle="tab">To file</a></li>
+						<li><a href="#tab-body-modal-save-rawjson" data-toggle="tab">Raw JSON</a></li>
+					</ul>
+					
+					<div class="tab-content">
+						<div class="tab-pane" id="tab-body-modal-save-localstorage">...</div>
+						<div class="tab-pane" id="tab-body-modal-save-tofile">...</div>
+						<div class="tab-pane" id="tab-body-modal-save-rawjson">
+							<button class="btn btn-default btn-xs">Get JSON</button>
+							<pre id="save-to-raw-json">
+							</pre>
+						</div>
+					</div>
+					
+				</div>
+			</div>
+		</div>
 	</div>
 </div>
 
