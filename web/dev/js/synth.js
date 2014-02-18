@@ -10,25 +10,32 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
     if(! MUSIC || ! MUSIC_Note || ! MUSIC_Interval) { throw 'MUSIC.js not available.'; }
     if(! MIDI) { throw 'MIDI.js not available.'; }
     
-    SYNTH.soundfontUrl = '../soundfont/';
+    // True constants
+    var VERSION = '0.1';
+    var SOUNDFONT_URL = '../soundfont/';
+    var TEMPLATE_URL = 'templates/templates.html';
+    var TEMPLATE_SELECTOR = '.template';
+    // Initialized contants
+    var TONES;
+    var FREQS;
+    var TEMPLATE_CACHE = {};
     
-    // Op | Establish template cache -------------------------------------------------------------------
-    SYNTH.templateCache = {};
-    function _cacheTemplates(cacheObject, templateUrl, templateSelector) {
-        if(! cacheObject) {
-            cacheObject = {};
+    // Initialization helpers
+    function _cacheTemplates() {
+        if(! TEMPLATE_CACHE) {
+            TEMPLATE_CACHE = {};
         }
         
         var templateString;
         $.ajax({
-            url: templateUrl,
+            url: TEMPLATE_URL,
             method: 'GET',
             async: false,
             success: function(data) {
-                templateString = $(data).filter(templateSelector);
+                templateString = $(data).filter(TEMPLATE_SELECTOR);
                 var i;
                 for(i = 0; i < templateString.length; i++) {
-                    cacheObject[templateString[i].id] = $(templateString[i]).html();
+                    TEMPLATE_CACHE[templateString[i].id] = $(templateString[i]).html();
                 }
             },
             error: function() {
@@ -36,35 +43,36 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             }
         });
     }
-    _cacheTemplates(SYNTH.templateCache, 'templates/templates.html', '.template');
     
-    // Op | Define frequency table
     function _generateFrequencyTable() {
         var tones = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'A', 'Bb', 'B'];
         var octaves = ['1', '2', '3', '4', '5', '6', '7', '8'];
         
-        SYNTH.TONES = ['A0', 'Bb0', 'B0'];
+        TONES = ['A0', 'Bb0', 'B0'];
         (function() {
             var i, j;
             for(i = 0; i < octaves.length; i++) {
                 for(j = 0; j < tones.length; j++) {
-                    SYNTH.TONES.push(tones[j] + octaves[i]);
-                    if(SYNTH.TONES.length >= 88) {
+                    TONES.push(tones[j] + octaves[i]);
+                    if(TONES.length >= 88) {
                         return;
                     }
                 }
             }
         }());
         
-        SYNTH.FREQS = [];
+        FREQS = [];
         (function() {
             var i;
-            for(i = 0; i < SYNTH.TONES.length; i++) {
-                SYNTH.FREQS.push(MUSIC_Note.fromLatin(SYNTH.TONES[i]).frequency());
+            for(i = 0; i < TONES.length; i++) {
+                FREQS.push(MUSIC_Note.fromLatin(TONES[i]).frequency());
             }
         }());
     };
-    _generateFrequencyTable();
+    
+    // Initialize
+    _cacheTemplates(); // Establish template cache
+    _generateFrequencyTable(); // Define frequency table
         
     // Declare | Command class ----------------------------------------------------------------------
     
@@ -1139,7 +1147,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             
             if(! this.getIsSoundFontLoadingOrLoaded(number)) {
                 MIDI.loadPlugin({
-                    soundfontUrl: SYNTH.soundfontUrl,
+                    soundfontUrl: SOUNDFONT_URL,
                     instruments: [soundFontId],
                     callback: function() {
                         console.log('callback');
@@ -2014,7 +2022,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
     
     var GridNoteCollectionView = Backbone.View.extend({
         el: '',
-        collectionTemplate: SYNTH.templateCache['template-note'],
+        collectionTemplate: TEMPLATE_CACHE['template-note'],
         collectionBinder: null,
         
         initialize: function() {
@@ -2065,7 +2073,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
      */
     var GridPitchCollectionView = Backbone.View.extend({
         el: '',
-        collectionTemplate: SYNTH.templateCache['template-grid-pitch'],
+        collectionTemplate: TEMPLATE_CACHE['template-grid-pitch'],
         collectionBinder: null,
         
         initialize: function() {
@@ -2117,7 +2125,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
      */
     var GridInstrumentView = Backbone.View.extend({
         el: '#grid-instruments',
-        collectionTemplate: SYNTH.templateCache['template-grid-instrument'],
+        collectionTemplate: TEMPLATE_CACHE['template-grid-instrument'],
         collectionBinder: null,
         
         initialize: function() {
@@ -2171,7 +2179,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
         el: '#grid-event-capture-layer',
         columnEl: '#grid-event-capture-layer-columns',
         rowCollectionBinder: null,
-        rowTemplate: SYNTH.templateCache['template-grid-event-capture-layer-row'],
+        rowTemplate: TEMPLATE_CACHE['template-grid-event-capture-layer-row'],
         
         initialize: function() {
             
@@ -2225,7 +2233,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
      */
     var GridLeftBar = Backbone.View.extend({
         el: '#part-left-lower',
-        collectionTemplate: SYNTH.templateCache['template-beat-time'],
+        collectionTemplate: TEMPLATE_CACHE['template-beat-time'],
         collectionBinder: null,
         
         initialize: function() {
@@ -2331,7 +2339,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
                 var div;
                 var str;
                 for(i = 0; i < 88; i++) {
-                    str = SYNTH.TONES[i];
+                    str = TONES[i];
                     div = $('<div></div>').attr({'data-pitch': i});
                     if(str.length > 2) {
                         div.append($('<div>' + str.substr(0, 2)+ '</div>'));
@@ -2626,7 +2634,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
     var PlayerControlPanelView = Backbone.View.extend({
         el: '#player-controls',
         model: null,
-        template: SYNTH.templateCache['template-playback-panel'],
+        template: TEMPLATE_CACHE['template-playback-panel'],
         modelBinder: null,
         orchestraModelBinder: null,
         initialize: function() {
@@ -2739,7 +2747,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
     });
     
     var InstrumentView = Backbone.View.extend({
-        el: SYNTH.templateCache['template-instrument-panel'],
+        el: TEMPLATE_CACHE['template-instrument-panel'],
         selectEl: '',
         initialize: function() {
             //this.selectEl = '#instrument-list .instrument-panel[data-id="' + this.model.getId() + '"] select';
@@ -2907,8 +2915,8 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
         addInstrumentEl: '#add-instrument-controls',
         instrumentListEl: '#instrument-list',
         model: null,
-        template: SYNTH.templateCache['template-add-instrument-panel'],
-        collectionTemplate: SYNTH.templateCache['template-instrument-panel'],
+        template: TEMPLATE_CACHE['template-add-instrument-panel'],
+        collectionTemplate: TEMPLATE_CACHE['template-instrument-panel'],
         instrumentCollectionBinder: null,
         initialize: function() {
             
@@ -2950,7 +2958,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
         el: '#edit-controls',
         model: null,
         modelBinder: null,
-        template: SYNTH.templateCache['template-edit-panel'],
+        template: TEMPLATE_CACHE['template-edit-panel'],
         initialize: function() {
             this.$el.html(this.template);
             this.modelBinder = new Backbone.ModelBinder();
@@ -2996,8 +3004,8 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
     
     var SaveLoadPanelView = Backbone.View.extend({
         el: '#modals',
-        loadPanelTemplate: SYNTH.templateCache['template-load-panel'],
-        savePanelTemplate: SYNTH.templateCache['template-save-panel'],
+        loadPanelTemplate: TEMPLATE_CACHE['template-load-panel'],
+        savePanelTemplate: TEMPLATE_CACHE['template-save-panel'],
         initialize: function() {
             this.$el.append(this.loadPanelTemplate);
             this.$el.append(this.savePanelTemplate);
@@ -3151,7 +3159,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
     var TopLevelView = Backbone.View.extend({
         el: '#body',
         model: null,
-        template: SYNTH.templateCache['template-base'],
+        template: TEMPLATE_CACHE['template-base'],
         // sub-views
         _viewControllerView: null,
         _keyButtonsView: null,
@@ -3192,10 +3200,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
     
     // Expose api ---------------------------------------
     return {
-        // constants
-        TONES: SYNTH.TONES,
-        FREQS: SYNTH.FREQS,
-        soundfontUrl: SYNTH.soundfontUrl,
+        VERSION: VERSION,
         // models
         Command: Command,
         Invoker: Invoker,
@@ -3213,34 +3218,26 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
         TopLevelView: TopLevelView
     };
 });
-SYNTH.prototype = {};
 SYNTH = SYNTH(jQuery, _, Backbone, MUSIC, Note, Interval, MIDI);
 
 
 // ================================================================================
 // Those are the classes - now we initialize the UI and the application
 // ================================================================================
-SYNTH.app = {
-    controller: undefined,
-    topView: undefined
-};
 
 // Op | Document.ready --------------------------------------------------------------------------------
 $(document).ready(function() {
     
-    SYNTH.app.version = '0.1';
+    SYNTH.app = {
+        version: SYNTH.VERSION,
+        controller: undefined,
+        topView: undefined,
+        domCache: {}
+    };
     
-    // Establish | Variables ---------------------------------------------------------------------------
-    SYNTH.app.domCache = {};
-    
-    // Op | Initialize models -----------------------------------------------------------------------------
-    SYNTH.app.controller = new SYNTH.Controller({version: SYNTH.app.version});
-    
-    // Initialize top level views
-    SYNTH.app.topView = new SYNTH.TopLevelView({model: SYNTH.app.controller});
-    
-    // Preconfigure orchestra
-    SYNTH.app.controller.getOrchestra().addNewDefaultInstrument();
+    SYNTH.app.controller = new SYNTH.Controller({version: SYNTH.app.version}); // Initialize models
+    SYNTH.app.topView = new SYNTH.TopLevelView({model: SYNTH.app.controller}); // Initialize top level views
+    SYNTH.app.controller.getOrchestra().addNewDefaultInstrument(); // Preconfigure orchestra
     
     // UI ops
     (function() {
