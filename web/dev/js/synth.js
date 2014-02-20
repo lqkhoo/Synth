@@ -16,8 +16,8 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
     var TEMPLATE_URL = 'templates/templates.html';
     var TEMPLATE_SELECTOR = '.template';
     // Initialized contants
-    var TONES;
-    var FREQS;
+    var TONES = [];
+    var FREQS = [];
     var TEMPLATE_CACHE = {};
     
     // Initialization helpers
@@ -377,7 +377,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
         };
     }
     
-    // Declare | Models ---------------------------------------------------------------------------------------
+    // Declare | Models -------------------------------------------------------------------------------
     
     /**
      * Top level model for mixins / augments etc.
@@ -3278,3 +3278,4 @@ $(document).ready(function() {
     });
     
 });
+
