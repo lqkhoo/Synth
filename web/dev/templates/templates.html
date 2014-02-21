@@ -32,8 +32,8 @@
 					<li><button id="button-toggle-view-panel" class="btn btn-default btn-xs">View</button></li>
 					<li>
 						<span class="btn-group">
-							<button id="button-toggle-load-panel" class="btn btn-default btn-xs" data-toggle="modal" data-target="#load-panel">Load</button>
-							<button id="button-toggle-save-panel" class="btn btn-default btn-xs" data-toggle="modal" data-target="#save-panel">Save</button>
+							<button id="button-toggle-load-panel" class="btn btn-default btn-xs" data-toggle="modal" data-target="#load-modal">Load</button>
+							<button id="button-toggle-save-panel" class="btn btn-default btn-xs" data-toggle="modal" data-target="#save-modal">Save</button>
 						</span>
 					</li>
 					<li><button id="button-toggle-tween-panel" class="btn btn-default btn-xs" disabled="disabled">Tween</button></li>
@@ -206,8 +206,8 @@
 	</div>
 </div>
 
-<div class="template" id="template-load-panel">
-	<div class="modal fade" id="load-panel" tabindex="-1">
+<div class="template" id="template-load-modal">
+	<div class="modal fade" id="load-modal" tabindex="-1">
 		<div class="modal-dialog">
 			<div class="modal-content">
 				<div class="modal-header">
@@ -227,17 +227,22 @@
 						<div class="tab-pane" id="tab-body-modal-load-samples">...</div>
 						<div class="tab-pane" id="tab-body-modal-load-localstorage">...</div>
 						<div class="tab-pane" id="tab-body-modal-load-fromfile">...</div>
-						<div class="tab-pane" id="tab-body-modal-load-fromjson">...</div>
+						<div class="tab-pane" id="tab-body-modal-load-fromjson">
+							<span class="btn-group">
+								<button class="btn btn-default btn-xs" id="load-parse-json">Load</button>
+								<button class="btn btn-default btn-xs" id="load-clear-all">Clear</button>
+							</span>
+							<textarea id="load-raw-json" class="form-control"></textarea>
+						</div>
 					</div>
-					
 				</div>
 			</div>
 		</div>
 	</div>
 </div>
 
-<div class="template" id="template-save-panel">
-	<div class="modal fade" id="save-panel" tabindex="-1">
+<div class="template" id="template-save-modal">
+	<div class="modal fade" id="save-modal" tabindex="-1">
 		<div class="modal-dialog">
 			<div class="modal-content">
 				<div class="modal-header">
@@ -256,9 +261,12 @@
 						<div class="tab-pane" id="tab-body-modal-save-localstorage">...</div>
 						<div class="tab-pane" id="tab-body-modal-save-tofile">...</div>
 						<div class="tab-pane" id="tab-body-modal-save-rawjson">
-							<button class="btn btn-default btn-xs">Get JSON</button>
-							<pre id="save-to-raw-json">
-							</pre>
+							<span class="btn-group">
+								<button class="btn btn-default btn-xs" id="save-get-json">Get JSON</button>
+								<button class="btn btn-default btn-xs" id="save-select-all">Select all</button>
+								<button class="btn btn-default btn-xs" id="save-clear-all">Clear</button>
+							</span>
+							<textarea id="save-raw-json" class="form-control" readonly="readonly"></textarea>
 						</div>
 					</div>
 					

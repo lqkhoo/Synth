@@ -6,7 +6,7 @@
          url("../fonts/vibrocen.svg") format("svg");
 }
 
- html, body { overflow: hidden; }
+html, body { overflow: hidden; }
 
 legend {
 	font-size: 1em;
@@ -586,6 +586,19 @@ legend {
 	height: 100px;
 }
 
+/* Modals -------------------------------------------
+ */
+#tab-body-modal-load-fromjson .btn-group,
+#tab-body-modal-save-rawjson .btn-group {
+	margin-top: 10px;
+}
+
+#load-raw-json,
+#save-raw-json {
+	width: 100%;
+	height: 400px;
+}
+
 /* Repetitive stuff ----------------------------------------------
  */
 [data-pitch="0"] { left: 0px; }
@@ -676,32 +689,4 @@ legend {
 [data-pitch="85"] { left: 1700px; }
 [data-pitch="86"] { left: 1720px; }
 [data-pitch="87"] { left: 1740px; }
-
-
-/* This is quite costly when the browser re-renders, but this setting should be rarely touched once set.
-   Eventually these should be baked into PNGs to skirt this whole issue
- */
-/*
-#part-controls[data-bpb="4"] .event-layer-row:nth-child(4n+1) { background-color: rgba(200,200,200,0.15); }
-#part-controls[data-bpb="5"] .event-layer-row:nth-child(5n+1) { background-color: rgba(200,200,200,0.15); }
-#part-controls[data-bpb="6"] .event-layer-row:nth-child(6n+1) { background-color: rgba(200,200,200,0.15); }
-#part-controls[data-bpb="7"] .event-layer-row:nth-child(7n+1) { background-color: rgba(200,200,200,0.15); }
-#part-controls[data-bpb="8"] .event-layer-row:nth-child(8n+1) { background-color: rgba(200,200,200,0.15); }
-#part-controls[data-bpb="9"] .event-layer-row:nth-child(9n+1) { background-color: rgba(200,200,200,0.15); }
-#part-controls[data-bpb="10"] .event-layer-row:nth-child(10n+1) { background-color: rgba(200,200,200,0.15); }
-#part-controls[data-bpb="11"] .event-layer-row:nth-child(11n+1) { background-color: rgba(200,200,200,0.15); }
-#part-controls[data-bpb="12"] .event-layer-row:nth-child(12n+1) { background-color: rgba(200,200,200,0.15); }
-#part-controls[data-bpb="13"] .event-layer-row:nth-child(13n+1) { background-color: rgba(200,200,200,0.15); }
-#part-controls[data-bpb="14"] .event-layer-row:nth-child(14n+1) { background-color: rgba(200,200,200,0.15); }
-#part-controls[data-bpb="15"] .event-layer-row:nth-child(15n+1) { background-color: rgba(200,200,200,0.15); }
-#part-controls[data-bpb="16"] .event-layer-row:nth-child(16n+1) { background-color: rgba(200,200,200,0.15); }
-#part-controls[data-bpb="17"] .event-layer-row:nth-child(17n+1) { background-color: rgba(200,200,200,0.15); }
-#part-controls[data-bpb="18"] .event-layer-row:nth-child(18n+1) { background-color: rgba(200,200,200,0.15); }
-#part-controls[data-bpb="19"] .event-layer-row:nth-child(19n+1) { background-color: rgba(200,200,200,0.15); }
-#part-controls[data-bpb="20"] .event-layer-row:nth-child(20n+1) { background-color: rgba(200,200,200,0.15); }
-#part-controls[data-bpb="21"] .event-layer-row:nth-child(21n+1) { background-color: rgba(200,200,200,0.15); }
-#part-controls[data-bpb="22"] .event-layer-row:nth-child(22n+1) { background-color: rgba(200,200,200,0.15); }
-#part-controls[data-bpb="23"] .event-layer-row:nth-child(23n+1) { background-color: rgba(200,200,200,0.15); }
-#part-controls[data-bpb="24"] .event-layer-row:nth-child(24n+1) { background-color: rgba(200,200,200,0.15); }
-*/
 
