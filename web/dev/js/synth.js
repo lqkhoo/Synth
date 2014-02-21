@@ -142,13 +142,17 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
         _getUndoStack: function() {
             return this.get('undoStack');
         },
-        
         _getRedoStack: function() {
             return this.get('redoStack');
         },
         _triggerChange: function() {
             this.trigger('change:undoStack');
             this.trigger('change:redoStack');
+        },
+        reset: function() {
+            this.set('undoStack', []);
+            this.set('redoStack', []);
+            this._triggerChange();
         },
         getUndoStackLength: function() {
             return this._getUndoStack().length;
@@ -450,7 +454,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             'instrument': null,
             'isSelected': false
         },
-        deserialize: function(serialized) {
+        fromSerialized: function(serialized) {
             if(serialized.noteCollection) {
                 var note;
                 var noteCollection = new Notes();
@@ -723,13 +727,13 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
         transientAttrs: {
             'orchestra': null
         },
-        deserialize: function(serialized) {
+        fromSerialized: function(serialized) {
             if(serialized.pitchCollection) {
                 var pitch;
                 var pitchCollection = new Pitches();
                 var i;
                 for(i = 0; i < serialized.pitchCollection.length; i++) {
-                    pitch = new Pitch(serialized.pitchCollection[i]).deserialize(serialized.pitchCollection[i]);
+                    pitch = new Pitch(serialized.pitchCollection[i]).fromSerialized(serialized.pitchCollection[i]);
                     pitch.setInstrument(this);
                     pitchCollection.add(pitch);
                 }
@@ -1257,7 +1261,8 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             'dummyInstrument': null,
             'timeUnitCollection': null
         },
-        initialize: function(serialized) {
+        initialize: function() {
+            
             var dummyInstrument;
             var instrumentCollection;
             var timeUnitCollection;
@@ -1290,20 +1295,21 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             this._setTimeUnitCollection(timeUnitCollection);
             this._setSoundFontLibrary(soundFontLibrary);
         },
-        deserialize: function(serialized) {
-            
+        updateFromSerialized: function(serialized) {
             var i;
             var serializedInstrument;
             var instrument;
-            var instrumentCollection = new Instruments();
+            
+            this.constructor(serialized);
+            this.setInstrumentCollection = new Instruments();
+            
+            SYNTH.app.topView.render(); 
             for(i = 0; i < serialized.instrumentCollection.length; i++) {
                 serializedInstrument = serialized.instrumentCollection[i];
-                instrument = new Instrument(serializedInstrument).deserialize(serializedInstrument);
+                instrument = new Instrument(serializedInstrument).fromSerialized(serializedInstrument);
                 instrument.setOrchestra(this);
-                instrumentCollection.add(instrument);
+                this._addInstrument(instrument, instrument.getId());
             }
-            this._setInstrumentCollection(instrumentCollection);
-            return this;
         },
         
         // getters | setters
@@ -1405,16 +1411,20 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
                 SYNTH.app.topView.getGridView().addPitchCollectionView(instrumentId);
             }
         },
-        /** Adds a new pre-constructed instrument into the collection
-         *  This new instrument is set to be the selected instrument
-         */
-        addInstrument: function(instrument, instrumentId) {
+        /** Private method - does not increment instrumentId. Used for special insertions only */
+        _addInstrument: function(instrument, instrumentId) {
             var soundFontNumber = instrument.getSoundFontId();
             this.getInstrumentCollection().add(instrument);
             this.initializePitchCollectionView(instrumentId);
             this.setNewActiveInstrument(instrumentId);
-            this.incrementNextInstrumentId();
             this.getController().getPlayer().loadSoundFont(soundFontNumber);
+        },
+        /** Adds a new pre-constructed instrument into the collection
+         *  This new instrument is set to be the selected instrument
+         */
+        addInstrument: function(instrument, instrumentId) {
+            this._addInstrument(instrument, instrumentId);
+            this.incrementNextInstrumentId();
             return instrument;
         },
         /** Adds a new default instrument to the collection */
@@ -1873,7 +1883,6 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             'viewController': null,
             'appBehaviorController': null
         },
-        
         initialize: function() {
             var orchestra;
             var player;
@@ -1890,6 +1899,30 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             
             this._setPlayer(player);
         },
+        fromJson: function(json) {
+            
+            var serialized = JSON.parse(json);            
+            var orchestra;
+            
+            this.getInvoker().reset();
+            
+            if(SYNTH.app) {
+                SYNTH.app.topView.close();
+                SYNTH.app.controller.destroy();
+                
+                SYNTH.app.controller = new Controller();
+                SYNTH.app.controller.initUI();
+                
+                serialized.orchestra.controller = this;
+                orchestra = SYNTH.app.controller.getOrchestra();
+                orchestra.updateFromSerialized(serialized.orchestra);
+            }            
+            
+        },
+        toJson: function() {
+            return JSON.stringify(this);
+        },
+                
         getOrchestra: function() {
             return this.get('orchestra');
         },
@@ -1914,29 +1947,43 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             return this.get('appBehaviorController');
         },
         
-        fromJson: function(json) {
-            var obj = JSON.parse(json);
-            var orchestra;
-            var instruments;
-            var i;
+        initUI: function() {
             
-            obj.orchestra.controller = this;
-            orchestra = new Orchestra(obj.orchestra).deserialize(obj.orchestra);
-            this._setOrchestra(orchestra);
+            SYNTH.app.topView = new SYNTH.TopLevelView({model: SYNTH.app.controller}); // Initialize top level views
             
-            orchestra = this.getOrchestra();
+            // UI ops
+            (function() {
+                
+                function resizeUI() {
+                    var windowHeight = $(window).height() - 110 - 25;    // 110px #site-top 25px #site-bottom
+                    var partHeight = windowHeight - 60; // 60px static top frequency row
+                    var instrumentControlHeight = windowHeight - 100 - 25 - 20 - 25;   // ditto above - 20px instrument .nav-menu -25px add instrument
+                    $('#site-main').attr({'style': 'height: ' + windowHeight + 'px;'});
+                    $('#grid').attr({'style': 'height: ' + partHeight + 'px;'});
+                    $('#instrument-list').attr({'style': 'height: ' + instrumentControlHeight + 'px;'});
+                }
+                
+                resizeUI();
+                $(window).resize(resizeUI);
+                
+                $('#instrument-list').sortable({
+                    scroll: false,
+                    axis: 'y',
+                }); // jQueryUI
+                
+                $('#site-bottom').click(function() {
+                    $(this).toggleClass('expanded');
+                });
+                
+            }());
             
-            instruments = orchestra.getInstrumentCollection().models;
-            for(i = 0; i < instruments.length; i++) {
-                orchestra.initializePitchCollectionView(instruments[i].getId());
-            }
-            console.log(orchestra);
-            if(SYNTH.app) {
-                SYNTH.app.topView.render();
-            }
-        },
-        toJson: function() {
-            return JSON.stringify(this);
+            // Scroll syncing
+            SYNTH.app.domCache.top = $('#part-top');
+            SYNTH.app.domCache.left = $('#part-left');
+            $('#grid').scroll(function() {
+                SYNTH.app.domCache.top.attr({'style': 'left: ' + (- this.scrollLeft) + 'px'});
+                SYNTH.app.domCache.left.attr({'style': 'top: ' + (- this.scrollTop + 170) + 'px'});
+            });
         },
         
         // invocations
@@ -2209,7 +2256,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
         collectionBinder: null,
         
         initialize: function() {
-            
+
             var converter = function(direction, value) {
                 if(value) {
                     return 'selected';
@@ -2237,6 +2284,8 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
                     converter: colorToBackground
                 }
             };
+            
+            this.$el.empty();
             
             this.collectionBinder = new Backbone.CollectionBinder(
                 new Backbone.CollectionBinder.ElManagerFactory(this.collectionTemplate, bindings)
@@ -2284,7 +2333,10 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
                     $(self.columnEl).append(div);
                 }
             }
-                        
+            
+            this.$el.find('.event-layer-row').remove();
+            $(this.columnEl).find('div').remove();
+            
             this.rowCollectionBinder = new Backbone.CollectionBinder(
                     new Backbone.CollectionBinder.ElManagerFactory(this.rowTemplate, bindings)
                     ,{autoSort: true});
@@ -2338,6 +2390,8 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
                    elAttribute: 'data-isselected'
                }
             };
+            
+            this.$el.empty();
             
             this.collectionBinder = new Backbone.CollectionBinder(
                 new Backbone.CollectionBinder.ElManagerFactory(this.collectionTemplate, bindings)
@@ -2434,6 +2488,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
                 }
             }
             
+            this.$el.empty();
             initializeKeyboard.apply(this);
             
             this.render();
@@ -2441,6 +2496,10 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
         render: function() {
             
             return this;
+        },
+        close: function() {
+            this.$el.empty();
+            this.unbind();
         },
         
         // event handlers
@@ -2471,12 +2530,15 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
         _pitchCollectionViews: {},
         
         initialize: function() {
-            this._gridInstrumentView = new GridInstrumentView({model: this.model});
+            this.render();
+        },
+        render: function() {
             this._gridEventCaptureView = new GridEventCaptureView({model: this.model});
             this._gridLeftBar = new GridLeftBar({model: this.model});
             this._gridTopBar = new GridTopBar({model: this.model});
+            this._gridInstrumentView = new GridInstrumentView({model: this.model});
+            return this;
         },
-        // this view does not render
         close: function() {
             this._gridInstrumentView.close();
             this._gridEventCaptureView.close();
@@ -2688,11 +2750,11 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
         // methods
         addPitchCollectionView: function(instrumentId) {
             var instrument;
-            console.log(this._pitchCollectionViews);
             this._pitchCollectionViews[instrumentId] = {};
             
             instrument = this.model.getOrchestra().getInstrumentById(instrumentId);
             this._pitchCollectionViews[instrumentId]['pitchview'] = new GridPitchCollectionView({model: instrument});
+            console.log(this._pitchCollectionViews[instrumentId]['pitchview']);
             
             var i;
             this._pitchCollectionViews[instrumentId]['noteViews'] = [];
@@ -3353,48 +3415,11 @@ $(document).ready(function() {
         topView: undefined,
         domCache: {}
     };
-    
+    SYNTH.app.controller = new SYNTH.Controller();    
     SYNTH.app.controller = new SYNTH.Controller({version: SYNTH.app.version}); // Initialize models
-    SYNTH.app.topView = new SYNTH.TopLevelView({model: SYNTH.app.controller}); // Initialize top level views
+
+    SYNTH.app.controller.initUI();
     SYNTH.app.controller.getOrchestra().addNewDefaultInstrument(); // Preconfigure orchestra
-    
-    // UI ops
-    (function() {
-        
-        function resizeUI() {
-            var windowHeight = $(window).height() - 110 - 25;    // 110px #site-top 25px #site-bottom
-            var partHeight = windowHeight - 60; // 60px static top frequency row
-            var instrumentControlHeight = windowHeight - 100 - 25 - 20 - 25;   // ditto above - 20px instrument .nav-menu -25px add instrument
-            $('#site-main').attr({'style': 'height: ' + windowHeight + 'px;'});
-            $('#grid').attr({'style': 'height: ' + partHeight + 'px;'});
-            $('#instrument-list').attr({'style': 'height: ' + instrumentControlHeight + 'px;'});
-        }
-        
-        resizeUI();
-        $(window).resize(resizeUI);
-        
-        $('#instrument-list').sortable({
-            scroll: false,
-            axis: 'y',
-        }); // jQueryUI
-        
-        $('#site-bottom').click(function() {
-            $(this).toggleClass('expanded');
-        });
-        
-    }());
-    
-    //var foo = SYNTH.app.controller;
-    //console.log(foo);
-    //console.log(JSON.stringify(foo));
-    
-    // Scroll syncing
-    SYNTH.app.domCache.top = $('#part-top');
-    SYNTH.app.domCache.left = $('#part-left');
-    $('#grid').scroll(function() {
-        SYNTH.app.domCache.top.attr({'style': 'left: ' + (- this.scrollLeft) + 'px'});
-        SYNTH.app.domCache.left.attr({'style': 'top: ' + (- this.scrollTop + 170) + 'px'});
-    });
     
 });
 
