@@ -2346,10 +2346,6 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
         render: function() {
             this.rowCollectionBinder.bind(this.model.getOrchestra().getTimeUnitCollection(), this.el);
             return this;
-        }, 
-        events: {
-            'mousedown': '_calcCoords',
-            'mouseup': '_onMouseUp'
         },
         close: function() {
             this.rowCollectionBinder.unbind();
@@ -2412,7 +2408,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
         // event handlers
         events: {
             'mousedown .time': '_onMouseDownTime',
-            'mousedown div': '_preventDefault',
+            'mousedown > div': '_preventDefault',
             'mouseup': '_onMouseUp',
         },
         _onMouseDownTime: function(event) {
@@ -2530,11 +2526,13 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
         _pitchCollectionViews: {},
         
         initialize: function() {
+            // Grid left bar does not re-render. Putting it in render would make it bind events multiple times
+            // when render is called
+            this._gridLeftBar = new GridLeftBar({model: this.model});
             this.render();
         },
         render: function() {
             this._gridEventCaptureView = new GridEventCaptureView({model: this.model});
-            this._gridLeftBar = new GridLeftBar({model: this.model});
             this._gridTopBar = new GridTopBar({model: this.model});
             this._gridInstrumentView = new GridInstrumentView({model: this.model});
             return this;
@@ -2754,7 +2752,6 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             
             instrument = this.model.getOrchestra().getInstrumentById(instrumentId);
             this._pitchCollectionViews[instrumentId]['pitchview'] = new GridPitchCollectionView({model: instrument});
-            console.log(this._pitchCollectionViews[instrumentId]['pitchview']);
             
             var i;
             this._pitchCollectionViews[instrumentId]['noteViews'] = [];
