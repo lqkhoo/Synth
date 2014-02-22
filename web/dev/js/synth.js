@@ -3323,12 +3323,32 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
         el: '#modals',
         loadPanelTemplate: TEMPLATE_CACHE['template-load-modal'],
         savePanelTemplate: TEMPLATE_CACHE['template-save-modal'],
+        noFileReaderAPITemplate: TEMPLATE_CACHE['template-no-load-file-support'],
+        noFileSaverAPITemplate: TEMPLATE_CACHE['template-no-save-file-support'],
+        noFileSelectedTemplate: TEMPLATE_CACHE['template-no-file-selected'],
         initialize: function() {
             this.$el.append(this.loadPanelTemplate);
             this.$el.append(this.savePanelTemplate);
             this.render();
         },
         render: function() {
+            
+            // Read file
+            if(window.File && window.FileReader && window.FileList && window.Blob) {
+                
+            } else {
+                $('#load-warning').html(this.noFileReaderAPITemplate);
+                $('#save-button-save-file').attr({'disabled': 'disabled'});
+            }
+            
+            // Save file
+            if(window.Blob) {
+                $('#save-input-file-name').val(SYNTH.app.controller.getOrchestra().getMusicMetadata().getTitle());
+            } else {
+                $('#save-warning').html(this.noFileSaverAPITemplate);
+                $('#save-button-save-file').attr({'disabled': 'disabled'});
+            }
+            
             return this;
         },
         close: function() {
@@ -3338,9 +3358,11 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
         events: {
             'click #load-parse-json': '_loadJson',
             'click #load-clear-all': '_clearAllLoad',
+            'click #load-button-load-file': '_loadFromFile',
             'click #save-get-json': '_getJson',
             'click #save-select-all': '_selectAll',
-            'click #save-clear-all': '_clearAllSave'
+            'click #save-clear-all': '_clearAllSave',
+            'click #save-button-save-file': '_saveToFile'
         },
         
         _loadJson: function() {
@@ -3349,6 +3371,21 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
         },
         _clearAllLoad: function() {
             $('#load-raw-json').val('');
+        },
+        _loadFromFile: function() {
+            var fileList = document.getElementById('load-input-file-load').files;
+            var file;
+            var fileReader;
+            if(fileList.length === 0) {
+                $('#load-warning').html(this.noFileSelectedTemplate);
+            } else {
+                file = fileList[0];
+                fileReader = new FileReader();
+                fileReader.onload = function() {
+                    this.model.fromJson(fileReader.result);
+                }.bind(this);
+                fileReader.readAsText(file, "utf-8");
+            }
         },
         
         _getJson: function() {
@@ -3359,8 +3396,13 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
         },
         _clearAllSave: function() {
             $('#save-raw-json').val('');
+        },
+        _saveToFile: function() {
+            var blob = new Blob([this.model.toJson()], {type: "text/plain; charset=utf-8"});
+            var title = $('#save-input-file-name').val() + '.txt';
+            //FileSaver.js method
+            saveAs(blob, title);  
         }
-        
     });
     
     var ViewControllerView = Backbone.View.extend({

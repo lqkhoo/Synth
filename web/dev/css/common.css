@@ -613,15 +613,24 @@ legend {
 
 /* Modals -------------------------------------------
  */
-#tab-body-modal-load-fromjson .btn-group,
-#tab-body-modal-save-rawjson .btn-group {
+#save-modal .btn-group,
+#load-modal .btn-group {
 	margin: 10px 0;
+}
+
+#tab-body-modal-save-tofile input[type="text"] {
+	width: 300px;
+	display: inline-block;
 }
 
 #load-raw-json,
 #save-raw-json {
 	width: 100%;
 	height: 400px;
+}
+
+.tab-pane {
+	padding: 10px;
 }
 
 /* Repetitive stuff ----------------------------------------------

@@ -228,6 +228,8 @@
 	</div>
 </div>
 
+<!-- modals -->
+
 <div class="template" id="template-load-modal">
 	<div class="modal fade" id="load-modal" tabindex="-1">
 		<div class="modal-dialog">
@@ -240,21 +242,24 @@
 				
 					<ul class="nav nav-tabs">
 						<li><a href="#tab-body-modal-load-samples" data-toggle="tab">Samples</a></li>
-						<li><a href="#tab-body-modal-load-localstorage" data-toggle="tab">From HTML5 local storage</a></li>
 						<li><a href="#tab-body-modal-load-fromfile" data-toggle="tab">From file</a></li>
 						<li><a href="#tab-body-modal-load-fromjson" data-toggle="tab">From raw JSON</a></li>
 					</ul>
 					
 					<div class="tab-content">
+					
 						<div class="tab-pane" id="tab-body-modal-load-samples">
 							TODO
 						</div>
-						<div class="tab-pane" id="tab-body-modal-load-localstorage">
-							TODO
-						</div>
+						
 						<div class="tab-pane" id="tab-body-modal-load-fromfile">
-							TODO
+							<div id="load-warning"></div>
+							<input type="file" id="load-input-file-load"></input>
+							<span class="btn-group">
+								<button class="btn btn-default btn-sm" id="load-button-load-file">Load</button>
+							</span>
 						</div>
+						
 						<div class="tab-pane" id="tab-body-modal-load-fromjson">
 							<span class="btn-group">
 								<button class="btn btn-default btn-sm" id="load-parse-json">Load</button>
@@ -280,18 +285,20 @@
 				<div class="modal-body">
 				
 					<ul class="nav nav-tabs">
-						<li><a href="#tab-body-modal-save-localstorage" data-toggle="tab">To HTML5 local storage</a></li>
 						<li><a href="#tab-body-modal-save-tofile" data-toggle="tab">To file</a></li>
 						<li><a href="#tab-body-modal-save-rawjson" data-toggle="tab">Raw JSON</a></li>
 					</ul>
 					
 					<div class="tab-content">
-						<div class="tab-pane" id="tab-body-modal-save-localstorage">
-							TODO
-						</div>
+						
 						<div class="tab-pane" id="tab-body-modal-save-tofile">
-							TODO
+							<div id="save-warning"></div>
+							<div>This will save to your default download directory.</div>
+							<button class="btn btn-default btn-sm" id="save-button-save-file">Save as</button>
+							<input id="save-input-file-name" type="text" class="form-control"></input>
+							<span>.txt</span>
 						</div>
+						
 						<div class="tab-pane" id="tab-body-modal-save-rawjson">
 							<span class="btn-group">
 								<button class="btn btn-default btn-sm" id="save-get-json">Get JSON</button>
@@ -301,7 +308,6 @@
 							<textarea id="save-raw-json" class="form-control" readonly="readonly"></textarea>
 						</div>
 					</div>
-					
 				</div>
 			</div>
 		</div>
@@ -342,6 +348,35 @@
 		<div class="g-pitch-in">
 		</div>
 
+	</div>
+</div>
+
+<!-- alerts -->
+
+<div class="template" id="template-no-save-file-support">
+	<div class="alert alert-warning">
+		<span>Your browser does not support saving files generated from SynthJS. Use save to raw JSON
+		 instead - copy the text and save it into a plaintext file (.txt or .json are fine). The 
+		 easier way would be to use up-to-date browsers (try Chrome / Firefox) which support this feature.
+		</span>
+		<button type="button" class="close" data-dismiss="alert">&times;</button>
+	</div>
+</div>
+
+<div class="template" id="template-no-load-file-support">
+	<div class="alert alert-warning">
+		<span>Your browser does not support loading files generated from SynthJS. Open up the file using a 
+		 plaintext editor, copy everything to clipboard, and paste it into load from JSON as a workaround. The 
+		 easier way would be to use up-to-date browsers (try Chrome / Firefox) which support this feature.
+		</span>
+		<button type="button" class="close" data-dismiss="alert">&times;</button>
+	</div>
+</div>
+
+<div class="template" id="template-no-file-selected">
+	<div class="alert alert-warning">
+		<span>No file selected.</span>
+		<button type="button" class="close" data-dismiss="alert">&times;</button>
 	</div>
 </div>
 
