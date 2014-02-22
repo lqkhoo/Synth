@@ -481,7 +481,7 @@ legend {
 	margin-left: 15px;
 }
 #instrument-controls-wrapper {
-	float: left;
+	height: 100%;
 	width: 100%;
 }
 #player-controls input[type="number"] {

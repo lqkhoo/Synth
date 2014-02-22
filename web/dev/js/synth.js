@@ -2036,32 +2036,17 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             
             SYNTH.app.topView = new SYNTH.TopLevelView({model: SYNTH.app.controller}); // Initialize top level views
             
-            // UI ops
-            (function() {
-                
-                function resizeUI() {
-                    var windowHeight = $(window).height() - 110 - 25;    // 110px #site-top 25px #site-bottom
-                    var partHeight = windowHeight - 60; // 60px static top frequency row
-                    var instrumentControlHeight = windowHeight - 100 - 25 - 20 - 25;   // ditto above - 20px instrument .nav-menu -25px add instrument
-                    $('#site-main').attr({'style': 'height: ' + windowHeight + 'px;'});
-                    $('#grid').attr({'style': 'height: ' + partHeight + 'px;'});
-                    $('#instrument-list').attr({'style': 'height: ' + instrumentControlHeight + 'px;'});
-                }
-                
-                resizeUI();
-                $(window).resize(resizeUI);
-                
-                $('#instrument-list').sortable({
-                    scroll: false,
-                    axis: 'y',
-                    containment: 'parent'
-                }); // jQueryUI
-                
-                $('#site-bottom').click(function() {
-                    $(this).toggleClass('expanded');
-                });
-                
-            }());
+            this.resizeUI();
+            $(window).resize(this.resizeUI);
+            
+            $('#instrument-list').sortable({
+                scroll: false,
+                axis: 'y',
+            }); // jQueryUI
+            
+            $('#site-bottom').click(function() {
+                $(this).toggleClass('expanded');
+            });      
             
             // Scroll syncing
             SYNTH.app.domCache.top = $('#part-top');
@@ -2070,6 +2055,22 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
                 SYNTH.app.domCache.top.attr({'style': 'left: ' + (- this.scrollLeft) + 'px'});
                 SYNTH.app.domCache.left.attr({'style': 'top: ' + (- this.scrollTop + 170) + 'px'});
             });
+        },
+        resizeUI: function() {
+            var siteTopHeight = 110;    // #site-top
+            var siteBottomHeight = 25;  // #site-bottom
+            var partTopHeight = 60;     // #part-top static top keys 
+            var navHeight = 20;         // .nav-menu black title bar on each panel
+            var addInstrumentHeight = 30;   // add instrument .nav-footer
+            var siteRightTopControlsHeight = $('#site-right-top-controls').height();
+            
+            var mainHeight = $(window).height() - siteTopHeight - siteBottomHeight;
+            var partHeight = mainHeight - partTopHeight;
+            var instrumentControlHeight = mainHeight - navHeight - addInstrumentHeight - siteRightTopControlsHeight;   // ditto above - 20px instrument .nav-menu -25px add instrument
+            $('#site-main').attr({'style': 'height: ' + mainHeight + 'px;'});
+            $('#grid').attr({'style': 'height: ' + partHeight + 'px;'});
+            $('#instrument-list').attr({'style': 'height: ' + instrumentControlHeight + 'px;'});
+            
         },
         
         // invocations
@@ -2940,6 +2941,9 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
                 collapsibles.hide();
             }
             button.toggleClass('collapsed');
+            if(SYNTH.app) {
+                SYNTH.app.controller.resizeUI();
+            }
         }
     });
     
@@ -3587,7 +3591,7 @@ $(document).ready(function() {
     };
     SYNTH.app.controller = new SYNTH.Controller({version: SYNTH.app.version}); // Initialize models
     SYNTH.app.controller.initUI();
-    // SYNTH.app.controller.getOrchestra().addNewDefaultInstrument(); // Preconfigure orchestra
+    SYNTH.app.controller.getOrchestra().addNewDefaultInstrument(); // Preconfigure orchestra
     
 });
 
