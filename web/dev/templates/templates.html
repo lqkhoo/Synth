@@ -76,11 +76,12 @@
 			</div>
 		</div>
 		<div id="site-right">
+			<div id="metadata-controls"><!-- template-metadata-panel --></div>
 			<div id="player-controls"><!-- template-playback-panel --></div>
 			<div id="instrument-controls-wrapper">
 				<div class="nav-header">Instruments</div>
 				<div id="instrument-controls">
-					<div id="add-instrument-controls">TODO: Add instrument</div>
+					<div id="add-instrument-controls"></div>
 					<ul id="instrument-list">
 						<!-- template-instrument-controls -->
 					</ul>
@@ -93,6 +94,8 @@
 
 <!-- panel templates -->
 
+<!-- top bar panel templates -->
+
 <div class="template" id="template-add-instrument-panel">
 	<div class="nav-footer">
 		<button id="button-add-instrument" class="btn btn-default btn-xs">Add&nbsp;<span class="plus">+</span></button>
@@ -102,26 +105,26 @@
 
 <ul class="template" id="template-instrument-panel">
 	<li class="instrument-panel-outer">
-		<div class="instrument-panel btn btn-default">
+		<div class="instrument-panel btn btn-default" data-bind="id">
 			<div>
 				<div class="color-picker-facade">
-					<input type="color" data-binding="background-color"></input>
+					<input data-bind="displayed-color" type="color"></input>
 				</div>
-				<input type="text" data-binding="name" class="form-control"></input>
+				<input type="text" data-bind="name" class="form-control"></input>
 			</div>
 			<div>
 				<select class="instrument-select form-control"></select>
 			</div>
 			<div class="volume-control">
 				<span>Vol</span>
-				<input type="range" data-binding="volume" min="0" max="1000"></input>
-				<input type="number" data-binding="volume-val" class="form-control" min="0" max="1000"></input>
-				<button data-binding="is-muted" class="btn btn-default btn-xs glyphicon glyphicon-volume-up"></button>
+				<input type="range" data-bind="volume" min="0" max="1000"></input>
+				<input type="number" data-bind="volume-val" class="form-control" min="0" max="1000"></input>
+				<button data-bind="is-muted" class="btn btn-default btn-xs glyphicon glyphicon-volume-up"></button>
 			</div>
 			<div class="sustain-velocity">
 				<span>Sustain</span>
-				<input type="checkbox" data-binding="sustain-on-off"></input>
-				<input type="number" min="0" max="9999" data-binding="sustain-duration" class="form-control"></input>
+				<input type="checkbox" data-bind="sustain-on-off"></input>
+				<input type="number" min="0" max="9999" data-bind="sustain-duration" class="form-control"></input>
 				<span>ms</span>
 			</div>
 		</div>
@@ -178,6 +181,23 @@
 	</div>	
 </div>
 
+<!-- right bar panel templates -->
+
+<div class="template" id="template-metadata-panel">
+	<div class="nav-header">Metadata<button class="btn btn-xs glyphicon glyphicon-chevron-down collapsed"></button></div>
+	<div class="form">
+		<div><input placeholder="Title" data-toggle="tooltip" data-placement="left" title="Title" type="text" data-bind="metadata-title" class="form-control"></input></div>
+		<div id="metadata-collapsibles">
+			<div><input placeholder="Composer" data-toggle="tooltip" data-placement="left" title="Composer" type="text" data-bind="metadata-composer" class="form-control"></input></div>
+			<div><input placeholder="Arranger" data-toggle="tooltip" data-placement="left" title="Arranger" type="text" data-bind="metadata-arranger" class="form-control"></input></div>
+			<div><input placeholder="Artists" data-toggle="tooltip" data-placement="left" title="Artists" type="text" data-bind="metadata-artists" class="form-control"></input></div>
+			<div><input placeholder="From" data-toggle="tooltip" data-placement="left" title="Where this piece is originally from (movie, concert, etc.)" type="text" data-bind="metadata-from" class="form-control"></input></div>
+			<div><input placeholder="SYNTHer" data-toggle="tooltip" data-placement="left" title="Who SYNTHed this - This is probably you!" type="text" data-bind="metadata-synther" class="form-control"></input></div>
+			<div><input placeholder="Date" data-toggle="tooltip" data-placement="left" title="Date" type="text" data-bind="metadata-date" class="form-control"></input></div>
+		</div>
+	</div>
+</div>
+
 <div class="template" id="template-playback-panel">
 	<div class="nav-header">Playback</div>
 	<div id="playback-buttons-wrapper">
@@ -224,13 +244,19 @@
 					</ul>
 					
 					<div class="tab-content">
-						<div class="tab-pane" id="tab-body-modal-load-samples">...</div>
-						<div class="tab-pane" id="tab-body-modal-load-localstorage">...</div>
-						<div class="tab-pane" id="tab-body-modal-load-fromfile">...</div>
+						<div class="tab-pane" id="tab-body-modal-load-samples">
+							TODO
+						</div>
+						<div class="tab-pane" id="tab-body-modal-load-localstorage">
+							TODO
+						</div>
+						<div class="tab-pane" id="tab-body-modal-load-fromfile">
+							TODO
+						</div>
 						<div class="tab-pane" id="tab-body-modal-load-fromjson">
 							<span class="btn-group">
-								<button class="btn btn-default btn-xs" id="load-parse-json">Load</button>
-								<button class="btn btn-default btn-xs" id="load-clear-all">Clear</button>
+								<button class="btn btn-default btn-sm" id="load-parse-json">Load</button>
+								<button class="btn btn-default btn-sm" id="load-clear-all">Clear</button>
 							</span>
 							<textarea id="load-raw-json" class="form-control"></textarea>
 						</div>
@@ -258,13 +284,17 @@
 					</ul>
 					
 					<div class="tab-content">
-						<div class="tab-pane" id="tab-body-modal-save-localstorage">...</div>
-						<div class="tab-pane" id="tab-body-modal-save-tofile">...</div>
+						<div class="tab-pane" id="tab-body-modal-save-localstorage">
+							TODO
+						</div>
+						<div class="tab-pane" id="tab-body-modal-save-tofile">
+							TODO
+						</div>
 						<div class="tab-pane" id="tab-body-modal-save-rawjson">
 							<span class="btn-group">
-								<button class="btn btn-default btn-xs" id="save-get-json">Get JSON</button>
-								<button class="btn btn-default btn-xs" id="save-select-all">Select all</button>
-								<button class="btn btn-default btn-xs" id="save-clear-all">Clear</button>
+								<button class="btn btn-default btn-sm" id="save-get-json">Get JSON</button>
+								<button class="btn btn-default btn-sm" id="save-select-all">Select all</button>
+								<button class="btn btn-default btn-sm" id="save-clear-all">Clear</button>
 							</span>
 							<textarea id="save-raw-json" class="form-control" readonly="readonly"></textarea>
 						</div>

@@ -40,6 +40,20 @@ legend {
 .nav-footer {
 	padding: 3px;
 }
+.nav-header button,
+.nav-header button:hover,
+.nav-header button:focus {
+	float: right;
+	margin-right: -5px;
+	top: -2px;
+	background: transparent;
+	color: #ccc;
+}
+.nav-header button:hover {
+	color: #fff;
+	background: #888;
+}
+
 .nav-panel {
 	color: #666;
 	font-size: 0.9em;
@@ -429,6 +443,17 @@ legend {
 	z-index: 100;
 	box-shadow: rgba(50, 50, 50, 0.5) -2px 0 5px;
 }
+#metadata-controls > .form {
+	margin: 0.5em 0;
+}
+#metadata-controls input[type="text"] {
+	margin: 0.2em 1em;
+	width: 200px;
+	font-size: 0.9em;
+	display: inline-block;
+	height: 2em;
+	padding: 0 0.5em;
+}
 #player-controls {
 	height: 140px;
 }
@@ -590,7 +615,7 @@ legend {
  */
 #tab-body-modal-load-fromjson .btn-group,
 #tab-body-modal-save-rawjson .btn-group {
-	margin-top: 10px;
+	margin: 10px 0;
 }
 
 #load-raw-json,
