@@ -715,7 +715,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             return pitches;
         }
     };
-        
+    
     /** An instrument */
     var Instrument = SynthBaseModel.extend({
         defaults: {

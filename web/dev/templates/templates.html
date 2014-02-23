@@ -41,8 +41,8 @@
 			</div>
 			<div id="key-buttons">
 				<span class="btn-group">
-					<button id="button-undo" class="btn btn-default glyphicon glyphicon-arrow-left"></button>
-					<button id="button-redo" class="btn btn-default glyphicon glyphicon-arrow-right"></button>
+					<button id="button-undo" class="btn btn-default btn-xs">Undo</button>
+					<button id="button-redo" class="btn btn-default btn-xs">Redo</button>
 				</span>
 			</div>
 		</div>
@@ -164,8 +164,8 @@
 		<div>
 			<span>Selection</span>
 			<span class="btn-group">
-				<button id="button-select-all" class="btn btn-default btn-xs">Select all</button>
-				<button id="button-clear-all" class="btn btn-default btn-xs">Clear selection</button>
+				<button id="button-select-all" class="btn btn-default btn-xs" disabled="disabled">Select all</button>
+				<button id="button-clear-all" class="btn btn-default btn-xs" disabled="disabled">Clear selection</button>
 			</span>
 		</div>
 		<div>
@@ -174,11 +174,11 @@
 				<button id="button-insert-time-blocks" class="btn btn-default btn-xs">Insert</button>
 			</span>
 			<input id="time-blocks-per-add" min="1" max="200" type="number" class="form-control"></input>
-			<span>row(s)</span>
+			<span>col(s)</span>
 		</div>
 		<div>
 			<button id="button-delete-time-blocks" class="btn btn-default btn-xs">Delete</button>
-			<span>selected row(s)</span>
+			<span>selected col(s)</span>
 		</div>
 	</div>	
 </div>

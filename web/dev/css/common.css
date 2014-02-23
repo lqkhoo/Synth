@@ -67,6 +67,17 @@ legend {
 	height: 100%;
 	vertical-align: top;
 }
+
+#logo {
+	background-image: url("../img/synth-logo-small.png");
+	width: 250px;
+	height: 110px;
+}
+#logo .inner {
+	display: none;
+}
+
+/*
 #logo {
 	font-size: 1.1em;
 	height: 100%;
@@ -153,6 +164,7 @@ legend {
 	background:      -o-linear-gradient(left, rgba(255,255,255,0) 0%, rgba(255,255,255,1) 30%, rgba(255,255,255,1) 70%, rgba(255,255,255,0) 100%);
 	background:     linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,1) 30%, rgba(255,255,255,1) 70%, rgba(255,255,255,0) 100%);
 }
+*/
 
 #upper-controls {
 	width: 100%;
