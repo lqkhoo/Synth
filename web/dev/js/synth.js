@@ -1324,7 +1324,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             'nextInstrumentId': 0,
             'activeInstrumentId': null,
             'timeUnitCollection': null,
-            'scoreLength': 24,
+            'scoreLength': 80,
             'playSpeed': 300,
             'musicMetadata': null
         },
@@ -1553,8 +1553,10 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
         // note methods
         addNote: function(instrumentId, pitchId, startTime, value) {
             var pitch = this.getPitch(instrumentId, pitchId);
-            var note = pitch.getNoteCollection();
-            note.add(new Note({'id': startTime, 'value': value}));
+            var noteCollection = pitch.getNoteCollection();
+            var note = new Note({'id': startTime, 'value': value});
+            noteCollection.add(note);
+            return note;
         },
         removeNote: function(instrumentId, pitchId, startTime) {
             var pitch = this.getPitch(instrumentId, pitchId);
@@ -2240,12 +2242,12 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
         collectionBinder: null,
         
         initialize: function() {
-            function valueToHeight(direction, value) {
-                return 'height:' + (value * 20 - 3).toString() + 'px';  // value * 20 subtract 2px border 1px compensation
+            function valueToWidth(direction, value) {
+                return 'width:' + (value * 20 - 3).toString() + 'px';  // value * 20 subtract 2px border 1px compensation
             }
             
-            function idToTop(direction, value) {
-                return 'top: ' + (value * 20).toString() + 'px';
+            function idToLeft(direction, value) {
+                return 'left: ' + (value * 20).toString() + 'px';
             }
             
             var bindings = {
@@ -2257,13 +2259,13 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
                    {
                        'selector': '.dot',
                        'elAttribute': 'style',
-                       'converter': idToTop
+                       'converter': idToLeft
                    }
                 ],
                 'value': {
                     'selector': '.dot-in',
                     'elAttribute': 'style',
-                    'converter': valueToHeight
+                    'converter': valueToWidth
                 }
             };
             this.el = '.g-instrument-inner[data-id="' + this.model.getInstrument().getId() + '"] .g-pitch-in[data-pitch="' + this.model.getId() +  '"]';
@@ -2394,9 +2396,9 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
      */
     var GridEventCaptureView = Backbone.View.extend({
         el: '#grid-event-capture-layer',
-        columnEl: '#grid-event-capture-layer-columns',
-        rowCollectionBinder: null,
-        rowTemplate: TEMPLATE_CACHE['template-grid-event-capture-layer-row'],
+        rowEl: '#grid-event-capture-layer-rows',
+        columnCollectionBinder: null,
+        columnTemplate: TEMPLATE_CACHE['template-grid-event-capture-layer-column'],
         
         initialize: function() {
             
@@ -2413,42 +2415,43 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
                     }
                 };
             
-            function initializeColumns() {
+            function initializeRows() {
                 var i;
                 var div;
-                for(i = 0; i < 88; i++) {
+                for(i = TONES.length - 1; i >= 0; i--) {
                     div = $('<div></div>').attr({'data-pitch': i});
-                    $(self.columnEl).append(div);
+                    $(self.rowEl).append(div);
                 }
             }
             
-            this.$el.find('.event-layer-row').remove();
-            $(this.columnEl).find('div').remove();
+            this.$el.find('.event-layer-column').remove();
+            $(this.rowEl).find('div').remove();
             
-            this.rowCollectionBinder = new Backbone.CollectionBinder(
-                    new Backbone.CollectionBinder.ElManagerFactory(this.rowTemplate, bindings)
+            this.columnCollectionBinder = new Backbone.CollectionBinder(
+                    new Backbone.CollectionBinder.ElManagerFactory(this.columnTemplate, bindings)
                     ,{autoSort: true});
-            initializeColumns(); // render columns
+            initializeRows(); // render columns
             this.render();
         },
         render: function() {
-            this.rowCollectionBinder.bind(this.model.getOrchestra().getTimeUnitCollection(), this.el);
+            this.columnCollectionBinder.bind(this.model.getOrchestra().getTimeUnitCollection(), this.el);
             return this;
         },
         close: function() {
-            this.rowCollectionBinder.unbind();
+            this.columnCollectionBinder.unbind();
             this.$el.empty();
             this.unbind();
         }
         
     });
     
+    //TODO bind to active instrument
     /**
-     * Component view. Reponsible for grid left bar
+     * Component view. Responsible for grid top bar
      * Expected model: Controller
      */
-    var GridLeftBar = Backbone.View.extend({
-        el: '#part-left-lower',
+    var GridTopBar = Backbone.View.extend({
+        el: '#part-top',
         collectionTemplate: TEMPLATE_CACHE['template-beat-time'],
         collectionBinder: null,
         
@@ -2544,19 +2547,18 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
         }
     });
     
-    //TODO bind to active instrument
     /**
-     * Component view. Responsible for grid top bar
+     * Component view. Reponsible for grid left bar
      * Expected model: Controller
      */
-    var GridTopBar = Backbone.View.extend({
-        el: '#part-top',
+    var GridLeftBar = Backbone.View.extend({
+        el: '#part-left-lower',
         initialize: function() {
             function initializeKeyboard() {
                 var i;
                 var div;
                 var str;
-                for(i = 0; i < 88; i++) {
+                for(i = TONES.length - 1; i >= 0; i--) {
                     str = TONES[i];
                     div = $('<div></div>').attr({'data-pitch': i});
                     if(str.length > 2) {
@@ -2665,9 +2667,11 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             var note;
             var noteStartTime;
             var noteValue;
-            if(event.offsetY) { pitchId = Math.floor(event.originalEvent.offsetX / 20); } // Chrome / Opera
-            else { pitchId = Math.floor(event.originalEvent.layerX / 20); } // Firefox
+            if(event.offsetY) { pitchId = TONES.length - 1 - Math.floor(event.originalEvent.offsetY / 20); } // Chrome / Opera
+            else { pitchId = TONES.length - 1 - Math.floor(event.originalEvent.layerY / 20); } // Firefox
             time = parseInt(event.target.getAttribute('data-time'));
+            
+            console.log(pitchId);
             
             orchestra = this.model.getOrchestra();
             activeInstrument = orchestra.getActiveInstrument();
@@ -2728,8 +2732,8 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
         // new note
         _initUIHelperForNewNote: function(activeInstrumentId, pitchId, time, noteStartTime, noteValue) {
             $(this.uiHelperEl).css({
-                'left': (pitchId * 20).toString() + 'px',
-                'top': (time * 20).toString() + 'px',
+                'top': ((TONES.length - 1 - pitchId) * 20).toString() + 'px',
+                'left': (time * 20).toString() + 'px',
                 'width': '20px',
                 'height': '20px',
                 'background-color': '#aaa'
@@ -2742,7 +2746,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             
             var newTime = parseInt(event.target.getAttribute('data-time'));
             $(this.uiHelperEl).css({
-                'height': Math.min((latestWindow - time + 1) * 20, (Math.max(20, (newTime - time + 1) * 20))).toString() + 'px'
+                'width': Math.min((latestWindow - time + 1) * 20, (Math.max(20, (newTime - time + 1) * 20))).toString() + 'px'
             });
             $(this.uiHelperEl).attr({
                 'data-value': Math.min(latestWindow - time + 1, Math.max(1, (newTime - time + 1)))
@@ -2763,8 +2767,8 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             var newPitchId;
             var newTime;
             
-            if(event.offsetY) { newPitchId = Math.floor(event.originalEvent.offsetX / 20); } // Chrome / Opera
-            else { newPitchId = Math.floor(event.originalEvent.layerX / 20); } // Firefox
+            if(event.offsetY) { newPitchId = TONES.length - 1 - Math.floor(event.originalEvent.offsetY / 20); } // Chrome / Opera
+            else { newPitchId = TONES.length - 1 - Math.floor(event.originalEvent.layerY / 20); } // Firefox
             newTime = parseInt(event.target.getAttribute('data-time'));
             
             if(newPitchId === pitchId && newTime === time) {
@@ -2776,8 +2780,8 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
         // change existing note
         _initUIHelperForExistingNote: function(activeInstrumentId, pitchId, time, noteStartTime, value) {
             $(this.uiHelperEl).css({
-                'left': (pitchId * 20).toString() + 'px',
-                'top': (time * 20).toString() + 'px',
+                'top': ((TONES.length - 1 - pitchId) * 20).toString() + 'px',
+                'left': (time * 20).toString() + 'px',
                 'width': '20px',
                 'height': '20px',
                 'background-color': '#aaa'
@@ -2790,8 +2794,8 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             var newTime = parseInt(event.target.getAttribute('data-time'));
             if(newTime === time) {
                 $(this.uiHelperEl).css({
-                    'top': (time * 20).toString() + 'px',
-                    'height':'20px'
+                    'left': (time * 20).toString() + 'px',
+                    'width':'20px'
                 });
                 $(this.uiHelperEl).attr({
                     'data-value': value + newTime - time - 1
@@ -2799,16 +2803,16 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             } else if(newTime > time) {
                 // if mouse released further down, it will add duration to the note
                 $(this.uiHelperEl).css({
-                    'top': (time * 20).toString() + 'px',
-                    'height': Math.min((latestWindow - time + 1) * 20, (Math.max(1, (newTime - time + 1)) * 20)).toString() + 'px'
+                    'left': (time * 20).toString() + 'px',
+                    'top': Math.min((latestWindow - time + 1) * 20, (Math.max(1, (newTime - time + 1)) * 20)).toString() + 'px'
                 });
                 $(this.uiHelperEl).attr({
                     'data-value': Math.min(latestWindow - noteStartTime + 1, Math.max(1, value + newTime - time))
                 });
             } else {
                 $(this.uiHelperEl).css({
-                    'top': (Math.max(noteStartTime, newTime) * 20).toString() + 'px',
-                    'height': (Math.min(value * 20, Math.max(20, (time - newTime + 1) * 20))).toString() + 'px'
+                    'left': (Math.max(noteStartTime, newTime) * 20).toString() + 'px',
+                    'top': (Math.min(value * 20, Math.max(20, (time - newTime + 1) * 20))).toString() + 'px'
                 });
                 $(this.uiHelperEl).attr({
                     'data-value': Math.max(0, value + newTime - time - 1)    // value can go down to zero. If zero, delete note
@@ -2848,7 +2852,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             
             var i;
             this._pitchCollectionViews[instrumentId]['noteViews'] = [];
-            for(i = 0; i < 88; i++) {
+            for(i = 0; i < TONES.length; i++) {
                 this._pitchCollectionViews[instrumentId]['noteViews'].push(
                         new GridNoteCollectionView({model: instrument.getPitchCollection().get(i)}));
             }
@@ -2871,7 +2875,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             }
             
             instruments = SYNTH.app.controller.getOrchestra().getInstrumentCollection().models;
-            for(i = 0; i < instruments.length; i++) {
+            for(i = instruments.length - 1; i >= 0; i--) {
                 this.addPitchCollectionView(instruments[i].getId());
             }
         }
@@ -3625,6 +3629,8 @@ SYNTH = SYNTH(jQuery, _, Backbone, MUSIC, Note, Interval, MIDI);
 // Op | Document.ready --------------------------------------------------------------------------------
 $(document).ready(function() {
     
+
+    
     SYNTH.app = {
         version: SYNTH.VERSION,
         controller: undefined,
@@ -3634,6 +3640,5 @@ $(document).ready(function() {
     SYNTH.app.controller = new SYNTH.Controller({version: SYNTH.app.version}); // Initialize models
     SYNTH.app.controller.initUI();
     SYNTH.app.controller.getOrchestra().addNewDefaultInstrument(); // Preconfigure orchestra
-    
 });
 
