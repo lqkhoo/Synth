@@ -73,7 +73,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
     // Initialize
     _cacheTemplates(); // Establish template cache
     _generateFrequencyTable(); // Define frequency table
-        
+    
     // Declare | Command class ----------------------------------------------------------------------
     
     /*
@@ -2670,8 +2670,6 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             if(event.offsetY) { pitchId = TONES.length - 1 - Math.floor(event.originalEvent.offsetY / 20); } // Chrome / Opera
             else { pitchId = TONES.length - 1 - Math.floor(event.originalEvent.layerY / 20); } // Firefox
             time = parseInt(event.target.getAttribute('data-time'));
-            
-            console.log(pitchId);
             
             orchestra = this.model.getOrchestra();
             activeInstrument = orchestra.getActiveInstrument();

@@ -454,6 +454,10 @@ legend {
 .g-pitch-in .dot-in {
 	display: inline-block;
 }
+.g-instrument {
+	position: absolute;
+	top: 0;
+}
 .g-instrument-inner {
 	width: 0;
 	height: 1760px;
