@@ -2504,7 +2504,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
         },
         _onMouseDownTime: function(event) {
             var time = parseInt($(event.currentTarget).attr('data-time'));
-            var isSelected = $('#part-left-lower .time[data-time="' + time + '"]').attr('data-isselected');
+            var isSelected = $('#part-top .time[data-time="' + time + '"]').attr('data-isselected');
             if(SYNTH.app) {
                 if(isSelected === 'true') {
                     SYNTH.app.controller.getOrchestra().setTimeUnitSelection(time, false);
@@ -2527,17 +2527,19 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
                     self._selectOnMouseOverBeat(event);
                 });
             }
+            console.log('delegate');
         },
         _selectOnMouseOverBeat: function(event) {
             if(SYNTH.app) {
                 SYNTH.app.controller.getOrchestra().setTimeUnitSelection(parseInt($(event.currentTarget).html()) - 1, true);
             }
+            console.log('select');
         },
         _deSelectOnMouseOverBeat: function(event) {
             if(SYNTH.app) {
                 SYNTH.app.controller.getOrchestra().setTimeUnitSelection(parseInt($(event.currentTarget).html()) - 1, false);
             }
-            
+            console.log('deselect');
         },
         _onMouseUp: function(event) {
             this.$el.undelegate('.time', 'mouseover');
@@ -2802,7 +2804,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
                 // if mouse released further down, it will add duration to the note
                 $(this.uiHelperEl).css({
                     'left': (time * 20).toString() + 'px',
-                    'top': Math.min((latestWindow - time + 1) * 20, (Math.max(1, (newTime - time + 1)) * 20)).toString() + 'px'
+                    'width': Math.min((latestWindow - time + 1) * 20, (Math.max(1, (newTime - time + 1)) * 20)).toString() + 'px'
                 });
                 $(this.uiHelperEl).attr({
                     'data-value': Math.min(latestWindow - noteStartTime + 1, Math.max(1, value + newTime - time))
@@ -2810,7 +2812,7 @@ var SYNTH = (function($, _, Backbone, MUSIC, MUSIC_Note, MUSIC_Interval, MIDI) {
             } else {
                 $(this.uiHelperEl).css({
                     'left': (Math.max(noteStartTime, newTime) * 20).toString() + 'px',
-                    'top': (Math.min(value * 20, Math.max(20, (time - newTime + 1) * 20))).toString() + 'px'
+                    'width': (Math.min(value * 20, Math.max(20, (time - newTime + 1) * 20))).toString() + 'px'
                 });
                 $(this.uiHelperEl).attr({
                     'data-value': Math.max(0, value + newTime - time - 1)    // value can go down to zero. If zero, delete note
